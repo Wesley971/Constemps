@@ -1,0 +1,63 @@
+-- CreateTable
+CREATE TABLE `User` (
+    `id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Deck` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `dailyGoal` INTEGER NOT NULL DEFAULT 10,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Card` (
+    `id` VARCHAR(191) NOT NULL,
+    `deckId` VARCHAR(191) NOT NULL,
+    `type` ENUM('CLASSIC', 'OPEN_QUESTION') NOT NULL,
+    `front` VARCHAR(191) NOT NULL,
+    `back` VARCHAR(191) NOT NULL,
+    `stability` DOUBLE NOT NULL DEFAULT 0,
+    `difficulty` DOUBLE NOT NULL DEFAULT 0,
+    `due` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `lapses` INTEGER NOT NULL DEFAULT 0,
+    `reps` INTEGER NOT NULL DEFAULT 0,
+    `state` INTEGER NOT NULL DEFAULT 0,
+    `audioUrl` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ReviewLog` (
+    `id` VARCHAR(191) NOT NULL,
+    `cardId` VARCHAR(191) NOT NULL,
+    `rating` INTEGER NOT NULL,
+    `userAnswer` VARCHAR(191) NULL,
+    `aiVerdict` VARCHAR(191) NULL,
+    `reviewedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `scheduledDays` INTEGER NOT NULL,
+    `elapsedDays` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Deck` ADD CONSTRAINT `Deck_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Card` ADD CONSTRAINT `Card_deckId_fkey` FOREIGN KEY (`deckId`) REFERENCES `Deck`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ReviewLog` ADD CONSTRAINT `ReviewLog_cardId_fkey` FOREIGN KEY (`cardId`) REFERENCES `Card`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: constemps-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: constemps
+      MYSQL_USER: constemps
+      MYSQL_PASSWORD: constemps
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

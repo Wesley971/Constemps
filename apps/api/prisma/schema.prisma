@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  decks     Deck[]
+}
+
+model Deck {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  dailyGoal Int      @default(10) // palier adaptatif, recalculé par job
+  cards     Card[]
+  createdAt DateTime @default(now())
+}
+
+enum CardType {
+  CLASSIC
+  OPEN_QUESTION
+}
+
+model Card {
+  id         String      @id @default(uuid())
+  deckId     String
+  deck       Deck        @relation(fields: [deckId], references: [id])
+  type       CardType
+  front      String // recto, ou question
+  back       String // verso, ou réponse de référence
+  // état FSRS
+  stability  Float       @default(0)
+  difficulty Float       @default(0)
+  due        DateTime    @default(now())
+  lapses     Int         @default(0)
+  reps       Int         @default(0)
+  state      Int         @default(0) // New/Learning/Review/Relearning (enum FSRS)
+  audioUrl   String?
+  createdAt  DateTime    @default(now())
+  reviewLogs ReviewLog[]
+}
+
+model ReviewLog {
+  id            String   @id @default(uuid())
+  cardId        String
+  card          Card     @relation(fields: [cardId], references: [id])
+  rating        Int // Again/Hard/Good/Easy, ou verdict IA mappé
+  userAnswer    String? // contenu réel, nécessaire pour le rappel à 6 mois
+  aiVerdict     String? // pour OPEN_QUESTION : compris/partiel/incompris
+  reviewedAt    DateTime @default(now())
+  scheduledDays Int
+  elapsedDays   Int
+}
