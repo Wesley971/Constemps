@@ -36,7 +36,7 @@ enum CardType {
 model Card {
   id         String      @id @default(uuid())
   deckId     String
-  deck       Deck        @relation(fields: [deckId], references: [id])
+  deck       Deck        @relation(fields: [deckId], references: [id], onDelete: Cascade)
   type       CardType
   front      String // recto, ou question
   back       String // verso, ou réponse de référence
