@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { fsrs, Rating } from 'ts-fsrs';
 import type { Card as FsrsCardInput, Grade, State } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
-import { AiEvaluationService, AiVerdict } from './ai-evaluation.service';
+import { AiService, AiVerdict } from '../ai/ai.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
 
 const DAILY_GOAL_WINDOW_DAYS = 7;
@@ -39,7 +39,7 @@ const scheduler = fsrs({ enable_short_term: false });
 export class ReviewsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly aiEvaluationService: AiEvaluationService,
+    private readonly aiService: AiService,
   ) {}
 
   private async assertDeckOwnership(userId: string, deckId: string) {
@@ -178,7 +178,7 @@ export class ReviewsService {
         throw new BadRequestException('userAnswer is required for OPEN_QUESTION cards');
       }
       userAnswer = dto.userAnswer;
-      const evaluation = await this.aiEvaluationService.evaluate(card.front, card.back, dto.userAnswer);
+      const evaluation = await this.aiService.evaluate(card.front, card.back, dto.userAnswer);
       aiVerdict = evaluation.verdict;
       grade = AI_VERDICT_TO_GRADE[evaluation.verdict];
     }

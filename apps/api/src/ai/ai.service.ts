@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 
 export type AiVerdict = 'compris' | 'partiellement' | 'incompris';
@@ -8,10 +8,10 @@ export interface AiEvaluationResult {
   justification?: string;
 }
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-flash-lite-latest';
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 
-function buildPrompt(question: string, referenceAnswer: string, userAnswer: string): string {
+function buildEvaluationPrompt(question: string, referenceAnswer: string, userAnswer: string): string {
   return `Tu évalues la compréhension d'un concept par un élève, dans le cadre d'une app de révision espacée.
 
 Question posée : ${question}
@@ -24,6 +24,17 @@ Réponds avec exactement un verdict parmi ces trois valeurs : "compris", "partie
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "verdict": "compris" }`;
+}
+
+function buildTranslationPrompt(text: string, targetLang: string): string {
+  return `Traduis le texte suivant vers la langue dont le code est "${targetLang}".
+
+Texte à traduire : ${text}
+
+Réponds uniquement avec la traduction directe, sans aucun commentaire, explication ou texte additionnel autour.
+
+Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
+{ "translation": "..." }`;
 }
 
 function normalizeToWordSet(text: string): Set<string> {
@@ -39,8 +50,8 @@ function normalizeToWordSet(text: string): Set<string> {
 }
 
 @Injectable()
-export class AiEvaluationService {
-  private readonly logger = new Logger(AiEvaluationService.name);
+export class AiService {
+  private readonly logger = new Logger(AiService.name);
 
   async evaluate(question: string, referenceAnswer: string, userAnswer: string): Promise<AiEvaluationResult> {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -50,10 +61,9 @@ export class AiEvaluationService {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
+      const response = await this.getClient(apiKey).models.generateContent({
         model: GEMINI_MODEL,
-        contents: buildPrompt(question, referenceAnswer, userAnswer),
+        contents: buildEvaluationPrompt(question, referenceAnswer, userAnswer),
         config: { responseMimeType: 'application/json' },
       });
 
@@ -73,6 +83,38 @@ export class AiEvaluationService {
     }
   }
 
+  async translate(text: string, targetLang: string): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new ServiceUnavailableException('Service de traduction non configuré');
+    }
+
+    let responseText: string | undefined;
+    try {
+      const response = await this.getClient(apiKey).models.generateContent({
+        model: GEMINI_MODEL,
+        contents: buildTranslationPrompt(text, targetLang),
+        config: { responseMimeType: 'application/json' },
+      });
+      responseText = response.text;
+    } catch (err) {
+      this.logger.error('Appel Gemini échoué pour la traduction', err instanceof Error ? err.stack : String(err));
+      throw new BadGatewayException('La traduction a échoué');
+    }
+
+    const translation = this.parseTranslation(responseText);
+    if (!translation) {
+      this.logger.error(`Réponse Gemini mal formée pour la traduction : ${responseText}`);
+      throw new BadGatewayException('La traduction a échoué');
+    }
+
+    return translation;
+  }
+
+  private getClient(apiKey: string): GoogleGenAI {
+    return new GoogleGenAI({ apiKey });
+  }
+
   private parseVerdict(text: string | undefined): AiVerdict | null {
     if (!text) return null;
 
@@ -80,6 +122,20 @@ export class AiEvaluationService {
       const parsed = JSON.parse(text) as { verdict?: unknown };
       if (typeof parsed.verdict === 'string' && VALID_VERDICTS.includes(parsed.verdict as AiVerdict)) {
         return parsed.verdict as AiVerdict;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private parseTranslation(text: string | undefined): string | null {
+    if (!text) return null;
+
+    try {
+      const parsed = JSON.parse(text) as { translation?: unknown };
+      if (typeof parsed.translation === 'string' && parsed.translation.trim().length > 0) {
+        return parsed.translation;
       }
       return null;
     } catch {
