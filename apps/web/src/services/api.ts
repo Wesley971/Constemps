@@ -1,6 +1,7 @@
 import type { User } from '../types/user'
 import type { Deck } from '../types/deck'
 import type { Card, CardType } from '../types/card'
+import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -59,4 +60,20 @@ export const cardsApi = {
   update: (id: string, front: string, back: string) =>
     request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back }) }),
   remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
+}
+
+export const reviewsApi = {
+  getSession: (deckId: string) => request<ReviewSession>(`/decks/${deckId}/reviews/session`),
+  submitClassic: (cardId: string, rating: ManualRating) =>
+    request<SubmitReviewResult>('/reviews', { method: 'POST', body: JSON.stringify({ cardId, rating }) }),
+  submitOpenQuestion: (cardId: string, userAnswer: string) =>
+    request<SubmitReviewResult>('/reviews', { method: 'POST', body: JSON.stringify({ cardId, userAnswer }) }),
+}
+
+export const translationApi = {
+  translate: (text: string, targetLang: string) =>
+    request<{ translation: string }>('/translation', {
+      method: 'POST',
+      body: JSON.stringify({ text, targetLang }),
+    }),
 }

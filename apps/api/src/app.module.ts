@@ -7,9 +7,10 @@ import { UsersModule } from './users/users.module';
 import { DecksModule } from './decks/decks.module';
 import { CardsModule } from './cards/cards.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { TranslationModule } from './translation/translation.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, DecksModule, CardsModule, ReviewsModule],
+  imports: [PrismaModule, AuthModule, UsersModule, DecksModule, CardsModule, ReviewsModule, TranslationModule],
   controllers: [AppController],
   providers: [AppService],
 })

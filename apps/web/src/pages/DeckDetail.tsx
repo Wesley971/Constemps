@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { authApi, cardsApi, decksApi, ApiError } from '../services/api'
+import { authApi, cardsApi, decksApi, translationApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 import type { Card, CardType } from '../types/card'
 
@@ -24,6 +24,8 @@ function DeckDetail() {
   const [newCardFront, setNewCardFront] = useState('')
   const [newCardBack, setNewCardBack] = useState('')
   const [creating, setCreating] = useState(false)
+  const [translating, setTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState<string | null>(null)
 
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const [editFront, setEditFront] = useState('')
@@ -71,6 +73,21 @@ function DeckDetail() {
       setError(err instanceof ApiError ? err.message : 'Impossible de créer la card')
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function handleTranslate() {
+    if (!newCardFront.trim()) return
+
+    setTranslating(true)
+    setTranslateError(null)
+    try {
+      const { translation } = await translationApi.translate(newCardFront.trim(), 'EN')
+      setNewCardBack(translation)
+    } catch (err) {
+      setTranslateError(err instanceof ApiError ? err.message : 'Traduction indisponible')
+    } finally {
+      setTranslating(false)
     }
   }
 
@@ -125,6 +142,10 @@ function DeckDetail() {
 
       {error && <p role="alert">{error}</p>}
 
+      <p>
+        <Link to={`/decks/${id}/review`}>Réviser</Link>
+      </p>
+
       <button type="button" onClick={() => setShowCreateForm((v) => !v)}>
         {showCreateForm ? 'Annuler' : 'Ajouter une card'}
       </button>
@@ -160,6 +181,12 @@ function DeckDetail() {
           <div>
             <label htmlFor="back">{FIELD_LABELS[newCardType].back}</label>
             <input id="back" type="text" value={newCardBack} onChange={(e) => setNewCardBack(e.target.value)} required />
+            {newCardType === 'CLASSIC' && (
+              <button type="button" disabled={translating || !newCardFront.trim()} onClick={handleTranslate}>
+                {translating ? 'Traduction...' : 'Traduire'}
+              </button>
+            )}
+            {translateError && <p role="alert">{translateError}</p>}
           </div>
           <button type="submit" disabled={creating}>
             {creating ? 'Création...' : 'Créer la card'}
