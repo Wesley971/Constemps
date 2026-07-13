@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 
@@ -100,7 +100,7 @@ function Decks() {
         <ul>
           {decks.map((deck) => (
             <li key={deck.id}>
-              {deck.name}
+              <Link to={`/decks/${deck.id}`}>{deck.name}</Link>
               <button type="button" onClick={() => handleDelete(deck)}>
                 Supprimer
               </button>

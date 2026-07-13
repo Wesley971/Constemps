@@ -1,5 +1,6 @@
 import type { User } from '../types/user'
 import type { Deck } from '../types/deck'
+import type { Card, CardType } from '../types/card'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -46,6 +47,16 @@ export const authApi = {
 
 export const decksApi = {
   list: () => request<Deck[]>('/decks'),
+  get: (id: string) => request<Deck>(`/decks/${id}`),
   create: (name: string) => request<Deck>('/decks', { method: 'POST', body: JSON.stringify({ name }) }),
   remove: (id: string) => request<{ success: boolean }>(`/decks/${id}`, { method: 'DELETE' }),
+}
+
+export const cardsApi = {
+  list: (deckId: string) => request<Card[]>(`/decks/${deckId}/cards`),
+  create: (deckId: string, type: CardType, front: string, back: string) =>
+    request<Card>(`/decks/${deckId}/cards`, { method: 'POST', body: JSON.stringify({ type, front, back }) }),
+  update: (id: string, front: string, back: string) =>
+    request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back }) }),
+  remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
 }
