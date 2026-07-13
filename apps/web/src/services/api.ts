@@ -2,6 +2,7 @@ import type { User } from '../types/user'
 import type { Deck } from '../types/deck'
 import type { Card, CardType } from '../types/card'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
+import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -76,4 +77,10 @@ export const translationApi = {
       method: 'POST',
       body: JSON.stringify({ text, targetLang }),
     }),
+}
+
+export const statsApi = {
+  getOverview: (deckId: string) => request<StatsOverview>(`/decks/${deckId}/stats/overview`),
+  getHistory: (deckId: string) => request<HistoryDay[]>(`/decks/${deckId}/stats/history`),
+  getProgressHighlight: (deckId: string) => request<ProgressHighlight>(`/decks/${deckId}/stats/progress-highlight`),
 }

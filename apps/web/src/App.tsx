@@ -4,6 +4,7 @@ import Register from './pages/Register'
 import Decks from './pages/Decks'
 import DeckDetail from './pages/DeckDetail'
 import Review from './pages/Review'
+import Stats from './pages/Stats'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/decks" element={<Decks />} />
         <Route path="/decks/:id" element={<DeckDetail />} />
         <Route path="/decks/:id/review" element={<Review />} />
+        <Route path="/decks/:id/stats" element={<Stats />} />
       </Routes>
     </BrowserRouter>
   )

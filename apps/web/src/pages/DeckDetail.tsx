@@ -143,7 +143,7 @@ function DeckDetail() {
       {error && <p role="alert">{error}</p>}
 
       <p>
-        <Link to={`/decks/${id}/review`}>Réviser</Link>
+        <Link to={`/decks/${id}/review`}>Réviser</Link> · <Link to={`/decks/${id}/stats`}>Stats</Link>
       </p>
 
       <button type="button" onClick={() => setShowCreateForm((v) => !v)}>
