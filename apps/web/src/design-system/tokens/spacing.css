@@ -1,0 +1,32 @@
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --grid-gap: 16px;
+  --grid-row-h: 176px;
+  --dot-grid-size: 24px;
+
+  /* breakpoints (reference values — consumed via JS or manually mirrored in @media, since CSS can't @media a var) */
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 720px;
+  --breakpoint-lg: 1040px;
+  --breakpoint-xl: 1280px;
+
+  /* z-index scale */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-drawer: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* minimum interactive hit target */
+  --hit-target-min: 44px;
+}

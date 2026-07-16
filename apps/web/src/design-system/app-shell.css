@@ -1,0 +1,14 @@
+body {
+  padding: 32px;
+}
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  body {
+    padding: 16px;
+  }
+}

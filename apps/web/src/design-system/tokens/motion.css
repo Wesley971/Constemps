@@ -1,0 +1,10 @@
+:root {
+  --ease-bounce: cubic-bezier(.34,1.56,.64,1);
+  --duration-tile: .35s;
+
+  /* general motion tokens — reuse the same bounce for anything playful, linear ease for state changes */
+  --ease-standard: cubic-bezier(.4,0,.2,1);
+  --duration-fast: .15s;
+  --duration-base: .2s;
+  --duration-slow: .35s;
+}

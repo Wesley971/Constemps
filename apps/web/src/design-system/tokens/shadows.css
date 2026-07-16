@@ -1,0 +1,15 @@
+:root {
+  --shadow-soft: 0 14px 34px -18px rgba(20,22,28,0.18);
+  --shadow-lift: 0 22px 50px -22px rgba(20,22,28,0.28);
+  --shadow-glow-teal: 0 18px 40px -14px rgba(15,157,143,0.45);
+
+  /* elevation scale — for layered surfaces (dropdowns, modals, drawers, tooltips) */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(20,22,28,0.06), 0 1px 1px rgba(20,22,28,0.04);
+  --elevation-2: var(--shadow-soft);
+  --elevation-3: var(--shadow-lift);
+  --elevation-4: 0 32px 70px -24px rgba(20,22,28,0.38);
+
+  --blur-glass: 10px;
+  --blur-glow: 70px;
+}

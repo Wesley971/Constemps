@@ -1,0 +1,70 @@
+:root {
+  /* base */
+  --canvas: #f2f3f5;
+  --ink: #17181c;
+  --inksoft: #5b5e68;
+  --line: rgba(23,24,28,0.09);
+  --white: #ffffff;
+
+  /* teal */
+  --teal: #0f9d8f;
+  --teal-deep: #0b7d72;
+  --teal-tint: #e7f5f1;
+
+  /* apricot */
+  --apricot: #fb923c;
+  --apricot-deep: #e07a1f;
+
+  /* semantic aliases */
+  --surface-canvas: var(--canvas);
+  --surface-card: var(--white);
+  --surface-card-dark: var(--ink);
+  --surface-accent-teal: var(--teal);
+  --surface-accent-apricot: var(--apricot);
+  --surface-tint-teal: var(--teal-tint);
+
+  --text-primary: var(--ink);
+  --text-primary-on-dark: var(--white);
+  --text-secondary: var(--inksoft);
+  --text-secondary-on-dark: rgba(255,255,255,0.62);
+  --text-on-teal: var(--white);
+  --text-on-apricot: var(--ink);
+
+  --border-hairline: var(--line);
+  --border-hairline-on-dark: rgba(255,255,255,0.12);
+
+  /* dots grid */
+  --canvas-dot: rgba(23,24,28,.035);
+
+  /* state colors — same restraint as brand accents: one hue per state, tint for soft surfaces */
+  --success: #0f9d6f;
+  --success-deep: #0b7d58;
+  --success-tint: #e6f5ee;
+
+  --warning: var(--apricot);
+  --warning-deep: var(--apricot-deep);
+  --warning-tint: #fdf1e4;
+
+  --danger: #d64545;
+  --danger-deep: #b23434;
+  --danger-tint: #fbe9e9;
+
+  --info: #3b7dd8;
+  --info-deep: #2e63ad;
+  --info-tint: #e8f0fc;
+
+  /* overlays */
+  --overlay-scrim: rgba(23,24,28,0.45);
+  --overlay-scrim-soft: rgba(23,24,28,0.24);
+  --overlay-glass: rgba(255,255,255,0.7);
+  --overlay-glass-on-dark: rgba(255,255,255,0.08);
+
+  /* gradients (used sparingly — CTA glow blob, photo overlay, media placeholders) */
+  --gradient-photo-overlay: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 55%);
+  --gradient-teal-deep: linear-gradient(135deg, var(--teal), #135e56);
+  --gradient-cta-glow: radial-gradient(circle, var(--teal) 0%, transparent 70%);
+
+  /* focus ring */
+  --focus-ring-color: var(--teal-deep);
+  --focus-ring: 0 0 0 3px rgba(15,157,143,0.35);
+}

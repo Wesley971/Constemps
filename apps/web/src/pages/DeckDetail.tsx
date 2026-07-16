@@ -3,21 +3,36 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, cardsApi, decksApi, translationApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
-import type { Card, CardType } from '../types/card'
+import type { Card as CardData, CardType } from '../types/card'
+import { Card } from '../design-system/components/Card'
+import { Badge } from '../design-system/components/Badge'
+import { Button, LinkButton } from '../design-system/components/Button'
+import { Input } from '../design-system/components/Input'
+import { Radio } from '../design-system/components/Radio'
+import { IconCircleButton } from '../design-system/components/IconCircleButton'
+import { ConfirmModal } from '../design-system/components/Modal'
+import { ToastViewport } from '../design-system/components/ToastViewport'
+import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { useToast } from '../design-system/useToast'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
   CLASSIC: { front: 'Recto', back: 'Verso' },
   OPEN_QUESTION: { front: 'Question', back: 'Réponse de référence' },
 }
 
+const CARD_TYPE_OPTIONS = [
+  { value: 'CLASSIC', label: 'Rappel classique' },
+  { value: 'OPEN_QUESTION', label: 'Question ouverte' },
+]
+
 function DeckDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { toast, notify } = useToast()
 
   const [deck, setDeck] = useState<Deck | null>(null)
-  const [cards, setCards] = useState<Card[]>([])
+  const [cards, setCards] = useState<CardData[]>([])
   const [checkingAuth, setCheckingAuth] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newCardType, setNewCardType] = useState<CardType>('CLASSIC')
@@ -25,12 +40,13 @@ function DeckDetail() {
   const [newCardBack, setNewCardBack] = useState('')
   const [creating, setCreating] = useState(false)
   const [translating, setTranslating] = useState(false)
-  const [translateError, setTranslateError] = useState<string | null>(null)
 
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const [editFront, setEditFront] = useState('')
   const [editBack, setEditBack] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
+
+  const [cardToDelete, setCardToDelete] = useState<CardData | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -48,13 +64,14 @@ function DeckDetail() {
         setDeck(deckData)
         setCards(cardsData)
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : 'Impossible de charger le deck')
+        notify({ tone: 'danger', title: 'Chargement impossible', message: err instanceof ApiError ? err.message : 'Impossible de charger le deck' })
       } finally {
         setCheckingAuth(false)
       }
     }
 
     void init(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate])
 
   async function handleCreate(event: FormEvent) {
@@ -62,7 +79,6 @@ function DeckDetail() {
     if (!id || !newCardFront.trim() || !newCardBack.trim()) return
 
     setCreating(true)
-    setError(null)
     try {
       const card = await cardsApi.create(id, newCardType, newCardFront.trim(), newCardBack.trim())
       setCards((prev) => [card, ...prev])
@@ -70,7 +86,7 @@ function DeckDetail() {
       setNewCardBack('')
       setShowCreateForm(false)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Impossible de créer la card')
+      notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Impossible de créer la card' })
     } finally {
       setCreating(false)
     }
@@ -80,18 +96,17 @@ function DeckDetail() {
     if (!newCardFront.trim()) return
 
     setTranslating(true)
-    setTranslateError(null)
     try {
       const { translation } = await translationApi.translate(newCardFront.trim(), 'EN')
       setNewCardBack(translation)
     } catch (err) {
-      setTranslateError(err instanceof ApiError ? err.message : 'Traduction indisponible')
+      notify({ tone: 'danger', title: 'Traduction indisponible', message: err instanceof ApiError ? err.message : 'Réessaie plus tard.' })
     } finally {
       setTranslating(false)
     }
   }
 
-  function startEdit(card: Card) {
+  function startEdit(card: CardData) {
     setEditingCardId(card.id)
     setEditFront(card.front)
     setEditBack(card.back)
@@ -105,143 +120,154 @@ function DeckDetail() {
     if (!editFront.trim() || !editBack.trim()) return
 
     setSavingEdit(true)
-    setError(null)
     try {
       const updated = await cardsApi.update(cardId, editFront.trim(), editBack.trim())
       setCards((prev) => prev.map((c) => (c.id === cardId ? updated : c)))
       setEditingCardId(null)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Impossible de modifier la card')
+      notify({ tone: 'danger', title: 'Modification impossible', message: err instanceof ApiError ? err.message : 'Impossible de modifier la card' })
     } finally {
       setSavingEdit(false)
     }
   }
 
-  async function handleDelete(card: Card) {
-    const confirmed = window.confirm('Supprimer cette card ? Cette action est irréversible.')
-    if (!confirmed) return
+  async function confirmDeleteCard() {
+    if (!cardToDelete) return
+    const card = cardToDelete
+    setCardToDelete(null)
 
     try {
       await cardsApi.remove(card.id)
       setCards((prev) => prev.filter((c) => c.id !== card.id))
+      notify({ tone: 'success', title: 'Card supprimée' })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Impossible de supprimer la card')
+      notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer la card' })
     }
   }
 
   if (checkingAuth) {
-    return <p>Chargement...</p>
+    return <PageSkeleton />
   }
 
   return (
-    <div>
-      <p>
+    <div className="wrap">
+      <ToastViewport toast={toast} />
+
+      <p style={{ margin: '4px 0 20px' }}>
         <Link to="/decks">Retour aux decks</Link>
       </p>
-      <h1>{deck?.name}</h1>
+      <h1 style={{ font: 'var(--text-display-lg)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 16px' }}>
+        {deck?.name}
+      </h1>
 
-      {error && <p role="alert">{error}</p>}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <LinkButton to={`/decks/${id}/review`} variant="primary" icon="ph:play-bold">
+          Réviser
+        </LinkButton>
+        <LinkButton to={`/decks/${id}/stats`} variant="ghost" icon="ph:chart-bar-bold">
+          Stats
+        </LinkButton>
+      </div>
 
-      <p>
-        <Link to={`/decks/${id}/review`}>Réviser</Link> · <Link to={`/decks/${id}/stats`}>Stats</Link>
-      </p>
-
-      <button type="button" onClick={() => setShowCreateForm((v) => !v)}>
+      <Button variant="ghost" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)} style={{ marginBottom: 20 }}>
         {showCreateForm ? 'Annuler' : 'Ajouter une card'}
-      </button>
+      </Button>
 
       {showCreateForm && (
-        <form onSubmit={handleCreate}>
-          <div>
-            <label>
-              <input
-                type="radio"
-                name="cardType"
-                value="CLASSIC"
-                checked={newCardType === 'CLASSIC'}
-                onChange={() => setNewCardType('CLASSIC')}
+        <Card style={{ padding: 24, marginBottom: 24 }}>
+          <form onSubmit={handleCreate}>
+            <div style={{ marginBottom: 16 }}>
+              <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} inline />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Input
+                label={FIELD_LABELS[newCardType].front}
+                value={newCardFront}
+                onChange={(e) => setNewCardFront(e.target.value)}
+                required
               />
-              Rappel classique
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="cardType"
-                value="OPEN_QUESTION"
-                checked={newCardType === 'OPEN_QUESTION'}
-                onChange={() => setNewCardType('OPEN_QUESTION')}
-              />
-              Question ouverte
-            </label>
-          </div>
-          <div>
-            <label htmlFor="front">{FIELD_LABELS[newCardType].front}</label>
-            <input id="front" type="text" value={newCardFront} onChange={(e) => setNewCardFront(e.target.value)} required />
-          </div>
-          <div>
-            <label htmlFor="back">{FIELD_LABELS[newCardType].back}</label>
-            <input id="back" type="text" value={newCardBack} onChange={(e) => setNewCardBack(e.target.value)} required />
-            {newCardType === 'CLASSIC' && (
-              <button type="button" disabled={translating || !newCardFront.trim()} onClick={handleTranslate}>
-                {translating ? 'Traduction...' : 'Traduire'}
-              </button>
-            )}
-            {translateError && <p role="alert">{translateError}</p>}
-          </div>
-          <button type="submit" disabled={creating}>
-            {creating ? 'Création...' : 'Créer la card'}
-          </button>
-        </form>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                <Input
+                  label={FIELD_LABELS[newCardType].back}
+                  value={newCardBack}
+                  onChange={(e) => setNewCardBack(e.target.value)}
+                  required
+                  style={{ flex: 1 }}
+                />
+                {newCardType === 'CLASSIC' && (
+                  <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={handleTranslate}>
+                    {translating ? 'Traduction...' : 'Traduire'}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <Button type="submit" disabled={creating}>
+              {creating ? 'Création...' : 'Créer la card'}
+            </Button>
+          </form>
+        </Card>
       )}
 
       {cards.length === 0 ? (
-        <p>Aucune card pour l'instant.</p>
+        <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)' }}>Aucune card pour l'instant.</p>
       ) : (
-        <ul>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {cards.map((card) => (
-            <li key={card.id}>
+            <Card key={card.id} style={{ padding: 20 }}>
               {editingCardId === card.id ? (
                 <div>
-                  <div>
-                    <label htmlFor={`edit-front-${card.id}`}>{FIELD_LABELS[card.type].front}</label>
-                    <input
-                      id={`edit-front-${card.id}`}
-                      type="text"
-                      value={editFront}
-                      onChange={(e) => setEditFront(e.target.value)}
-                    />
+                  <div style={{ marginBottom: 12 }}>
+                    <Input label={FIELD_LABELS[card.type].front} value={editFront} onChange={(e) => setEditFront(e.target.value)} />
                   </div>
-                  <div>
-                    <label htmlFor={`edit-back-${card.id}`}>{FIELD_LABELS[card.type].back}</label>
-                    <input
-                      id={`edit-back-${card.id}`}
-                      type="text"
-                      value={editBack}
-                      onChange={(e) => setEditBack(e.target.value)}
-                    />
+                  <div style={{ marginBottom: 16 }}>
+                    <Input label={FIELD_LABELS[card.type].back} value={editBack} onChange={(e) => setEditBack(e.target.value)} />
                   </div>
-                  <button type="button" disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
-                    {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                  <button type="button" onClick={cancelEdit}>
-                    Annuler
-                  </button>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <Button disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
+                      {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
+                    </Button>
+                    <Button variant="ghost" onClick={cancelEdit}>
+                      Annuler
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <strong>[{card.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}]</strong>{' '}
-                  {card.front} / {card.back}
-                  <button type="button" onClick={() => startEdit(card)}>
-                    Éditer
-                  </button>
-                  <button type="button" onClick={() => handleDelete(card)}>
-                    Supprimer
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div>
+                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'teal'}>
+                        {card.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
+                      </Badge>
+                    </div>
+                    <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: 0 }}>
+                      {card.front} <span style={{ color: 'var(--inksoft)' }}>/</span> {card.back}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <IconCircleButton icon="ph:pencil-simple-bold" tone="ghost" size={32} title="Éditer" onClick={() => startEdit(card)} />
+                    <IconCircleButton icon="ph:trash-bold" tone="ghost" size={32} title="Supprimer" onClick={() => setCardToDelete(card)} />
+                  </div>
                 </div>
               )}
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
+      )}
+
+      {cardToDelete && (
+        <ConfirmModal
+          title="Supprimer cette card ?"
+          confirmLabel="Supprimer"
+          confirmVariant="danger"
+          onConfirm={confirmDeleteCard}
+          onClose={() => setCardToDelete(null)}
+        >
+          Cette action est irréversible.
+        </ConfirmModal>
       )}
     </div>
   )
