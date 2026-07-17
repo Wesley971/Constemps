@@ -5,6 +5,7 @@ import type { AuthenticatedUser } from '../auth/current-user.decorator';
 import { CardsService } from './cards.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
+import { GenerateCardsDto } from './dto/generate-cards.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -14,6 +15,11 @@ export class CardsController {
   @Post('decks/:deckId/cards')
   create(@CurrentUser() user: AuthenticatedUser, @Param('deckId') deckId: string, @Body() dto: CreateCardDto) {
     return this.cardsService.create(user.id, deckId, dto);
+  }
+
+  @Post('decks/:deckId/cards/generate')
+  generateCards(@CurrentUser() user: AuthenticatedUser, @Param('deckId') deckId: string, @Body() dto: GenerateCardsDto) {
+    return this.cardsService.generateCards(user.id, deckId, dto.text);
   }
 
   @Get('decks/:deckId/cards')

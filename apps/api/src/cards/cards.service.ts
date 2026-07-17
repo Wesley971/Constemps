@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AiService } from '../ai/ai.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 
 @Injectable()
 export class CardsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly aiService: AiService,
+  ) {}
 
   private async assertDeckOwnership(userId: string, deckId: string) {
     const deck = await this.prisma.deck.findUnique({ where: { id: deckId } });
@@ -24,6 +28,11 @@ export class CardsService {
         back: dto.back,
       },
     });
+  }
+
+  async generateCards(userId: string, deckId: string, text: string) {
+    await this.assertDeckOwnership(userId, deckId);
+    return this.aiService.generateCards(text);
   }
 
   async findAllForDeck(userId: string, deckId: string) {

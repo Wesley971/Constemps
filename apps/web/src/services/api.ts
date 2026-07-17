@@ -1,6 +1,6 @@
 import type { User } from '../types/user'
 import type { Deck } from '../types/deck'
-import type { Card, CardType } from '../types/card'
+import type { Card, CardType, GeneratedCard } from '../types/card'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
 
@@ -61,6 +61,8 @@ export const cardsApi = {
   update: (id: string, front: string, back: string) =>
     request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back }) }),
   remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
+  generate: (deckId: string, text: string) =>
+    request<GeneratedCard[]>(`/decks/${deckId}/cards/generate`, { method: 'POST', body: JSON.stringify({ text }) }),
 }
 
 export const reviewsApi = {

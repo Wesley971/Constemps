@@ -38,8 +38,8 @@ model Card {
   deckId     String
   deck       Deck        @relation(fields: [deckId], references: [id], onDelete: Cascade)
   type       CardType
-  front      String // recto, ou question
-  back       String // verso, ou réponse de référence
+  front      String @db.Text // recto, ou question
+  back       String @db.Text // verso, ou réponse de référence
   // état FSRS
   stability  Float       @default(0)
   difficulty Float       @default(0)
@@ -55,9 +55,9 @@ model Card {
 model ReviewLog {
   id            String   @id @default(uuid())
   cardId        String
-  card          Card     @relation(fields: [cardId], references: [id])
+  card          Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   rating        Int // Again/Hard/Good/Easy, ou verdict IA mappé
-  userAnswer    String? // contenu réel, nécessaire pour le rappel à 6 mois
+  userAnswer    String? @db.Text // contenu réel, nécessaire pour le rappel à 6 mois
   aiVerdict     String? // pour OPEN_QUESTION : compris/partiel/incompris
   reviewedAt    DateTime @default(now())
   scheduledDays Int

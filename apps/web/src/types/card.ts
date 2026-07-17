@@ -1,5 +1,11 @@
 export type CardType = 'CLASSIC' | 'OPEN_QUESTION'
 
+export interface GeneratedCard {
+  type: CardType
+  front: string
+  back: string
+}
+
 export interface Card {
   id: string
   deckId: string

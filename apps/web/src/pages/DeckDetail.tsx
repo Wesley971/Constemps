@@ -14,6 +14,7 @@ import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
+import { GenerateCardsModal } from './GenerateCardsModal'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
   CLASSIC: { front: 'Recto', back: 'Verso' },
@@ -47,6 +48,7 @@ function DeckDetail() {
   const [savingEdit, setSavingEdit] = useState(false)
 
   const [cardToDelete, setCardToDelete] = useState<CardData | null>(null)
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -169,9 +171,14 @@ function DeckDetail() {
         </LinkButton>
       </div>
 
-      <Button variant="ghost" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)} style={{ marginBottom: 20 }}>
-        {showCreateForm ? 'Annuler' : 'Ajouter une card'}
-      </Button>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <Button variant="ghost" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)}>
+          {showCreateForm ? 'Annuler' : 'Ajouter une card'}
+        </Button>
+        <Button variant="ghost" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
+          Générer des cards depuis un texte
+        </Button>
+      </div>
 
       {showCreateForm && (
         <Card style={{ padding: 24, marginBottom: 24 }}>
@@ -268,6 +275,15 @@ function DeckDetail() {
         >
           Cette action est irréversible.
         </ConfirmModal>
+      )}
+
+      {showGenerateModal && id && (
+        <GenerateCardsModal
+          deckId={id}
+          onClose={() => setShowGenerateModal(false)}
+          onCardsAdded={(newCards) => setCards((prev) => [...newCards, ...prev])}
+          notify={notify}
+        />
       )}
     </div>
   )
