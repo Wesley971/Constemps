@@ -1,4 +1,9 @@
-import { BadGatewayException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import type { CardType } from '@prisma/client';
 
@@ -20,7 +25,11 @@ const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 const MIN_GENERATED_CARDS = 5;
 const BASE_MAX_GENERATED_CARDS = 15;
 
-function buildEvaluationPrompt(question: string, referenceAnswer: string, userAnswer: string): string {
+function buildEvaluationPrompt(
+  question: string,
+  referenceAnswer: string,
+  userAnswer: string,
+): string {
   return `Tu évalues la compréhension d'un concept par un élève, dans le cadre d'une app de révision espacée.
 
 Question posée : ${question}
@@ -106,10 +115,16 @@ function normalizeToWordSet(text: string): Set<string> {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
 
-  async evaluate(question: string, referenceAnswer: string, userAnswer: string): Promise<AiEvaluationResult> {
+  async evaluate(
+    question: string,
+    referenceAnswer: string,
+    userAnswer: string,
+  ): Promise<AiEvaluationResult> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      this.logger.warn('GEMINI_API_KEY absente, repli sur l\'évaluation par recouvrement lexical');
+      this.logger.warn(
+        "GEMINI_API_KEY absente, repli sur l'évaluation par recouvrement lexical",
+      );
       return this.fallbackEvaluate(referenceAnswer, userAnswer);
     }
 
@@ -122,14 +137,16 @@ export class AiService {
 
       const verdict = this.parseVerdict(response.text);
       if (!verdict) {
-        this.logger.error(`Réponse Gemini mal formée, repli sur le fallback : ${response.text}`);
+        this.logger.error(
+          `Réponse Gemini mal formée, repli sur le fallback : ${response.text}`,
+        );
         return this.fallbackEvaluate(referenceAnswer, userAnswer);
       }
 
       return { verdict };
     } catch (err) {
       this.logger.error(
-        'Appel Gemini échoué, repli sur l\'évaluation par recouvrement lexical',
+        "Appel Gemini échoué, repli sur l'évaluation par recouvrement lexical",
         err instanceof Error ? err.stack : String(err),
       );
       return this.fallbackEvaluate(referenceAnswer, userAnswer);
@@ -139,7 +156,9 @@ export class AiService {
   async translate(text: string, targetLang: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new ServiceUnavailableException('Service de traduction non configuré');
+      throw new ServiceUnavailableException(
+        'Service de traduction non configuré',
+      );
     }
 
     let responseText: string | undefined;
@@ -151,13 +170,18 @@ export class AiService {
       });
       responseText = response.text;
     } catch (err) {
-      this.logger.error('Appel Gemini échoué pour la traduction', err instanceof Error ? err.stack : String(err));
+      this.logger.error(
+        'Appel Gemini échoué pour la traduction',
+        err instanceof Error ? err.stack : String(err),
+      );
       throw new BadGatewayException('La traduction a échoué');
     }
 
     const translation = this.parseTranslation(responseText);
     if (!translation) {
-      this.logger.error(`Réponse Gemini mal formée pour la traduction : ${responseText}`);
+      this.logger.error(
+        `Réponse Gemini mal formée pour la traduction : ${responseText}`,
+      );
       throw new BadGatewayException('La traduction a échoué');
     }
 
@@ -167,7 +191,9 @@ export class AiService {
   async generateCards(text: string): Promise<GeneratedCard[]> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new ServiceUnavailableException('Service de génération de cards non configuré');
+      throw new ServiceUnavailableException(
+        'Service de génération de cards non configuré',
+      );
     }
 
     const maxCards = computeMaxGeneratedCards(text.length);
@@ -181,13 +207,18 @@ export class AiService {
       });
       responseText = response.text;
     } catch (err) {
-      this.logger.error('Appel Gemini échoué pour la génération de cards', err instanceof Error ? err.stack : String(err));
+      this.logger.error(
+        'Appel Gemini échoué pour la génération de cards',
+        err instanceof Error ? err.stack : String(err),
+      );
       throw new BadGatewayException('La génération de cards a échoué');
     }
 
     const cards = this.parseGeneratedCards(responseText);
     if (!cards) {
-      this.logger.error(`Réponse Gemini mal formée pour la génération de cards : ${responseText}`);
+      this.logger.error(
+        `Réponse Gemini mal formée pour la génération de cards : ${responseText}`,
+      );
       throw new BadGatewayException('La génération de cards a échoué');
     }
 
@@ -203,7 +234,10 @@ export class AiService {
 
     try {
       const parsed = JSON.parse(text) as { verdict?: unknown };
-      if (typeof parsed.verdict === 'string' && VALID_VERDICTS.includes(parsed.verdict as AiVerdict)) {
+      if (
+        typeof parsed.verdict === 'string' &&
+        VALID_VERDICTS.includes(parsed.verdict as AiVerdict)
+      ) {
         return parsed.verdict as AiVerdict;
       }
       return null;
@@ -217,7 +251,10 @@ export class AiService {
 
     try {
       const parsed = JSON.parse(text) as { translation?: unknown };
-      if (typeof parsed.translation === 'string' && parsed.translation.trim().length > 0) {
+      if (
+        typeof parsed.translation === 'string' &&
+        parsed.translation.trim().length > 0
+      ) {
         return parsed.translation;
       }
       return null;
@@ -226,7 +263,9 @@ export class AiService {
     }
   }
 
-  private parseGeneratedCards(text: string | undefined): GeneratedCard[] | null {
+  private parseGeneratedCards(
+    text: string | undefined,
+  ): GeneratedCard[] | null {
     if (!text) return null;
 
     try {
@@ -254,26 +293,44 @@ export class AiService {
     }
   }
 
-  private fallbackEvaluate(referenceAnswer: string, userAnswer: string): AiEvaluationResult {
+  private fallbackEvaluate(
+    referenceAnswer: string,
+    userAnswer: string,
+  ): AiEvaluationResult {
     const referenceWords = normalizeToWordSet(referenceAnswer);
     const userWords = normalizeToWordSet(userAnswer);
 
     if (referenceWords.size === 0 || userWords.size === 0) {
-      return { verdict: 'incompris', justification: 'Réponse vide ou non comparable à la réponse de référence (fallback).' };
+      return {
+        verdict: 'incompris',
+        justification:
+          'Réponse vide ou non comparable à la réponse de référence (fallback).',
+      };
     }
 
-    const overlap = [...referenceWords].filter((word) => userWords.has(word)).length;
+    const overlap = [...referenceWords].filter((word) =>
+      userWords.has(word),
+    ).length;
     const overlapRatio = overlap / referenceWords.size;
 
     if (overlapRatio >= 0.6) {
-      return { verdict: 'compris', justification: 'La réponse couvre la majorité des éléments attendus (fallback).' };
+      return {
+        verdict: 'compris',
+        justification:
+          'La réponse couvre la majorité des éléments attendus (fallback).',
+      };
     }
     if (overlapRatio >= 0.3) {
       return {
         verdict: 'partiellement',
-        justification: 'La réponse couvre seulement une partie des éléments attendus (fallback).',
+        justification:
+          'La réponse couvre seulement une partie des éléments attendus (fallback).',
       };
     }
-    return { verdict: 'incompris', justification: 'La réponse ne correspond pas à la réponse de référence (fallback).' };
+    return {
+      verdict: 'incompris',
+      justification:
+        'La réponse ne correspond pas à la réponse de référence (fallback).',
+    };
   }
 }

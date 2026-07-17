@@ -16,6 +16,9 @@ const PROGRESS_HIGHLIGHT_WINDOW_MAX_DAYS = 35;
 
 const STATE_NAMES = ['New', 'Learning', 'Review', 'Relearning'] as const;
 
+// rating est stocké en simple Int côté Prisma (pas l'enum ts-fsrs), d'où le cast explicite.
+const RATING_GOOD: number = Rating.Good;
+
 function startOfDay(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -53,7 +56,9 @@ export class StatsService {
       select: { reviewedAt: true },
     });
 
-    const reviewDays = new Set(logs.map((log) => startOfDay(log.reviewedAt).getTime()));
+    const reviewDays = new Set(
+      logs.map((log) => startOfDay(log.reviewedAt).getTime()),
+    );
 
     let cursor = startOfDay(new Date());
     if (!reviewDays.has(cursor.getTime())) {
@@ -74,14 +79,27 @@ export class StatsService {
   async getOverview(userId: string, deckId: string) {
     await this.assertDeckOwnership(userId, deckId);
 
-    const [totalCards, groupedByState, masteredCards, recentLogs, currentStreak] = await Promise.all([
+    const [
+      totalCards,
+      groupedByState,
+      masteredCards,
+      recentLogs,
+      currentStreak,
+    ] = await Promise.all([
       this.prisma.card.count({ where: { deckId } }),
-      this.prisma.card.groupBy({ by: ['state'], where: { deckId }, _count: { _all: true } }),
+      this.prisma.card.groupBy({
+        by: ['state'],
+        where: { deckId },
+        _count: { _all: true },
+      }),
       this.prisma.card.count({
         where: { deckId, stability: { gt: MASTERED_STABILITY_THRESHOLD_DAYS } },
       }),
       this.prisma.reviewLog.findMany({
-        where: { card: { deckId }, reviewedAt: { gte: subDays(new Date(), RETENTION_WINDOW_DAYS) } },
+        where: {
+          card: { deckId },
+          reviewedAt: { gte: subDays(new Date(), RETENTION_WINDOW_DAYS) },
+        },
         select: { rating: true },
       }),
       this.computeCurrentStreak(deckId),
@@ -98,7 +116,11 @@ export class StatsService {
     const retentionRate =
       recentLogs.length === 0
         ? null
-        : Math.round((recentLogs.filter((log) => log.rating >= Rating.Good).length / recentLogs.length) * 100);
+        : Math.round(
+            (recentLogs.filter((log) => log.rating >= RATING_GOOD).length /
+              recentLogs.length) *
+              100,
+          );
 
     return {
       totalCards,
@@ -132,13 +154,16 @@ export class StatsService {
       const entry = byDay.get(formatDateKey(startOfDay(log.reviewedAt)));
       if (entry) {
         entry.count += 1;
-        if (log.rating >= Rating.Good) {
+        if (log.rating >= RATING_GOOD) {
           entry.successCount += 1;
         }
       }
     }
 
-    return Array.from(byDay.entries()).map(([date, stats]) => ({ date, ...stats }));
+    return Array.from(byDay.entries()).map(([date, stats]) => ({
+      date,
+      ...stats,
+    }));
   }
 
   async getProgressHighlight(userId: string, deckId: string) {
@@ -157,7 +182,12 @@ export class StatsService {
       include: { card: true },
     });
 
-    let best: { card: Card; oldLog: ReviewLog; recentLog: ReviewLog; reviewsBetween: number } | null = null;
+    let best: {
+      card: Card;
+      oldLog: ReviewLog;
+      recentLog: ReviewLog;
+      reviewsBetween: number;
+    } | null = null;
 
     for (const lapse of lapseCandidates) {
       const subsequentLogs = await this.prisma.reviewLog.findMany({
@@ -165,13 +195,17 @@ export class StatsService {
         orderBy: { reviewedAt: 'asc' },
       });
 
-      const successfulLogs = subsequentLogs.filter((log) => log.rating >= Rating.Good);
+      const successfulLogs = subsequentLogs.filter(
+        (log) => log.rating >= RATING_GOOD,
+      );
       if (successfulLogs.length === 0) {
         continue;
       }
 
       const recentLog = successfulLogs[successfulLogs.length - 1];
-      const reviewsBetween = subsequentLogs.filter((log) => log.reviewedAt <= recentLog.reviewedAt).length;
+      const reviewsBetween = subsequentLogs.filter(
+        (log) => log.reviewedAt <= recentLog.reviewedAt,
+      ).length;
 
       if (!best || reviewsBetween > best.reviewsBetween) {
         best = { card: lapse.card, oldLog: lapse, recentLog, reviewsBetween };

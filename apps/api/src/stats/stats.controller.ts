@@ -10,17 +10,26 @@ export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('decks/:deckId/stats/overview')
-  getOverview(@CurrentUser() user: AuthenticatedUser, @Param('deckId') deckId: string) {
+  getOverview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('deckId') deckId: string,
+  ) {
     return this.statsService.getOverview(user.id, deckId);
   }
 
   @Get('decks/:deckId/stats/history')
-  getHistory(@CurrentUser() user: AuthenticatedUser, @Param('deckId') deckId: string) {
+  getHistory(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('deckId') deckId: string,
+  ) {
     return this.statsService.getHistory(user.id, deckId);
   }
 
   @Get('decks/:deckId/stats/progress-highlight')
-  getProgressHighlight(@CurrentUser() user: AuthenticatedUser, @Param('deckId') deckId: string) {
+  getProgressHighlight(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('deckId') deckId: string,
+  ) {
     return this.statsService.getProgressHighlight(user.id, deckId);
   }
 }

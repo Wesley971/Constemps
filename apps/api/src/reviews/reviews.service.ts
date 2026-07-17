@@ -1,6 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { fsrs, Rating } from 'ts-fsrs';
-import type { Card as FsrsCardInput, Grade, State } from 'ts-fsrs';
+import type { Card as FsrsCardInput, Grade } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
@@ -50,7 +54,10 @@ export class ReviewsService {
     return deck;
   }
 
-  private async computeDailyGoal(deckId: string, defaultGoal: number): Promise<number> {
+  private async computeDailyGoal(
+    deckId: string,
+    defaultGoal: number,
+  ): Promise<number> {
     const firstLog = await this.prisma.reviewLog.findFirst({
       where: { card: { deckId } },
       orderBy: { reviewedAt: 'asc' },
@@ -61,7 +68,9 @@ export class ReviewsService {
       return defaultGoal;
     }
 
-    const daysSinceFirstReview = Math.floor((Date.now() - firstLog.reviewedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceFirstReview = Math.floor(
+      (Date.now() - firstLog.reviewedAt.getTime()) / (1000 * 60 * 60 * 24),
+    );
     if (daysSinceFirstReview < DAILY_GOAL_WINDOW_DAYS) {
       return defaultGoal;
     }
@@ -84,7 +93,10 @@ export class ReviewsService {
       countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
     }
 
-    const total = [...countsByDay.values()].reduce((sum, count) => sum + count, 0);
+    const total = [...countsByDay.values()].reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     const average = total / DAILY_GOAL_WINDOW_DAYS;
     return Math.max(MIN_DAILY_GOAL, Math.round(average));
   }
@@ -106,7 +118,8 @@ export class ReviewsService {
     if (remaining <= 0) {
       return {
         done: true,
-        message: 'Palier du jour atteint, bravo ! Reviens demain pour continuer sur ta lancée.',
+        message:
+          'Palier du jour atteint, bravo ! Reviens demain pour continuer sur ta lancée.',
         dailyGoal,
         reviewedToday,
       };
@@ -150,7 +163,7 @@ export class ReviewsService {
       learning_steps: 0,
       reps: card.reps,
       lapses: card.lapses,
-      state: card.state as State,
+      state: card.state,
       last_review: lastLog?.reviewedAt,
     };
   }
@@ -175,17 +188,27 @@ export class ReviewsService {
       grade = MANUAL_RATING_TO_GRADE[dto.rating];
     } else {
       if (!dto.userAnswer) {
-        throw new BadRequestException('userAnswer is required for OPEN_QUESTION cards');
+        throw new BadRequestException(
+          'userAnswer is required for OPEN_QUESTION cards',
+        );
       }
       userAnswer = dto.userAnswer;
-      const evaluation = await this.aiService.evaluate(card.front, card.back, dto.userAnswer);
+      const evaluation = await this.aiService.evaluate(
+        card.front,
+        card.back,
+        dto.userAnswer,
+      );
       aiVerdict = evaluation.verdict;
       grade = AI_VERDICT_TO_GRADE[evaluation.verdict];
     }
 
     const now = new Date();
     const fsrsCardInput = await this.toFsrsCardInput(card);
-    const { card: nextCardState, log } = scheduler.next(fsrsCardInput, now, grade);
+    const { card: nextCardState, log } = scheduler.next(
+      fsrsCardInput,
+      now,
+      grade,
+    );
 
     const updatedCard = await this.prisma.card.update({
       where: { id: card.id },

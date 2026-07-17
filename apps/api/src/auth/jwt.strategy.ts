@@ -10,7 +10,8 @@ export interface JwtPayload {
 }
 
 function extractJwtFromCookie(req: Request): string | null {
-  return req?.cookies?.access_token ?? null;
+  const cookies = req?.cookies as Record<string, string> | undefined;
+  return cookies?.access_token ?? null;
 }
 
 @Injectable()

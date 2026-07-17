@@ -10,7 +10,10 @@ export class TranslationController {
 
   @Post()
   async translate(@Body() dto: TranslateDto) {
-    const translation = await this.aiService.translate(dto.text, dto.targetLang);
+    const translation = await this.aiService.translate(
+      dto.text,
+      dto.targetLang,
+    );
     return { translation };
   }
 }
