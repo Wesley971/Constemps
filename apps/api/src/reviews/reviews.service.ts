@@ -16,6 +16,11 @@ const MIN_DAILY_GOAL = 1;
 // bloque pas complètement les cards jamais révisées : le palier remonte à une
 // fraction du dailyGoal par défaut du deck plutôt que de rester bloqué à 1.
 const MIN_DAILY_GOAL_FRACTION_DIVISOR = 3;
+// Palier étendu (opt-in) : double du palier initial, mais le bonus est
+// plafonné à 20 cards supplémentaires pour éviter un cram illimité sur les
+// decks dont le palier adaptatif est déjà élevé. Pour un dailyGoal <= 20 (cas
+// courant), ça revient exactement à un doublement.
+const EXTENSION_BONUS_CAP = 20;
 
 const MANUAL_RATING_TO_GRADE: Record<ManualRating, Grade> = {
   [ManualRating.AGAIN]: Rating.Again,
@@ -103,7 +108,7 @@ export class ReviewsService {
     return Math.max(MIN_DAILY_GOAL, Math.round(average));
   }
 
-  async getSession(userId: string, deckId: string) {
+  async getSession(userId: string, deckId: string, extend: boolean) {
     const deck = await this.assertDeckOwnership(userId, deckId);
     let dailyGoal = await this.computeDailyGoal(deckId, deck.dailyGoal);
 
@@ -123,6 +128,8 @@ export class ReviewsService {
       }
     }
 
+    const extendedGoal = dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
+
     const todayStart = startOfDay(new Date());
     const reviewedToday = await this.prisma.reviewLog.count({
       where: {
@@ -131,17 +138,32 @@ export class ReviewsService {
       },
     });
 
-    const remaining = dailyGoal - reviewedToday;
-
-    if (remaining <= 0) {
+    if (reviewedToday >= extendedGoal) {
       return {
         done: true,
+        state: 'capped' as const,
         message:
-          'Palier du jour atteint, bravo ! Reviens demain pour continuer sur ta lancée.',
+          'Palier étendu du jour atteint, quelle journée ! Reviens demain pour continuer sur ta lancée.',
         dailyGoal,
+        extendedGoal,
         reviewedToday,
       };
     }
+
+    if (reviewedToday >= dailyGoal && !extend) {
+      return {
+        done: false,
+        state: 'goal_reached' as const,
+        message:
+          "Palier du jour atteint, bravo ! Tu peux t'arrêter là, ou continuer si tu es motivé aujourd'hui.",
+        dailyGoal,
+        extendedGoal,
+        reviewedToday,
+      };
+    }
+
+    const target = reviewedToday >= dailyGoal ? extendedGoal : dailyGoal;
+    const remaining = target - reviewedToday;
 
     const cards = await this.prisma.card.findMany({
       where: { deckId, due: { lte: new Date() } },
@@ -151,7 +173,9 @@ export class ReviewsService {
 
     return {
       done: false,
+      state: 'active' as const,
       dailyGoal,
+      extendedGoal,
       reviewedToday,
       cards,
     };

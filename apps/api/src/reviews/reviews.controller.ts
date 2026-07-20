@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/current-user.decorator';
@@ -14,8 +14,9 @@ export class ReviewsController {
   getSession(
     @CurrentUser() user: AuthenticatedUser,
     @Param('deckId') deckId: string,
+    @Query('extend') extend?: string,
   ) {
-    return this.reviewsService.getSession(user.id, deckId);
+    return this.reviewsService.getSession(user.id, deckId, extend === 'true');
   }
 
   // Le throttle ne s'applique en pratique qu'aux OPEN_QUESTION (voir

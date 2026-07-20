@@ -71,7 +71,8 @@ export function audioUrl(path: string): string {
 }
 
 export const reviewsApi = {
-  getSession: (deckId: string) => request<ReviewSession>(`/decks/${deckId}/reviews/session`),
+  getSession: (deckId: string, extend = false) =>
+    request<ReviewSession>(`/decks/${deckId}/reviews/session${extend ? '?extend=true' : ''}`),
   submitClassic: (cardId: string, rating: ManualRating) =>
     request<SubmitReviewResult>('/reviews', { method: 'POST', body: JSON.stringify({ cardId, rating }) }),
   submitOpenQuestion: (cardId: string, userAnswer: string) =>

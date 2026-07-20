@@ -37,6 +37,7 @@ function Review() {
   const [session, setSession] = useState<ReviewSession | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [extended, setExtended] = useState(false)
 
   const [revealed, setRevealed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -44,9 +45,9 @@ function Review() {
   const [openAnswer, setOpenAnswer] = useState('')
   const [openResult, setOpenResult] = useState<SubmitReviewResult | null>(null)
 
-  async function loadSession(deckId: string) {
+  async function loadSession(deckId: string, extend = false) {
     try {
-      const data = await reviewsApi.getSession(deckId)
+      const data = await reviewsApi.getSession(deckId, extend)
       setSession(data)
       setCurrentIndex(0)
       setRevealed(false)
@@ -68,6 +69,7 @@ function Review() {
         return
       }
 
+      setExtended(false)
       await loadSession(deckId)
       setCheckingAuth(false)
     }
@@ -85,10 +87,16 @@ function Review() {
 
     const isLast = currentIndex + 1 >= session.cards.length
     if (isLast) {
-      await loadSession(id)
+      await loadSession(id, extended)
     } else {
       setCurrentIndex((i) => i + 1)
     }
+  }
+
+  async function handleContinueToday() {
+    if (!id) return
+    setExtended(true)
+    await loadSession(id, true)
   }
 
   async function handleClassicRating(cardId: string, rating: ManualRating) {
@@ -140,7 +148,7 @@ function Review() {
     return null
   }
 
-  if (session.done) {
+  if (session.state === 'capped') {
     return (
       <div className="wrap" style={{ maxWidth: 480 }}>
         <Card style={{ padding: 32, textAlign: 'center' }}>
@@ -148,6 +156,23 @@ function Review() {
             <ProgressBar value={100} label="Palier du jour" tone="success" />
           </div>
           <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 16px' }}>{session.message}</p>
+          <Link to="/decks">Retour aux decks</Link>
+        </Card>
+      </div>
+    )
+  }
+
+  if (session.state === 'goal_reached') {
+    return (
+      <div className="wrap" style={{ maxWidth: 480 }}>
+        <Card style={{ padding: 32, textAlign: 'center' }}>
+          <div style={{ marginBottom: 20 }}>
+            <ProgressBar value={100} label="Palier du jour" tone="success" />
+          </div>
+          <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 20px' }}>{session.message}</p>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+            <Button onClick={handleContinueToday}>Continuer aujourd'hui</Button>
+          </div>
           <Link to="/decks">Retour aux decks</Link>
         </Card>
       </div>
@@ -168,7 +193,8 @@ function Review() {
   }
 
   const card = session.cards[currentIndex]
-  const goalProgress = Math.min(100, Math.round((session.reviewedToday / Math.max(1, session.dailyGoal)) * 100))
+  const progressTarget = session.reviewedToday >= session.dailyGoal ? session.extendedGoal : session.dailyGoal
+  const goalProgress = Math.min(100, Math.round((session.reviewedToday / Math.max(1, progressTarget)) * 100))
 
   return (
     <div className="wrap" style={{ maxWidth: 560 }}>
@@ -179,7 +205,7 @@ function Review() {
       </p>
 
       <div style={{ marginBottom: 20 }}>
-        <ProgressBar value={goalProgress} label={`Palier du jour (${session.reviewedToday} / ${session.dailyGoal})`} />
+        <ProgressBar value={goalProgress} label={`Palier du jour (${session.reviewedToday} / ${progressTarget})`} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
