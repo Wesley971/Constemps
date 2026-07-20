@@ -3,14 +3,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { fsrs, Rating } from 'ts-fsrs';
+import { fsrs, Rating, State } from 'ts-fsrs';
 import type { Card as FsrsCardInput, Grade } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
 
 const DAILY_GOAL_WINDOW_DAYS = 7;
+const DAILY_GOAL_WINDOW_MS = DAILY_GOAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const MIN_DAILY_GOAL = 1;
+// Quand la moyenne mobile s'effondre au plancher (deck peu régulier), on ne
+// bloque pas complètement les cards jamais révisées : le palier remonte à une
+// fraction du dailyGoal par défaut du deck plutôt que de rester bloqué à 1.
+const MIN_DAILY_GOAL_FRACTION_DIVISOR = 3;
 
 const MANUAL_RATING_TO_GRADE: Record<ManualRating, Grade> = {
   [ManualRating.AGAIN]: Rating.Again,
@@ -28,12 +33,6 @@ const AI_VERDICT_TO_GRADE: Record<AiVerdict, Grade> = {
 function startOfDay(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function subDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() - days);
   return d;
 }
 
@@ -75,13 +74,16 @@ export class ReviewsService {
       return defaultGoal;
     }
 
-    const windowStart = startOfDay(subDays(new Date(), DAILY_GOAL_WINDOW_DAYS));
-    const windowEnd = startOfDay(new Date());
+    // Fenêtre glissante des 7×24h précédentes, pas calée sur des frontières
+    // calendaires : sinon les logs proches des bords de journée disparaissent
+    // de la moyenne (cf. bug du palier tombé à 1 sur le deck Anglais).
+    const windowEnd = new Date();
+    const windowStart = new Date(windowEnd.getTime() - DAILY_GOAL_WINDOW_MS);
 
     const successfulLogs = await this.prisma.reviewLog.findMany({
       where: {
         card: { deckId },
-        reviewedAt: { gte: windowStart, lt: windowEnd },
+        reviewedAt: { gte: windowStart, lte: windowEnd },
         rating: { gte: Rating.Good },
       },
       select: { reviewedAt: true },
@@ -103,7 +105,23 @@ export class ReviewsService {
 
   async getSession(userId: string, deckId: string) {
     const deck = await this.assertDeckOwnership(userId, deckId);
-    const dailyGoal = await this.computeDailyGoal(deckId, deck.dailyGoal);
+    let dailyGoal = await this.computeDailyGoal(deckId, deck.dailyGoal);
+
+    // Le palier adaptatif peut retomber à son plancher (deck peu régulier).
+    // S'il reste des cards jamais révisées (New) déjà dues, ce plancher ne
+    // doit pas bloquer complètement la session : on le remonte à une
+    // fraction du dailyGoal par défaut du deck plutôt que de rester à 1.
+    if (dailyGoal === MIN_DAILY_GOAL) {
+      const hasUnseenDueCards = await this.prisma.card.count({
+        where: { deckId, state: State.New, due: { lte: new Date() } },
+      });
+      if (hasUnseenDueCards > 0) {
+        dailyGoal = Math.max(
+          dailyGoal,
+          Math.round(deck.dailyGoal / MIN_DAILY_GOAL_FRACTION_DIVISOR),
+        );
+      }
+    }
 
     const todayStart = startOfDay(new Date());
     const reviewedToday = await this.prisma.reviewLog.count({
