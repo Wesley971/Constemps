@@ -6,18 +6,19 @@ import {
   HttpStatus,
   Post,
   Res,
-  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { Public } from './public.decorator';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './current-user.decorator';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
-const ACCESS_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const ACCESS_TOKEN_MAX_AGE_MS = 72 * 60 * 60 * 1000;
+const AUTH_THROTTLE = { default: { limit: 5, ttl: 60000 } };
 
 const cookieOptions = {
   httpOnly: true,
@@ -29,6 +30,8 @@ const cookieOptions = {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
+  @Throttle(AUTH_THROTTLE)
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
@@ -39,6 +42,8 @@ export class AuthController {
     return user;
   }
 
+  @Public()
+  @Throttle(AUTH_THROTTLE)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -50,6 +55,7 @@ export class AuthController {
     return user;
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@Res({ passthrough: true }) res: Response) {
@@ -58,7 +64,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: AuthenticatedUser) {
     return user;
   }

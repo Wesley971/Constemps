@@ -1,10 +1,12 @@
 import {
   BadGatewayException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { ApiError, GoogleGenAI, Modality } from '@google/genai';
 import type { CardType } from '@prisma/client';
 
 export type AiVerdict = 'compris' | 'partiellement' | 'incompris';
@@ -21,6 +23,9 @@ export interface GeneratedCard {
 }
 
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
+const GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const GEMINI_TTS_VOICE = 'Kore';
+const TTS_DEFAULT_SAMPLE_RATE = 24000;
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 const MIN_GENERATED_CARDS = 5;
 const BASE_MAX_GENERATED_CARDS = 15;
@@ -97,6 +102,40 @@ Réponds uniquement avec la traduction directe, sans aucun commentaire, explicat
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "translation": "..." }`;
+}
+
+// Gemini TTS renvoie du PCM brut (pas de conteneur) : on lui ajoute nous-mêmes
+// un en-tête WAV pour obtenir un fichier lisible par n'importe quel lecteur audio.
+function pcmToWav(
+  pcmData: Buffer,
+  sampleRate: number,
+  channels = 1,
+  bitsPerSample = 16,
+): Buffer {
+  const byteRate = (sampleRate * channels * bitsPerSample) / 8;
+  const blockAlign = (channels * bitsPerSample) / 8;
+  const header = Buffer.alloc(44);
+
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + pcmData.length, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // format PCM
+  header.writeUInt16LE(channels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write('data', 36);
+  header.writeUInt32LE(pcmData.length, 40);
+
+  return Buffer.concat([header, pcmData]);
+}
+
+function parseSampleRate(mimeType: string | undefined): number {
+  const match = mimeType?.match(/rate=(\d+)/);
+  return match ? Number(match[1]) : TTS_DEFAULT_SAMPLE_RATE;
 }
 
 function normalizeToWordSet(text: string): Set<string> {
@@ -223,6 +262,58 @@ export class AiService {
     }
 
     return cards;
+  }
+
+  async generateAudio(text: string): Promise<Buffer> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'Service de génération audio non configuré',
+      );
+    }
+
+    try {
+      const response = await this.getClient(apiKey).models.generateContent({
+        model: GEMINI_TTS_MODEL,
+        contents: [{ parts: [{ text }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE },
+            },
+          },
+        },
+      });
+
+      const inlineData =
+        response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!inlineData?.data) {
+        this.logger.error(
+          `Réponse Gemini sans donnée audio pour la génération TTS : ${JSON.stringify(response)}`,
+        );
+        throw new BadGatewayException('La génération audio a échoué');
+      }
+
+      const pcmBuffer = Buffer.from(inlineData.data, 'base64');
+      const sampleRate = parseSampleRate(inlineData.mimeType);
+      return pcmToWav(pcmBuffer, sampleRate);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        throw new HttpException(
+          'Quota audio quotidien atteint, réessaie demain',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      this.logger.error(
+        'Appel Gemini échoué pour la génération audio',
+        err instanceof Error ? err.stack : String(err),
+      );
+      throw new BadGatewayException('La génération audio a échoué');
+    }
   }
 
   private getClient(apiKey: string): GoogleGenAI {

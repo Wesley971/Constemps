@@ -1,10 +1,8 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Param } from '@nestjs/common';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/current-user.decorator';
 import { StatsService } from './stats.service';
 
-@UseGuards(JwtAuthGuard)
 @Controller()
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}

@@ -63,6 +63,11 @@ export const cardsApi = {
   remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
   generate: (deckId: string, text: string) =>
     request<GeneratedCard[]>(`/decks/${deckId}/cards/generate`, { method: 'POST', body: JSON.stringify({ text }) }),
+  generateAudio: (id: string) => request<Card>(`/cards/${id}/audio`, { method: 'POST' }),
+}
+
+export function audioUrl(path: string): string {
+  return `${API_URL}${path}`
 }
 
 export const reviewsApi = {

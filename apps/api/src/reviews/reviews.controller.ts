@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/current-user.decorator';
+import { AI_THROTTLE } from '../common/ai-throttle';
 import { ReviewsService } from './reviews.service';
 import { SubmitReviewDto } from './dto/submit-review.dto';
 
-@UseGuards(JwtAuthGuard)
 @Controller()
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
@@ -18,6 +18,9 @@ export class ReviewsController {
     return this.reviewsService.getSession(user.id, deckId);
   }
 
+  // Le throttle ne s'applique en pratique qu'aux OPEN_QUESTION (voir
+  // AppThrottlerGuard.shouldSkip) : seule cette voie appelle Gemini.
+  @Throttle(AI_THROTTLE)
   @Post('reviews')
   submitReview(
     @CurrentUser() user: AuthenticatedUser,
