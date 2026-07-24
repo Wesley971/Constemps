@@ -112,7 +112,7 @@ function Decks() {
       ) : (
         <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {decks.map((deck) => (
-            <Card key={deck.id} interactive className="p-5 flex flex-col gap-3 min-h-[100px]">
+            <Card key={deck.id} interactive className="p-5 flex flex-col gap-3 min-h-25">
               <Link to={`/decks/${deck.id}`} className="font-display text-display-sm text-ink tracking-tight">
                 {deck.name}
               </Link>

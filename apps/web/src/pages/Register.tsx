@@ -29,7 +29,7 @@ function Register() {
   }
 
   return (
-    <div className="max-w-[400px] mt-20 mx-auto">
+    <div className="max-w-100 mt-20 mx-auto">
       <Card className="p-8 text-center">
         <h1 className="font-display text-display-md text-ink tracking-tight m-0 mb-6">Créer un compte</h1>
         <form onSubmit={handleSubmit}>

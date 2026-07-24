@@ -110,7 +110,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
       <h2 className="font-display text-display-sm text-ink m-0 mb-1">Ta progression</h2>
       <p className="font-body text-body-md text-ink m-0 mb-4">{card.front}</p>
       <div className="flex gap-4 flex-wrap">
-        <div className="flex-1 min-w-[220px] border border-line rounded-sm p-4">
+        <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
           <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Il y a environ un mois</p>
           <Badge tone={RATING_TONES[oldReview.rating] ?? 'neutral'}>{RATING_LABELS[oldReview.rating] ?? oldReview.rating}</Badge>
           {oldReview.aiVerdict && (
@@ -120,7 +120,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
             <p className="font-body text-body-sm text-inksoft mt-2 mb-0">Réponse donnée : {oldReview.userAnswer}</p>
           )}
         </div>
-        <div className="flex-1 min-w-[220px] border border-line rounded-sm p-4">
+        <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
           <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Plus récemment</p>
           <Badge tone={RATING_TONES[recentReview.rating] ?? 'neutral'}>{RATING_LABELS[recentReview.rating] ?? recentReview.rating}</Badge>
           {recentReview.aiVerdict && (
@@ -185,7 +185,7 @@ function Stats() {
 
   if (error) {
     return (
-      <div className="max-w-[480px] mx-auto">
+      <div className="max-w-120 mx-auto">
         <div className="mb-4">
           <Notification tone="danger" title="Chargement impossible" message={error} />
         </div>

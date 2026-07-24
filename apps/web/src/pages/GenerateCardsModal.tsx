@@ -94,7 +94,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[680px] max-w-[92vw] max-h-[88vh] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
+        className="relative w-170 max-w-[92vw] max-h-[88vh] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
       >
         <div className="flex items-center justify-between">
           <span className="font-display text-display-sm text-ink">Générer des cards depuis un texte</span>
@@ -121,7 +121,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
 
               {generating ? (
                 <div className="flex flex-col gap-2 items-center py-3">
-                  <Skeleton className="w-[200px] h-7" radius="pill" />
+                  <Skeleton className="w-50 h-7" radius="pill" />
                   <span className="font-body text-body-sm text-inksoft">Génération en cours...</span>
                 </div>
               ) : (

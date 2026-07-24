@@ -28,7 +28,7 @@ export function ConfirmModal({ title, children, confirmLabel = 'Confirmer', canc
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[420px] max-w-[90vw] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
+        className="relative w-105 max-w-[90vw] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
       >
         <div className="flex items-center justify-between">
           <span className="font-display text-display-sm text-ink">{title}</span>

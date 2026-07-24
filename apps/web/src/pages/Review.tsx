@@ -135,7 +135,7 @@ function Review() {
 
   if (loadError && !session) {
     return (
-      <div className="max-w-[480px] mx-auto">
+      <div className="max-w-120 mx-auto">
         <div className="mb-4">
           <Notification tone="danger" title="Chargement impossible" message={loadError} />
         </div>
@@ -150,7 +150,7 @@ function Review() {
 
   if (session.state === 'capped') {
     return (
-      <div className="max-w-[480px] mx-auto">
+      <div className="max-w-120 mx-auto">
         <Card className="p-8 text-center">
           <div className="mb-5">
             <ProgressBar value={100} label="Palier du jour" tone="success" />
@@ -164,7 +164,7 @@ function Review() {
 
   if (session.state === 'goal_reached') {
     return (
-      <div className="max-w-[480px] mx-auto">
+      <div className="max-w-120 mx-auto">
         <Card className="p-8 text-center">
           <div className="mb-5">
             <ProgressBar value={100} label="Palier du jour" tone="success" />
@@ -181,7 +181,7 @@ function Review() {
 
   if (session.cards.length === 0) {
     return (
-      <div className="max-w-[480px] mx-auto">
+      <div className="max-w-120 mx-auto">
         <Card className="p-8 text-center">
           <p className="font-body text-body-md text-ink m-0 mb-4">Pas de card à réviser pour l'instant sur ce deck.</p>
           <Link to="/decks">Retour aux decks</Link>
@@ -195,7 +195,7 @@ function Review() {
   const goalProgress = Math.min(100, Math.round((session.reviewedToday / Math.max(1, progressTarget)) * 100))
 
   return (
-    <div className="max-w-[560px] mx-auto">
+    <div className="max-w-140 mx-auto">
       <ToastViewport toast={toast} />
 
       <p className="mt-1 mb-5">
