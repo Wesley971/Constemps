@@ -53,7 +53,7 @@ function HistoryChart({ days }: { days: HistoryDay[] }) {
 
   return (
     <div>
-      <div className="flex items-end gap-[3px] h-[90px] border-b border-line">
+      <div className="flex items-end gap-0.75 h-22.5 border-b border-line">
         {days.map((day) => {
           const successHeight = (day.successCount / maxCount) * CHART_MAX_BAR_HEIGHT
           const remainderHeight = ((day.count - day.successCount) / maxCount) * CHART_MAX_BAR_HEIGHT

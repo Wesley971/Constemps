@@ -19,7 +19,7 @@ const tones: Record<ChipTone, string> = {
 export function Chip({ children, icon, tone = 'default', className }: ChipProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-body font-medium text-[12.5px] px-[13px] py-1.5 rounded-pill ${tones[tone]} ${className ?? ''}`}
+      className={`inline-flex items-center gap-1.5 font-body font-medium text-[12.5px] px-3.25 py-1.5 rounded-pill ${tones[tone]} ${className ?? ''}`}
     >
       {icon ? <iconify-icon icon={icon} width="13"></iconify-icon> : null}
       {children}

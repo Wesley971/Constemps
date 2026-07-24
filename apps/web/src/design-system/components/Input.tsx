@@ -47,7 +47,7 @@ export function Input({
         </label>
       ) : null}
       <div
-        className={`flex items-center gap-2 rounded-input px-3.5 py-[11px] border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
+        className={`flex items-center gap-2 rounded-input px-3.5 py-2.75 border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
           disabled ? 'bg-canvas opacity-55' : 'bg-white'
         } ${focused ? 'shadow-focus' : ''}`}
       >

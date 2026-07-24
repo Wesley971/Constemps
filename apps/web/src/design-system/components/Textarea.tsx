@@ -36,7 +36,7 @@ export function Textarea({ label, placeholder = 'Write a short bio', hint, error
         onChange={onChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className={`border-[1.5px] rounded-input px-3.5 py-[11px] font-body text-body-md text-ink resize-y outline-none transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
+        className={`border-[1.5px] rounded-input px-3.5 py-2.75 font-body text-body-md text-ink resize-y outline-none transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
           disabled ? 'bg-canvas opacity-55' : 'bg-white'
         } ${focused ? 'shadow-focus' : ''}`}
       />
