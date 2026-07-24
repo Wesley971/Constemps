@@ -9,31 +9,24 @@ interface CheckboxProps {
 
 export function Checkbox({ checked, onChange, label, disabled }: CheckboxProps) {
   return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.55 : 1 }}>
-      <span style={{ position: 'relative', width: 20, height: 20, flexShrink: 0 }}>
+    <label className={`inline-flex items-center gap-2.5 ${disabled ? 'cursor-default opacity-55' : 'cursor-pointer'}`}>
+      <span className="relative w-5 h-5 shrink-0">
         <input
           type="checkbox"
           checked={checked}
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
-          style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'inherit', margin: 0 }}
+          className="absolute inset-0 opacity-0 cursor-inherit m-0"
         />
         <span
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 'var(--radius-xs)',
-            border: `1.5px solid ${checked ? 'var(--teal-deep)' : 'var(--line)'}`,
-            background: checked ? 'var(--teal)' : 'var(--white)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          className={`absolute inset-0 rounded-xs border-[1.5px] flex items-center justify-center ${
+            checked ? 'border-teal-deep bg-teal text-white' : 'border-line bg-white'
+          }`}
         >
-          {checked ? <iconify-icon icon="ph:check-bold" width="13" style={{ color: '#fff' }}></iconify-icon> : null}
+          {checked ? <iconify-icon icon="ph:check-bold" width="13"></iconify-icon> : null}
         </span>
       </span>
-      {label ? <span style={{ font: 'var(--text-body-md)', color: 'var(--ink)' }}>{label}</span> : null}
+      {label ? <span className="font-body text-body-md text-ink">{label}</span> : null}
     </label>
   )
 }

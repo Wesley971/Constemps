@@ -1,43 +1,41 @@
-import type { CSSProperties, MouseEventHandler } from 'react'
+import type { MouseEventHandler } from 'react'
 
 type IconCircleTone = 'ink' | 'ghost' | 'teal'
+type IconCircleSize = 'sm' | 'md' | 'lg'
 
 interface IconCircleButtonProps {
   icon: string
   tone?: IconCircleTone
-  size?: number
+  size?: IconCircleSize
   onClick?: MouseEventHandler<HTMLButtonElement>
-  style?: CSSProperties
+  className?: string
   title?: string
 }
 
-const tones: Record<IconCircleTone, CSSProperties> = {
-  ink: { background: 'var(--ink)', color: '#fff' },
-  ghost: { background: 'var(--white)', color: 'var(--ink)', border: '1px solid var(--line)' },
-  teal: { background: 'var(--teal)', color: '#fff' },
+const tones: Record<IconCircleTone, string> = {
+  ink: 'bg-ink text-white',
+  ghost: 'bg-white text-ink border border-line',
+  teal: 'bg-teal text-white',
 }
 
-export function IconCircleButton({ icon, tone = 'ink', size = 40, onClick, style, title }: IconCircleButtonProps) {
+// Tailles alignées sur les 3 usages réels de l'app (28px/32px/40px), avec la
+// largeur d'icône Iconify équivalente à l'ancien calcul Math.round(size*0.42).
+const sizes: Record<IconCircleSize, { box: string; icon: string }> = {
+  sm: { box: 'w-7 h-7', icon: '12' },
+  md: { box: 'w-8 h-8', icon: '13' },
+  lg: { box: 'w-10 h-10', icon: '17' },
+}
+
+export function IconCircleButton({ icon, tone = 'ink', size = 'lg', onClick, className, title }: IconCircleButtonProps) {
+  const { box, icon: iconSize } = sizes[size]
   return (
     <button
       type="button"
       title={title}
       onClick={onClick}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: 'none',
-        cursor: 'pointer',
-        transition: 'transform .2s var(--ease-bounce), background .2s ease',
-        ...tones[tone],
-        ...style,
-      }}
+      className={`${box} rounded-full inline-flex items-center justify-center border-none cursor-pointer transition-transform duration-base ease-bounce hover:-translate-y-0.5 ${tones[tone]} ${className ?? ''}`}
     >
-      <iconify-icon icon={icon} width={Math.round(size * 0.42)}></iconify-icon>
+      <iconify-icon icon={icon} width={iconSize}></iconify-icon>
     </button>
   )
 }

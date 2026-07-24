@@ -14,31 +14,21 @@ const icons: Record<NotificationTone, string> = {
 }
 
 const colors: Record<NotificationTone, string> = {
-  success: 'var(--success)',
-  warning: 'var(--warning)',
-  danger: 'var(--danger)',
-  info: 'var(--info)',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
+  info: 'text-info',
 }
 
 export function Notification({ title, message, tone = 'info' }: NotificationProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        background: 'var(--white)',
-        border: '1px solid var(--line)',
-        borderRadius: 'var(--radius-sm)',
-        boxShadow: 'var(--elevation-3)',
-        padding: 16,
-        maxWidth: 340,
-      }}
-    >
-      <iconify-icon icon={icons[tone]} width="20" style={{ color: colors[tone], flexShrink: 0, marginTop: 1 }}></iconify-icon>
+    <div className="flex gap-3 items-start bg-white border border-line rounded-sm shadow-elevation-3 p-4 max-w-[340px]">
+      <span className={`shrink-0 mt-px ${colors[tone]}`}>
+        <iconify-icon icon={icons[tone]} width="20"></iconify-icon>
+      </span>
       <div>
-        <div style={{ font: 'var(--text-label)', color: 'var(--ink)' }}>{title}</div>
-        {message && <div style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', marginTop: 2 }}>{message}</div>}
+        <div className="font-body text-label text-ink">{title}</div>
+        {message && <div className="font-body text-body-sm text-inksoft mt-0.5">{message}</div>}
       </div>
     </div>
   )

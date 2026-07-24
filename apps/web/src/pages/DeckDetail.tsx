@@ -174,17 +174,15 @@ function DeckDetail() {
   }
 
   return (
-    <div className="wrap">
+    <div className="max-w-wrap mx-auto">
       <ToastViewport toast={toast} />
 
-      <p style={{ margin: '4px 0 20px' }}>
+      <p className="mt-1 mb-5">
         <Link to="/decks">Retour aux decks</Link>
       </p>
-      <h1 style={{ font: 'var(--text-display-lg)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 16px' }}>
-        {deck?.name}
-      </h1>
+      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-4">{deck?.name}</h1>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+      <div className="flex gap-2.5 mb-5">
         <LinkButton to={`/decks/${id}/review`} variant="primary" icon="ph:play-bold">
           Réviser
         </LinkButton>
@@ -193,7 +191,7 @@ function DeckDetail() {
         </LinkButton>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="flex gap-2.5 mb-5 flex-wrap">
         <Button variant="ghost" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)}>
           {showCreateForm ? 'Annuler' : 'Ajouter une card'}
         </Button>
@@ -203,13 +201,13 @@ function DeckDetail() {
       </div>
 
       {showCreateForm && (
-        <Card style={{ padding: 24, marginBottom: 24 }}>
+        <Card className="p-6 mb-6">
           <form onSubmit={handleCreate}>
-            <div style={{ marginBottom: 16 }}>
+            <div className="mb-4">
               <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} inline />
             </div>
 
-            <div style={{ marginBottom: 16 }}>
+            <div className="mb-4">
               <Input
                 label={FIELD_LABELS[newCardType].front}
                 value={newCardFront}
@@ -217,14 +215,14 @@ function DeckDetail() {
                 required
               />
             </div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+            <div className="mb-4">
+              <div className="flex gap-2.5 items-end">
                 <Input
                   label={FIELD_LABELS[newCardType].back}
                   value={newCardBack}
                   onChange={(e) => setNewCardBack(e.target.value)}
                   required
-                  style={{ flex: 1 }}
+                  className="flex-1"
                 />
                 {newCardType === 'CLASSIC' && (
                   <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={handleTranslate}>
@@ -242,20 +240,20 @@ function DeckDetail() {
       )}
 
       {cards.length === 0 ? (
-        <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)' }}>Aucune card pour l'instant.</p>
+        <p className="font-body text-body-md text-inksoft">Aucune card pour l'instant.</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="flex flex-col gap-3">
           {cards.map((card) => (
-            <Card key={card.id} style={{ padding: 20 }}>
+            <Card key={card.id} className="p-5">
               {editingCardId === card.id ? (
                 <div>
-                  <div style={{ marginBottom: 12 }}>
+                  <div className="mb-3">
                     <Input label={FIELD_LABELS[card.type].front} value={editFront} onChange={(e) => setEditFront(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom: 16 }}>
+                  <div className="mb-4">
                     <Input label={FIELD_LABELS[card.type].back} value={editBack} onChange={(e) => setEditBack(e.target.value)} />
                   </div>
-                  <div style={{ display: 'flex', gap: 10 }}>
+                  <div className="flex gap-2.5">
                     <Button disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
                       {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
                     </Button>
@@ -265,25 +263,25 @@ function DeckDetail() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-2">
                     <div>
                       <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'teal'}>
                         {card.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
                       </Badge>
                     </div>
-                    <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: 0 }}>
-                      {card.front} <span style={{ color: 'var(--inksoft)' }}>/</span> {card.back}
+                    <p className="font-body text-body-md text-ink m-0">
+                      {card.front} <span className="text-inksoft">/</span> {card.back}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+                  <div className="flex gap-2 shrink-0 items-center">
                     {generatingAudioId === card.id ? (
-                      <Skeleton width={32} height={32} radius="50%" />
+                      <Skeleton className="w-8 h-8" radius="full" />
                     ) : card.audioUrl ? (
                       <IconCircleButton
                         icon="ph:speaker-high-bold"
                         tone="ghost"
-                        size={32}
+                        size="md"
                         title="Écouter"
                         onClick={() => handlePlayAudio(card.audioUrl!)}
                       />
@@ -291,13 +289,13 @@ function DeckDetail() {
                       <IconCircleButton
                         icon="ph:waveform-bold"
                         tone="ghost"
-                        size={32}
+                        size="md"
                         title="Générer l'audio"
                         onClick={() => handleGenerateAudio(card.id)}
                       />
                     )}
-                    <IconCircleButton icon="ph:pencil-simple-bold" tone="ghost" size={32} title="Éditer" onClick={() => startEdit(card)} />
-                    <IconCircleButton icon="ph:trash-bold" tone="ghost" size={32} title="Supprimer" onClick={() => setCardToDelete(card)} />
+                    <IconCircleButton icon="ph:pencil-simple-bold" tone="ghost" size="md" title="Éditer" onClick={() => startEdit(card)} />
+                    <IconCircleButton icon="ph:trash-bold" tone="ghost" size="md" title="Supprimer" onClick={() => setCardToDelete(card)} />
                   </div>
                 </div>
               )}

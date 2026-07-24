@@ -4,18 +4,7 @@ import { IconCircleButton } from './IconCircleButton'
 
 export function ModalScrim({ children, onScrimClick }: { children: ReactNode; onScrimClick?: () => void }) {
   return (
-    <div
-      onClick={onScrimClick}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'var(--overlay-scrim)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 'var(--z-modal)',
-      }}
-    >
+    <div onClick={onScrimClick} className="fixed inset-0 bg-scrim flex items-center justify-center z-modal">
       {children}
     </div>
   )
@@ -39,25 +28,14 @@ export function ConfirmModal({ title, children, confirmLabel = 'Confirmer', canc
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          width: 420,
-          maxWidth: '90vw',
-          background: 'var(--white)',
-          borderRadius: 'var(--radius-modal)',
-          boxShadow: 'var(--elevation-4)',
-          padding: 28,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}
+        className="relative w-[420px] max-w-[90vw] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ font: 'var(--text-display-sm)', color: 'var(--ink)' }}>{title}</span>
-          <IconCircleButton icon="ph:x-bold" tone="ghost" size={32} onClick={onClose} />
+        <div className="flex items-center justify-between">
+          <span className="font-display text-display-sm text-ink">{title}</span>
+          <IconCircleButton icon="ph:x-bold" tone="ghost" size="md" onClick={onClose} />
         </div>
-        <div style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)' }}>{children}</div>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <div className="font-body text-body-md text-inksoft">{children}</div>
+        <div className="flex gap-2.5 justify-end">
           <Button variant="ghost" onClick={onClose}>
             {cancelLabel}
           </Button>

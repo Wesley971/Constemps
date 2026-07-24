@@ -30,7 +30,6 @@ const VERDICT_LABELS: Record<string, string> = {
   incompris: 'Incompris',
 }
 
-const REMAINDER_COLOR = 'rgba(23,24,28,0.16)'
 const CHART_MAX_BAR_HEIGHT = 90
 
 function formatShortDate(dateKey: string): string {
@@ -41,21 +40,10 @@ function formatShortDate(dateKey: string): string {
 function StatBlock({ value, caption, tone }: { value: string; caption: string; tone: 'teal' | 'ink' }) {
   return (
     <div
-      style={{
-        flex: 1,
-        minWidth: 160,
-        background: tone === 'teal' ? 'var(--teal)' : 'var(--ink)',
-        color: '#fff',
-        borderRadius: 'var(--radius-tile)',
-        boxShadow: 'var(--shadow-soft)',
-        padding: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-      }}
+      className={`flex-1 min-w-40 ${tone === 'teal' ? 'bg-teal' : 'bg-ink'} text-white rounded-tile shadow-soft p-5 flex flex-col gap-1.5`}
     >
-      <div style={{ font: 'var(--text-stat)', letterSpacing: 'var(--tracking-tight)' }}>{value}</div>
-      <div style={{ font: 'var(--text-body-sm)', color: 'rgba(255,255,255,0.8)' }}>{caption}</div>
+      <div className="font-display text-stat tracking-tight">{value}</div>
+      <div className="font-body text-body-sm text-white/80">{caption}</div>
     </div>
   )
 }
@@ -65,15 +53,7 @@ function HistoryChart({ days }: { days: HistoryDay[] }) {
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 3,
-          height: CHART_MAX_BAR_HEIGHT,
-          borderBottom: '1px solid var(--line)',
-        }}
-      >
+      <div className="flex items-end gap-[3px] h-[90px] border-b border-line">
         {days.map((day) => {
           const successHeight = (day.successCount / maxCount) * CHART_MAX_BAR_HEIGHT
           const remainderHeight = ((day.count - day.successCount) / maxCount) * CHART_MAX_BAR_HEIGHT
@@ -81,25 +61,27 @@ function HistoryChart({ days }: { days: HistoryDay[] }) {
             <div
               key={day.date}
               title={`${day.date} : ${day.count} review(s), ${day.successCount} réussie(s)`}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}
+              className="flex-1 flex flex-col justify-end h-full"
             >
-              {remainderHeight > 0 && <div style={{ background: REMAINDER_COLOR, height: remainderHeight, borderRadius: '2px 2px 0 0' }} />}
-              {successHeight > 0 && <div style={{ background: 'var(--success)', height: successHeight, borderRadius: '2px 2px 0 0' }} />}
+              {/* hauteur pilotée par une valeur continue calculée depuis les données réelles :
+                  ne peut pas être exprimée en classe Tailwind statique */}
+              {remainderHeight > 0 && <div style={{ height: remainderHeight }} className="bg-ink/16 rounded-t-[2px]" />}
+              {successHeight > 0 && <div style={{ height: successHeight }} className="bg-success rounded-t-[2px]" />}
             </div>
           )
         })}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-body-sm)', color: 'var(--inksoft)', marginTop: 8 }}>
+      <div className="flex justify-between font-body text-body-sm text-inksoft mt-2">
         <span>{days.length > 0 && formatShortDate(days[0].date)}</span>
         <span>{days.length > 0 && formatShortDate(days[days.length - 1].date)}</span>
       </div>
-      <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>
-          <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'var(--success)' }} />
+      <div className="flex gap-4 mt-3">
+        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inksoft">
+          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-success" />
           Réussi
         </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>
-          <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: REMAINDER_COLOR }} />
+        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inksoft">
+          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-ink/16" />
           À retravailler
         </span>
       </div>
@@ -114,11 +96,9 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
 
   if (!highlight.available) {
     return (
-      <Card style={{ padding: 24 }}>
-        <h2 style={{ font: 'var(--text-display-sm)', color: 'var(--ink)', margin: '0 0 8px' }}>Ta progression</h2>
-        <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)', margin: 0 }}>
-          Continue à réviser pour voir apparaître ta progression ici.
-        </p>
+      <Card className="p-6">
+        <h2 className="font-display text-display-sm text-ink m-0 mb-2">Ta progression</h2>
+        <p className="font-body text-body-md text-inksoft m-0">Continue à réviser pour voir apparaître ta progression ici.</p>
       </Card>
     )
   }
@@ -126,40 +106,32 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
   const { card, oldReview, recentReview } = highlight
 
   return (
-    <Card style={{ padding: 24 }}>
-      <h2 style={{ font: 'var(--text-display-sm)', color: 'var(--ink)', margin: '0 0 4px' }}>Ta progression</h2>
-      <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 16px' }}>{card.front}</p>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 220, border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: 16 }}>
-          <p style={{ font: 'var(--text-micro)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-micro)', color: 'var(--inksoft)', margin: '0 0 10px' }}>
-            Il y a environ un mois
-          </p>
+    <Card className="p-6">
+      <h2 className="font-display text-display-sm text-ink m-0 mb-1">Ta progression</h2>
+      <p className="font-body text-body-md text-ink m-0 mb-4">{card.front}</p>
+      <div className="flex gap-4 flex-wrap">
+        <div className="flex-1 min-w-[220px] border border-line rounded-sm p-4">
+          <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Il y a environ un mois</p>
           <Badge tone={RATING_TONES[oldReview.rating] ?? 'neutral'}>{RATING_LABELS[oldReview.rating] ?? oldReview.rating}</Badge>
           {oldReview.aiVerdict && (
-            <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', margin: '10px 0 0' }}>
-              {VERDICT_LABELS[oldReview.aiVerdict] ?? oldReview.aiVerdict}
-            </p>
+            <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[oldReview.aiVerdict] ?? oldReview.aiVerdict}</p>
           )}
           {oldReview.userAnswer && (
-            <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', margin: '8px 0 0' }}>Réponse donnée : {oldReview.userAnswer}</p>
+            <p className="font-body text-body-sm text-inksoft mt-2 mb-0">Réponse donnée : {oldReview.userAnswer}</p>
           )}
         </div>
-        <div style={{ flex: 1, minWidth: 220, border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: 16 }}>
-          <p style={{ font: 'var(--text-micro)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-micro)', color: 'var(--inksoft)', margin: '0 0 10px' }}>
-            Plus récemment
-          </p>
+        <div className="flex-1 min-w-[220px] border border-line rounded-sm p-4">
+          <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Plus récemment</p>
           <Badge tone={RATING_TONES[recentReview.rating] ?? 'neutral'}>{RATING_LABELS[recentReview.rating] ?? recentReview.rating}</Badge>
           {recentReview.aiVerdict && (
-            <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', margin: '10px 0 0' }}>
-              {VERDICT_LABELS[recentReview.aiVerdict] ?? recentReview.aiVerdict}
-            </p>
+            <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[recentReview.aiVerdict] ?? recentReview.aiVerdict}</p>
           )}
           {recentReview.userAnswer && (
-            <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', margin: '8px 0 0' }}>Réponse donnée : {recentReview.userAnswer}</p>
+            <p className="font-body text-body-sm text-inksoft mt-2 mb-0">Réponse donnée : {recentReview.userAnswer}</p>
           )}
         </div>
       </div>
-      <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', margin: '16px 0 0' }}>Réponse de référence : {card.back}</p>
+      <p className="font-body text-body-sm text-inksoft mt-4 mb-0">Réponse de référence : {card.back}</p>
     </Card>
   )
 }
@@ -213,8 +185,8 @@ function Stats() {
 
   if (error) {
     return (
-      <div className="wrap" style={{ maxWidth: 480 }}>
-        <div style={{ marginBottom: 16 }}>
+      <div className="max-w-[480px] mx-auto">
+        <div className="mb-4">
           <Notification tone="danger" title="Chargement impossible" message={error} />
         </div>
         <Link to={`/decks/${id}`}>Retour au deck</Link>
@@ -223,17 +195,15 @@ function Stats() {
   }
 
   return (
-    <div className="wrap">
-      <p style={{ margin: '4px 0 20px' }}>
+    <div className="max-w-wrap mx-auto">
+      <p className="mt-1 mb-5">
         <Link to={`/decks/${id}`}>Retour au deck</Link>
       </p>
-      <h1 style={{ font: 'var(--text-display-lg)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 20px' }}>
-        Stats — {deck?.name}
-      </h1>
+      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Stats — {deck?.name}</h1>
 
       {overview && (
         <>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="flex gap-4 mb-3 flex-wrap">
             <StatBlock
               tone="teal"
               value={overview.retentionRate === null ? '–' : `${overview.retentionRate}%`}
@@ -242,9 +212,9 @@ function Stats() {
             <StatBlock tone="ink" value={String(overview.masteredCards)} caption={`Cards maîtrisées / ${overview.totalCards}`} />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-            <Chip style={{ fontSize: 11, padding: '4px 10px', opacity: 0.8 }}>Streak : {overview.currentStreak} jour(s)</Chip>
-            <span style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>
+          <div className="flex items-center gap-2.5 mb-6">
+            <Chip className="text-[11px] px-2.5 py-1 opacity-80">Streak : {overview.currentStreak} jour(s)</Chip>
+            <span className="font-body text-body-sm text-inksoft">
               New {overview.cardsByState.New} · Learning {overview.cardsByState.Learning} · Review {overview.cardsByState.Review} ·
               Relearning {overview.cardsByState.Relearning}
             </span>
@@ -252,8 +222,8 @@ function Stats() {
         </>
       )}
 
-      <Card style={{ padding: 24, marginBottom: 24 }}>
-        <h2 style={{ font: 'var(--text-display-sm)', color: 'var(--ink)', margin: '0 0 16px' }}>Régularité (30 derniers jours)</h2>
+      <Card className="p-6 mb-6">
+        <h2 className="font-display text-display-sm text-ink m-0 mb-4">Régularité (30 derniers jours)</h2>
         <HistoryChart days={history} />
       </Card>
 

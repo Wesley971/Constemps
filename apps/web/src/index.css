@@ -1,2 +1,26 @@
-@import './design-system/styles.css';
-@import './design-system/app-shell.css';
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    @apply bg-canvas bg-dot-grid text-ink font-body text-body-md p-8 max-[720px]:p-4;
+    background-size: 24px 24px;
+  }
+
+  a {
+    @apply text-teal-deep no-underline;
+  }
+  a:hover {
+    @apply text-teal underline;
+  }
+
+  :focus-visible {
+    @apply outline-none shadow-focus;
+  }
+}

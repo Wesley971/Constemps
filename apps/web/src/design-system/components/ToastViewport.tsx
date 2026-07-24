@@ -5,7 +5,7 @@ export function ToastViewport({ toast }: { toast: ToastState | null }) {
   if (!toast) return null
 
   return (
-    <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 'var(--z-toast)' }}>
+    <div className="fixed top-5 right-5 z-toast">
       <Notification tone={toast.tone} title={toast.title} message={toast.message} />
     </div>
   )

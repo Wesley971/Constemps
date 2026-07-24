@@ -1,19 +1,17 @@
+type SkeletonRadius = 'xs' | 'tile' | 'pill' | 'full'
+
 interface SkeletonProps {
-  width?: number | string
-  height?: number | string
-  radius?: string
+  radius?: SkeletonRadius
+  className?: string
 }
 
-export function Skeleton({ width = '100%', height = 16, radius = 'var(--radius-xs)' }: SkeletonProps) {
-  return (
-    <div
-      style={{
-        width,
-        height,
-        borderRadius: radius,
-        background: 'var(--line)',
-        animation: 'dsSkeletonPulse 1.4s ease-in-out infinite',
-      }}
-    />
-  )
+const radiusClasses: Record<SkeletonRadius, string> = {
+  xs: 'rounded-xs',
+  tile: 'rounded-tile',
+  pill: 'rounded-pill',
+  full: 'rounded-full',
+}
+
+export function Skeleton({ radius = 'xs', className }: SkeletonProps) {
+  return <div className={`bg-line animate-skeleton-pulse ${radiusClasses[radius]} ${className ?? ''}`} />
 }

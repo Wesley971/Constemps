@@ -83,7 +83,7 @@ function Review() {
     setOpenAnswer('')
     setOpenResult(null)
 
-    if (!id || !session || session.done) return
+    if (!id || !session || session.state !== 'active') return
 
     const isLast = currentIndex + 1 >= session.cards.length
     if (isLast) {
@@ -135,8 +135,8 @@ function Review() {
 
   if (loadError && !session) {
     return (
-      <div className="wrap" style={{ maxWidth: 480 }}>
-        <div style={{ marginBottom: 16 }}>
+      <div className="max-w-[480px] mx-auto">
+        <div className="mb-4">
           <Notification tone="danger" title="Chargement impossible" message={loadError} />
         </div>
         <Link to="/decks">Retour aux decks</Link>
@@ -150,12 +150,12 @@ function Review() {
 
   if (session.state === 'capped') {
     return (
-      <div className="wrap" style={{ maxWidth: 480 }}>
-        <Card style={{ padding: 32, textAlign: 'center' }}>
-          <div style={{ marginBottom: 20 }}>
+      <div className="max-w-[480px] mx-auto">
+        <Card className="p-8 text-center">
+          <div className="mb-5">
             <ProgressBar value={100} label="Palier du jour" tone="success" />
           </div>
-          <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 16px' }}>{session.message}</p>
+          <p className="font-body text-body-md text-ink m-0 mb-4">{session.message}</p>
           <Link to="/decks">Retour aux decks</Link>
         </Card>
       </div>
@@ -164,13 +164,13 @@ function Review() {
 
   if (session.state === 'goal_reached') {
     return (
-      <div className="wrap" style={{ maxWidth: 480 }}>
-        <Card style={{ padding: 32, textAlign: 'center' }}>
-          <div style={{ marginBottom: 20 }}>
+      <div className="max-w-[480px] mx-auto">
+        <Card className="p-8 text-center">
+          <div className="mb-5">
             <ProgressBar value={100} label="Palier du jour" tone="success" />
           </div>
-          <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 20px' }}>{session.message}</p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+          <p className="font-body text-body-md text-ink m-0 mb-5">{session.message}</p>
+          <div className="flex gap-2.5 justify-center flex-wrap mb-4">
             <Button onClick={handleContinueToday}>Continuer aujourd'hui</Button>
           </div>
           <Link to="/decks">Retour aux decks</Link>
@@ -181,11 +181,9 @@ function Review() {
 
   if (session.cards.length === 0) {
     return (
-      <div className="wrap" style={{ maxWidth: 480 }}>
-        <Card style={{ padding: 32, textAlign: 'center' }}>
-          <p style={{ font: 'var(--text-body-md)', color: 'var(--ink)', margin: '0 0 16px' }}>
-            Pas de card à réviser pour l'instant sur ce deck.
-          </p>
+      <div className="max-w-[480px] mx-auto">
+        <Card className="p-8 text-center">
+          <p className="font-body text-body-md text-ink m-0 mb-4">Pas de card à réviser pour l'instant sur ce deck.</p>
           <Link to="/decks">Retour aux decks</Link>
         </Card>
       </div>
@@ -197,35 +195,33 @@ function Review() {
   const goalProgress = Math.min(100, Math.round((session.reviewedToday / Math.max(1, progressTarget)) * 100))
 
   return (
-    <div className="wrap" style={{ maxWidth: 560 }}>
+    <div className="max-w-[560px] mx-auto">
       <ToastViewport toast={toast} />
 
-      <p style={{ margin: '4px 0 20px' }}>
+      <p className="mt-1 mb-5">
         <Link to={`/decks/${id}`}>Retour au deck</Link>
       </p>
 
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <ProgressBar value={goalProgress} label={`Palier du jour (${session.reviewedToday} / ${progressTarget})`} />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+      <div className="flex justify-center mb-5">
         <Chip>
           Card {currentIndex + 1} / {session.cards.length}
         </Chip>
       </div>
 
-      <Card style={{ padding: 32 }}>
+      <Card className="p-8">
         {card.type === 'CLASSIC' ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '0 0 20px' }}>
-              <h2 style={{ font: 'var(--text-display-md)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: 0 }}>
-                {card.front}
-              </h2>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2.5 mb-5">
+              <h2 className="font-display text-display-md text-ink tracking-tight m-0">{card.front}</h2>
               {card.audioUrl && (
                 <IconCircleButton
                   icon="ph:speaker-high-bold"
                   tone="ghost"
-                  size={32}
+                  size="md"
                   title="Écouter"
                   onClick={() => handlePlayAudio(card.audioUrl!)}
                 />
@@ -235,8 +231,8 @@ function Review() {
               <Button onClick={() => setRevealed(true)}>Voir la réponse</Button>
             ) : (
               <div>
-                <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)', margin: '0 0 24px' }}>{card.back}</p>
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <p className="font-body text-body-md text-inksoft m-0 mb-6">{card.back}</p>
+                <div className="flex gap-2.5 justify-center flex-wrap">
                   <Button variant="danger" disabled={submitting} onClick={() => handleClassicRating(card.id, 'AGAIN')}>
                     Again
                   </Button>
@@ -254,19 +250,17 @@ function Review() {
             )}
           </div>
         ) : (
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ font: 'var(--text-display-md)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 20px' }}>
-              {card.front}
-            </h2>
+          <div className="text-center">
+            <h2 className="font-display text-display-md text-ink tracking-tight m-0 mb-5">{card.front}</h2>
             {!openResult ? (
               <div>
-                <div style={{ marginBottom: 16, textAlign: 'left' }}>
+                <div className="mb-4 text-left">
                   <Textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} rows={4} />
                 </div>
                 {submitting ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-                    <Skeleton width={160} height={28} radius="var(--radius-pill)" />
-                    <span style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>Évaluation en cours...</span>
+                  <div className="flex flex-col gap-2 items-center">
+                    <Skeleton className="w-40 h-7" radius="pill" />
+                    <span className="font-body text-body-sm text-inksoft">Évaluation en cours...</span>
                   </div>
                 ) : (
                   <Button disabled={submitting} onClick={() => handleSubmitOpenQuestion(card.id)}>
@@ -276,14 +270,12 @@ function Review() {
               </div>
             ) : (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 16px' }}>
+                <div className="flex justify-center mb-4">
                   <Badge tone={openResult.aiVerdict ? VERDICT_TONES[openResult.aiVerdict] : 'neutral'}>
                     {openResult.aiVerdict ? (VERDICT_LABELS[openResult.aiVerdict] ?? openResult.aiVerdict) : 'Verdict indisponible'}
                   </Badge>
                 </div>
-                <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)', margin: '0 0 24px' }}>
-                  Réponse de référence : {card.back}
-                </p>
+                <p className="font-body text-body-md text-inksoft m-0 mb-6">Réponse de référence : {card.back}</p>
                 <Button onClick={advance}>Card suivante</Button>
               </div>
             )}

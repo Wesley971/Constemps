@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import type { CSSProperties, ChangeEventHandler } from 'react'
+import type { ChangeEventHandler } from 'react'
 
 interface TextareaProps {
   label?: string
@@ -11,19 +11,19 @@ interface TextareaProps {
   id?: string
   value?: string
   onChange?: ChangeEventHandler<HTMLTextAreaElement>
-  style?: CSSProperties
+  className?: string
 }
 
-export function Textarea({ label, placeholder = 'Write a short bio', hint, error, rows = 4, disabled, id, value, onChange, style }: TextareaProps) {
+export function Textarea({ label, placeholder = 'Write a short bio', hint, error, rows = 4, disabled, id, value, onChange, className }: TextareaProps) {
   const [focused, setFocused] = useState(false)
   const generatedId = useId()
   const fieldId = id ?? generatedId
-  const borderColor = error ? 'var(--danger)' : focused ? 'var(--teal-deep)' : 'var(--line)'
+  const borderColor = error ? 'border-danger' : focused ? 'border-teal-deep' : 'border-line'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', ...style }}>
+    <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
       {label ? (
-        <label htmlFor={fieldId} style={{ font: 'var(--text-label)', color: 'var(--ink)' }}>
+        <label htmlFor={fieldId} className="font-body text-label text-ink">
           {label}
         </label>
       ) : null}
@@ -36,25 +36,14 @@ export function Textarea({ label, placeholder = 'Write a short bio', hint, error
         onChange={onChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        style={{
-          border: `1.5px solid ${borderColor}`,
-          borderRadius: 'var(--radius-input)',
-          padding: '11px 14px',
-          font: 'var(--text-body-md)',
-          color: 'var(--ink)',
-          background: disabled ? 'var(--canvas)' : 'var(--white)',
-          opacity: disabled ? 0.55 : 1,
-          resize: 'vertical',
-          boxShadow: focused ? 'var(--focus-ring)' : 'none',
-          outline: 'none',
-          fontFamily: 'var(--font-body)',
-          transition: 'border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard)',
-        }}
+        className={`border-[1.5px] rounded-input px-3.5 py-[11px] font-body text-body-md text-ink resize-y outline-none transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
+          disabled ? 'bg-canvas opacity-55' : 'bg-white'
+        } ${focused ? 'shadow-focus' : ''}`}
       />
       {error ? (
-        <span style={{ font: 'var(--text-caption)', color: 'var(--danger)' }}>{error}</span>
+        <span className="font-body text-caption text-danger">{error}</span>
       ) : hint ? (
-        <span style={{ font: 'var(--text-caption)', color: 'var(--inksoft)' }}>{hint}</span>
+        <span className="font-body text-caption text-inksoft">{hint}</span>
       ) : null}
     </div>
   )

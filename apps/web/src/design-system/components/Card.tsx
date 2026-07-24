@@ -1,22 +1,17 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface CardProps {
   children: ReactNode
   interactive?: boolean
-  style?: CSSProperties
+  className?: string
 }
 
-export function Card({ children, interactive = false, style }: CardProps) {
+export function Card({ children, interactive = false, className }: CardProps) {
   return (
     <div
-      className={interactive ? 'tile' : undefined}
-      style={{
-        background: 'var(--white)',
-        border: '1px solid var(--line)',
-        borderRadius: 'var(--radius-tile)',
-        boxShadow: 'var(--shadow-soft)',
-        ...style,
-      }}
+      className={`bg-white border border-line rounded-tile shadow-soft ${
+        interactive ? 'transition-[transform,box-shadow] duration-tile ease-bounce hover:-translate-y-1 hover:shadow-lift' : ''
+      } ${className ?? ''}`}
     >
       {children}
     </div>

@@ -14,39 +14,29 @@ interface RadioProps {
 
 export function Radio({ name, options, value, onChange, disabled, inline }: RadioProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: inline ? 'row' : 'column', gap: inline ? 20 : 10, opacity: disabled ? 0.55 : 1 }}>
+    <div className={`flex ${inline ? 'flex-row gap-5' : 'flex-col gap-2.5'} ${disabled ? 'opacity-55' : ''}`}>
       {options.map((opt) => {
         const checked = value === opt.value
         return (
-          <label
-            key={opt.value}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: disabled ? 'default' : 'pointer' }}
-          >
-            <span style={{ position: 'relative', width: 20, height: 20, flexShrink: 0 }}>
+          <label key={opt.value} className={`inline-flex items-center gap-2.5 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}>
+            <span className="relative w-5 h-5 shrink-0">
               <input
                 type="radio"
                 name={name}
                 checked={checked}
                 disabled={disabled}
                 onChange={() => onChange(opt.value)}
-                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'inherit', margin: 0 }}
+                className="absolute inset-0 opacity-0 cursor-inherit m-0"
               />
               <span
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: '50%',
-                  border: `1.5px solid ${checked ? 'var(--teal-deep)' : 'var(--line)'}`,
-                  background: 'var(--white)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className={`absolute inset-0 rounded-full border-[1.5px] bg-white flex items-center justify-center ${
+                  checked ? 'border-teal-deep' : 'border-line'
+                }`}
               >
-                {checked ? <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--teal)' }} /> : null}
+                {checked ? <span className="w-2.5 h-2.5 rounded-full bg-teal" /> : null}
               </span>
             </span>
-            <span style={{ font: 'var(--text-body-md)', color: 'var(--ink)' }}>{opt.label}</span>
+            <span className="font-body text-body-md text-ink">{opt.label}</span>
           </label>
         )
       })}

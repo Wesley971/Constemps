@@ -85,7 +85,7 @@ function Decks() {
   }
 
   return (
-    <div className="wrap">
+    <div className="max-w-wrap mx-auto">
       <ToastViewport toast={toast} />
 
       <AppHeader
@@ -96,13 +96,11 @@ function Decks() {
         }
       />
 
-      <h1 style={{ font: 'var(--text-display-lg)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 20px' }}>
-        Mes decks
-      </h1>
+      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Mes decks</h1>
 
-      <Card style={{ padding: 20, marginBottom: 24 }}>
-        <form onSubmit={handleCreate} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <Input placeholder="Nom du deck" value={newDeckName} onChange={(e) => setNewDeckName(e.target.value)} required style={{ flex: 1 }} />
+      <Card className="p-5 mb-6">
+        <form onSubmit={handleCreate} className="flex gap-3 items-start">
+          <Input placeholder="Nom du deck" value={newDeckName} onChange={(e) => setNewDeckName(e.target.value)} required className="flex-1" />
           <Button type="submit" disabled={creating} icon="ph:plus-bold">
             {creating ? 'Création...' : 'Créer un deck'}
           </Button>
@@ -110,19 +108,16 @@ function Decks() {
       </Card>
 
       {decks.length === 0 ? (
-        <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)' }}>Aucun deck pour l'instant.</p>
+        <p className="font-body text-body-md text-inksoft">Aucun deck pour l'instant.</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {decks.map((deck) => (
-            <Card key={deck.id} interactive style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 100 }}>
-              <Link
-                to={`/decks/${deck.id}`}
-                style={{ font: 'var(--text-display-sm)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)' }}
-              >
+            <Card key={deck.id} interactive className="p-5 flex flex-col gap-3 min-h-[100px]">
+              <Link to={`/decks/${deck.id}`} className="font-display text-display-sm text-ink tracking-tight">
                 {deck.name}
               </Link>
-              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
-                <IconCircleButton icon="ph:trash-bold" tone="ghost" size={32} title="Supprimer" onClick={() => setDeckToDelete(deck)} />
+              <div className="mt-auto flex justify-end">
+                <IconCircleButton icon="ph:trash-bold" tone="ghost" size="md" title="Supprimer" onClick={() => setDeckToDelete(deck)} />
               </div>
             </Card>
           ))}

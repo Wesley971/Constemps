@@ -94,26 +94,14 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          width: 680,
-          maxWidth: '92vw',
-          maxHeight: '88vh',
-          background: 'var(--white)',
-          borderRadius: 'var(--radius-modal)',
-          boxShadow: 'var(--elevation-4)',
-          padding: 28,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}
+        className="relative w-[680px] max-w-[92vw] max-h-[88vh] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ font: 'var(--text-display-sm)', color: 'var(--ink)' }}>Générer des cards depuis un texte</span>
-          <IconCircleButton icon="ph:x-bold" tone="ghost" size={32} onClick={onClose} />
+        <div className="flex items-center justify-between">
+          <span className="font-display text-display-sm text-ink">Générer des cards depuis un texte</span>
+          <IconCircleButton icon="ph:x-bold" tone="ghost" size="md" onClick={onClose} />
         </div>
 
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="overflow-y-auto flex flex-col gap-4">
           {!proposals ? (
             <>
               <div>
@@ -126,22 +114,15 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                   disabled={generating}
                   error={overLimit ? `Le texte dépasse la limite de ${MAX_TEXT_LENGTH.toLocaleString('fr-FR')} caractères` : undefined}
                 />
-                <div
-                  style={{
-                    textAlign: 'right',
-                    font: 'var(--text-caption)',
-                    color: overLimit ? 'var(--danger)' : 'var(--inksoft)',
-                    marginTop: 4,
-                  }}
-                >
+                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
                   {sourceText.length.toLocaleString('fr-FR')} / {MAX_TEXT_LENGTH.toLocaleString('fr-FR')}
                 </div>
               </div>
 
               {generating ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', padding: '12px 0' }}>
-                  <Skeleton width={200} height={28} radius="var(--radius-pill)" />
-                  <span style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>Génération en cours...</span>
+                <div className="flex flex-col gap-2 items-center py-3">
+                  <Skeleton className="w-[200px] h-7" radius="pill" />
+                  <span className="font-body text-body-sm text-inksoft">Génération en cours...</span>
                 </div>
               ) : (
                 <Button disabled={!sourceText.trim() || overLimit} onClick={handleGenerate}>
@@ -152,21 +133,21 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
           ) : (
             <>
               {proposals.length === 0 ? (
-                <p style={{ font: 'var(--text-body-md)', color: 'var(--inksoft)' }}>Aucune proposition restante.</p>
+                <p className="font-body text-body-md text-inksoft">Aucune proposition restante.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="flex flex-col gap-3">
                   {proposals.map((p) => (
-                    <Card key={p.id} style={{ padding: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                        <div style={{ paddingTop: 6 }}>
+                    <Card key={p.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="pt-1.5">
                           <Checkbox checked={p.selected} onChange={(checked) => updateProposal(p.id, { selected: checked })} />
                         </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="flex-1 flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between">
                             <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'teal'}>
                               {p.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
                             </Badge>
-                            <IconCircleButton icon="ph:trash-bold" tone="ghost" size={28} title="Retirer" onClick={() => removeProposal(p.id)} />
+                            <IconCircleButton icon="ph:trash-bold" tone="ghost" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />
                           </div>
                           <Input
                             label={p.type === 'CLASSIC' ? 'Recto' : 'Question'}
@@ -186,7 +167,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <div className="flex gap-2.5 justify-end">
                 <Button variant="ghost" disabled={addingSelected} onClick={() => setProposals(null)}>
                   Recommencer
                 </Button>

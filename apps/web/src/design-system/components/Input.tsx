@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import type { CSSProperties, ChangeEventHandler } from 'react'
+import type { ChangeEventHandler } from 'react'
 
 interface InputProps {
   label?: string
@@ -15,7 +15,7 @@ interface InputProps {
   onChange?: ChangeEventHandler<HTMLInputElement>
   required?: boolean
   minLength?: number
-  style?: CSSProperties
+  className?: string
 }
 
 export function Input({
@@ -32,36 +32,30 @@ export function Input({
   onChange,
   required,
   minLength,
-  style,
+  className,
 }: InputProps) {
   const [focused, setFocused] = useState(false)
   const generatedId = useId()
   const fieldId = id ?? generatedId
-  const state = error ? 'error' : focused ? 'focus' : 'default'
-  const borderColor = { default: 'var(--line)', focus: 'var(--teal-deep)', error: 'var(--danger)' }[state]
+  const borderColor = error ? 'border-danger' : focused ? 'border-teal-deep' : 'border-line'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', ...style }}>
+    <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
       {label ? (
-        <label htmlFor={fieldId} style={{ font: 'var(--text-label)', color: 'var(--ink)' }}>
+        <label htmlFor={fieldId} className="font-body text-label text-ink">
           {label}
         </label>
       ) : null}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: disabled ? 'var(--canvas)' : 'var(--white)',
-          border: `1.5px solid ${borderColor}`,
-          borderRadius: 'var(--radius-input)',
-          padding: '11px 14px',
-          boxShadow: focused ? 'var(--focus-ring)' : 'none',
-          opacity: disabled ? 0.55 : 1,
-          transition: 'border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard)',
-        }}
+        className={`flex items-center gap-2 rounded-input px-3.5 py-[11px] border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
+          disabled ? 'bg-canvas opacity-55' : 'bg-white'
+        } ${focused ? 'shadow-focus' : ''}`}
       >
-        {icon ? <iconify-icon icon={icon} width="16" style={{ color: 'var(--inksoft)' }}></iconify-icon> : null}
+        {icon ? (
+          <span className="text-inksoft flex items-center">
+            <iconify-icon icon={icon} width="16"></iconify-icon>
+          </span>
+        ) : null}
         <input
           id={fieldId}
           type={type}
@@ -74,21 +68,13 @@ export function Input({
           minLength={minLength}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          style={{
-            border: 'none',
-            outline: 'none',
-            flex: 1,
-            background: 'transparent',
-            font: 'var(--text-body-md)',
-            color: 'var(--ink)',
-            width: '100%',
-          }}
+          className="border-none outline-none flex-1 bg-transparent font-body text-body-md text-ink w-full"
         />
       </div>
       {error ? (
-        <span style={{ font: 'var(--text-caption)', color: 'var(--danger)' }}>{error}</span>
+        <span className="font-body text-caption text-danger">{error}</span>
       ) : hint ? (
-        <span style={{ font: 'var(--text-caption)', color: 'var(--inksoft)' }}>{hint}</span>
+        <span className="font-body text-caption text-inksoft">{hint}</span>
       ) : null}
     </div>
   )

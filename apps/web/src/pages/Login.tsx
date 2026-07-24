@@ -29,16 +29,14 @@ function Login() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto 0' }}>
-      <Card style={{ padding: 32, textAlign: 'center' }}>
-        <h1 style={{ font: 'var(--text-display-md)', color: 'var(--ink)', letterSpacing: 'var(--tracking-tight)', margin: '0 0 24px' }}>
-          Connexion
-        </h1>
+    <div className="max-w-[400px] mt-20 mx-auto">
+      <Card className="p-8 text-center">
+        <h1 className="font-display text-display-md text-ink tracking-tight m-0 mb-6">Connexion</h1>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16, textAlign: 'left' }}>
+          <div className="mb-4 text-left">
             <Input label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <div style={{ marginBottom: 16, textAlign: 'left' }}>
+          <div className="mb-4 text-left">
             <Input
               label="Mot de passe"
               id="password"
@@ -49,15 +47,15 @@ function Login() {
             />
           </div>
           {error && (
-            <div style={{ marginBottom: 16, textAlign: 'left' }}>
+            <div className="mb-4 text-left">
               <Notification tone="danger" title="Connexion impossible" message={error} />
             </div>
           )}
-          <Button type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
+          <Button type="submit" disabled={loading} className="w-full justify-center">
             {loading ? 'Connexion...' : 'Se connecter'}
           </Button>
         </form>
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)', marginTop: 20 }}>
+        <p className="font-body text-body-sm text-inksoft mt-5">
           Pas encore de compte ? <Link to="/register">Créer un compte</Link>
         </p>
       </Card>

@@ -1,39 +1,34 @@
-import type { CSSProperties } from 'react'
-
 type ProgressBarTone = 'teal' | 'success' | 'warning' | 'danger'
 
-const colors: Record<ProgressBarTone, string> = {
-  teal: 'var(--teal)',
-  success: 'var(--success)',
-  warning: 'var(--warning)',
-  danger: 'var(--danger)',
+const trackColors: Record<ProgressBarTone, string> = {
+  teal: 'bg-teal',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger',
 }
 
 interface ProgressBarProps {
   value: number
   label?: string
   tone?: ProgressBarTone
-  style?: CSSProperties
+  className?: string
 }
 
-export function ProgressBar({ value, label, tone = 'teal', style }: ProgressBarProps) {
+export function ProgressBar({ value, label, tone = 'teal', className }: ProgressBarProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', ...style }}>
+    <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
       {label ? (
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ font: 'var(--text-label)', color: 'var(--ink)' }}>{label}</span>
-          <span style={{ font: 'var(--text-body-sm)', color: 'var(--inksoft)' }}>{value}%</span>
+        <div className="flex justify-between">
+          <span className="font-body text-label text-ink">{label}</span>
+          <span className="font-body text-body-sm text-inksoft">{value}%</span>
         </div>
       ) : null}
-      <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--line)', overflow: 'hidden' }}>
+      <div className="h-2 rounded-pill bg-line overflow-hidden">
+        {/* largeur pilotée par une valeur numérique en direct (0-100) : ne peut pas
+            être exprimée en classe Tailwind statique, seul style inline restant de la migration */}
         <div
-          style={{
-            width: `${value}%`,
-            height: '100%',
-            borderRadius: 'var(--radius-pill)',
-            background: colors[tone],
-            transition: 'width var(--duration-slow) var(--ease-standard)',
-          }}
+          style={{ width: `${value}%` }}
+          className={`h-full rounded-pill transition-[width] duration-slow ease-standard ${trackColors[tone]}`}
         />
       </div>
     </div>
