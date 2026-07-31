@@ -20,6 +20,10 @@ Projet né d'un besoin personnel : apprentissage de l'anglais avec un prof aux m
 - Auth : email/mot de passe, JWT avec cookie httpOnly. Pas de vérification email ni mot de passe oublié en v0.
 - Moteur de répétition espacée : **FSRS** (Free Spaced Repetition Scheduler) via la lib `ts-fsrs` (npm), plus moderne et adaptatif que le SM-2 d'Anki
 
+## Stack confirmée
+
+IA unifiée sur **Gemini** (`@google/genai`) pour l'évaluation des réponses IA, la génération de fiches et le TTS, remplaçant les pistes initialement envisagées (Google Cloud TTS, "API type Claude" pour l'évaluation).
+
 ## Principes UX non négociables
 
 Ces règles priment sur toute simplification technique. Ne pas les casser pour aller plus vite.
@@ -43,18 +47,26 @@ Audio : génération TTS **à la volée** sur les fiches (prononciation), pas d'
 
 ## Scope MVP
 
-- **UC1** : compte simple (email/mot de passe, JWT httpOnly)
-- **UC2** : decks plats (pas de hiérarchie/sous-decks), nom libre, un deck = un sujet
-- **UC3** : création/édition/suppression de fiches, choix du type à la création, génération audio à la demande
-- **UC4** : session de révision avec palier adaptatif par deck, blocage anti-cram
-- **UC5** : stats de rétention/maîtrise, streak secondaire, mécanisme de progression mensuel
+- **UC1** : compte simple (email/mot de passe, JWT httpOnly) ✅ Terminé
+- **UC2** : decks plats (pas de hiérarchie/sous-decks), nom libre, un deck = un sujet ✅ Terminé
+- **UC3** : création/édition/suppression de fiches, choix du type à la création, génération audio à la demande ✅ Terminé
+- **UC4** : session de révision avec palier adaptatif par deck, blocage anti-cram ✅ Terminé
+- **UC5** : stats de rétention/maîtrise, streak secondaire, mécanisme de progression mensuel ✅ Terminé
 
 ## Hors scope MVP (V2)
 
 - UC6 : import de decks Anki (.apkg = zip contenant une base SQLite, faisable via `better-sqlite3` ou `sql.js`)
-- UC7 : génération automatique de fiches depuis texte/PDF (voire vidéo, encore plus tard)
+- UC7 : génération automatique de fiches depuis texte/PDF (voire vidéo, encore plus tard). ✅ Terminé pour le texte, implémenté en avance sur le plan initial (PDF et vidéo restent hors scope)
 - Formats de cartes avancés (contexte, détection d'erreur)
 - Mécanismes de rappel/notification pour la régularité (rien prévu en v0)
+
+## v1 en cours
+
+- Renommage des types de cards ("Rappel classique" -> "Appréciation personnelle", "Question ouverte" -> "Avis assisté"), affichage uniquement
+- Feedback pédagogique enrichi après évaluation IA
+- Choix du type de card à la génération (mix auto vs type forcé)
+- Nouveau design system à intégrer
+- Refonte ergonomique pour accessibilité
 
 ## Modèle de données Prisma (base de départ)
 
@@ -127,7 +139,7 @@ Le champ `type` sur `Card` suffit pour l'extensibilité V2 (ajout de valeurs à 
 
 Démarrer simple : moyenne mobile sur les 7 derniers jours de reviews réussies par deck. Ne pas sur-ingénierer avant d'avoir de la donnée réelle d'usage (Wesley + Emilie).
 
-### TTS
+### TTS ✅ Terminé (voir "Stack confirmée" : Gemini TTS remplace Google Cloud TTS)
 
 Google Cloud TTS pour la v0 (gratuit/quasi-gratuit, suffisant pour tester). Isoler l'appel derrière un service dédié pour pouvoir switcher vers ElevenLabs plus tard sans douleur si le besoin de qualité de prononciation augmente (pertinent vu l'usage anglais).
 
