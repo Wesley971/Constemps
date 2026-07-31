@@ -7,7 +7,9 @@ import { fsrs, Rating, State } from 'ts-fsrs';
 import type { Card as FsrsCardInput, Grade } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
+import { DecksService } from '../decks/decks.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
+import { startOfDay } from '../common/date';
 
 const DAILY_GOAL_WINDOW_DAYS = 7;
 const DAILY_GOAL_WINDOW_MS = DAILY_GOAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
@@ -35,12 +37,6 @@ const AI_VERDICT_TO_GRADE: Record<AiVerdict, Grade> = {
   incompris: Rating.Again,
 };
 
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 const scheduler = fsrs({ enable_short_term: false });
 
 @Injectable()
@@ -48,15 +44,8 @@ export class ReviewsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
+    private readonly decksService: DecksService,
   ) {}
-
-  private async assertDeckOwnership(userId: string, deckId: string) {
-    const deck = await this.prisma.deck.findUnique({ where: { id: deckId } });
-    if (!deck || deck.userId !== userId) {
-      throw new NotFoundException('Deck not found');
-    }
-    return deck;
-  }
 
   private async computeDailyGoal(
     deckId: string,
@@ -109,7 +98,7 @@ export class ReviewsService {
   }
 
   async getSession(userId: string, deckId: string, extend: boolean) {
-    const deck = await this.assertDeckOwnership(userId, deckId);
+    const deck = await this.decksService.findOne(userId, deckId);
     let dailyGoal = await this.computeDailyGoal(deckId, deck.dailyGoal);
 
     // Le palier adaptatif peut retomber à son plancher (deck peu régulier).
@@ -216,7 +205,7 @@ export class ReviewsService {
       include: { deck: { select: { userId: true } } },
     });
     if (!card || card.deck.userId !== userId) {
-      throw new NotFoundException('Card not found');
+      throw new NotFoundException('Card introuvable');
     }
 
     let grade: Grade;
@@ -225,13 +214,15 @@ export class ReviewsService {
 
     if (card.type === 'CLASSIC') {
       if (!dto.rating) {
-        throw new BadRequestException('rating is required for CLASSIC cards');
+        throw new BadRequestException(
+          'La notation est requise pour une card de type classique',
+        );
       }
       grade = MANUAL_RATING_TO_GRADE[dto.rating];
     } else {
       if (!dto.userAnswer) {
         throw new BadRequestException(
-          'userAnswer is required for OPEN_QUESTION cards',
+          'La réponse est requise pour une card de type question ouverte',
         );
       }
       userAnswer = dto.userAnswer;

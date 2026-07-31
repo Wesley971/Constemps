@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { DecksService } from '../decks/decks.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 
@@ -14,17 +15,11 @@ export class CardsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
+    private readonly decksService: DecksService,
   ) {}
 
-  private async assertDeckOwnership(userId: string, deckId: string) {
-    const deck = await this.prisma.deck.findUnique({ where: { id: deckId } });
-    if (!deck || deck.userId !== userId) {
-      throw new NotFoundException('Deck not found');
-    }
-  }
-
   async create(userId: string, deckId: string, dto: CreateCardDto) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
     return this.prisma.card.create({
       data: {
         deckId,
@@ -36,12 +31,12 @@ export class CardsService {
   }
 
   async generateCards(userId: string, deckId: string, text: string) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
     return this.aiService.generateCards(text);
   }
 
   async findAllForDeck(userId: string, deckId: string) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
     return this.prisma.card.findMany({
       where: { deckId },
       orderBy: { createdAt: 'desc' },
@@ -54,7 +49,7 @@ export class CardsService {
       include: { deck: { select: { userId: true } } },
     });
     if (!card || card.deck.userId !== userId) {
-      throw new NotFoundException('Card not found');
+      throw new NotFoundException('Card introuvable');
     }
     const { deck: _deck, ...rest } = card;
     return rest;

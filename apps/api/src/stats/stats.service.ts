@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Rating } from 'ts-fsrs';
 import type { Card, ReviewLog } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { DecksService } from '../decks/decks.service';
+import { startOfDay, subDays, formatDateKey } from '../common/date';
 
 const HISTORY_WINDOW_DAYS = 30;
 const RETENTION_WINDOW_DAYS = 30;
@@ -19,36 +21,12 @@ const STATE_NAMES = ['New', 'Learning', 'Review', 'Relearning'] as const;
 // rating est stocké en simple Int côté Prisma (pas l'enum ts-fsrs), d'où le cast explicite.
 const RATING_GOOD: number = Rating.Good;
 
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function subDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() - days);
-  return d;
-}
-
-function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 @Injectable()
 export class StatsService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  private async assertDeckOwnership(userId: string, deckId: string) {
-    const deck = await this.prisma.deck.findUnique({ where: { id: deckId } });
-    if (!deck || deck.userId !== userId) {
-      throw new NotFoundException('Deck not found');
-    }
-    return deck;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly decksService: DecksService,
+  ) {}
 
   private async computeCurrentStreak(deckId: string): Promise<number> {
     const logs = await this.prisma.reviewLog.findMany({
@@ -77,7 +55,7 @@ export class StatsService {
   }
 
   async getOverview(userId: string, deckId: string) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
 
     const [
       totalCards,
@@ -134,7 +112,7 @@ export class StatsService {
   }
 
   async getHistory(userId: string, deckId: string) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
 
     const todayStart = startOfDay(new Date());
     const windowStart = subDays(todayStart, HISTORY_WINDOW_DAYS - 1);
@@ -167,7 +145,7 @@ export class StatsService {
   }
 
   async getProgressHighlight(userId: string, deckId: string) {
-    await this.assertDeckOwnership(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
 
     const now = new Date();
     const windowStart = subDays(now, PROGRESS_HIGHLIGHT_WINDOW_MAX_DAYS);

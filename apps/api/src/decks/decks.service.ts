@@ -23,7 +23,7 @@ export class DecksService {
   async findOne(userId: string, id: string) {
     const deck = await this.prisma.deck.findUnique({ where: { id } });
     if (!deck || deck.userId !== userId) {
-      throw new NotFoundException('Deck not found');
+      throw new NotFoundException('Deck introuvable');
     }
     return deck;
   }
