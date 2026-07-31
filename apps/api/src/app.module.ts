@@ -9,7 +9,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { AppThrottlerGuard } from './common/app-throttler.guard';
-import { UsersModule } from './users/users.module';
 import { DecksModule } from './decks/decks.module';
 import { CardsModule } from './cards/cards.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -25,7 +24,6 @@ import { StatsModule } from './stats/stats.module';
     }),
     PrismaModule,
     AuthModule,
-    UsersModule,
     DecksModule,
     CardsModule,
     ReviewsModule,
