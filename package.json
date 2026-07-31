@@ -1,0 +1,15 @@
+{
+  "name": "constemps",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Orchestration racine (pas un workspace npm) : lance Docker, l'API et le front en une seule commande.",
+  "scripts": {
+    "docker:up": "docker compose up -d",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev": "npm run docker:up && concurrently -n API,WEB -c blue,green \"npm run dev:api\" \"npm run dev:web\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

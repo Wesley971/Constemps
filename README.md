@@ -8,13 +8,27 @@ App web de révision espacée (flashcards) avec moteur FSRS. Voir `CLAUDE.md` po
 apps/
   api/   Back NestJS + Prisma + MySQL
   web/   Front React + Vite + TypeScript
+package.json         Orchestration racine (concurrently), pas un workspace npm
 docker-compose.yml   Service MySQL local
 ```
+
+`apps/api` et `apps/web` restent deux installations indépendantes (chacune son `node_modules`). Le `package.json` racine ne fait qu'orchestrer leur lancement en une seule commande, voir ci-dessous.
 
 ## Prérequis
 
 - Node.js 20+
 - Docker (pour la base MySQL locale)
+
+## Tout lancer en une commande
+
+Après avoir installé les dépendances une première fois dans chaque app (`npm install` dans `apps/api` et `apps/web`, voir sections détaillées ci-dessous) :
+
+```bash
+npm install   # une seule fois, à la racine (installe concurrently)
+npm run dev
+```
+
+Cette commande démarre Docker (`docker compose up -d`, sans effet si déjà lancé), puis l'API et le front en parallèle, avec leurs logs préfixés `API`/`WEB` dans le même terminal. `Ctrl+C` arrête l'API et le front (Docker continue de tourner en arrière-plan, comme avec un `docker compose up -d` classique).
 
 ## Lancer la base de données
 
