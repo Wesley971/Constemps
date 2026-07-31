@@ -23,7 +23,7 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (existing) {
-      throw new ConflictException('Email already in use');
+      throw new ConflictException('Cette adresse e-mail est déjà utilisée');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
@@ -40,12 +40,12 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Identifiants invalides');
     }
 
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
     if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Identifiants invalides');
     }
 
     const publicUser = { id: user.id, email: user.email };
