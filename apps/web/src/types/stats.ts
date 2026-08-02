@@ -23,6 +23,10 @@ export interface ProgressHighlightReview {
   rating: number
   userAnswer: string | null
   aiVerdict: string | null
+  cePointsForts: string | null
+  cePointsAmeliorer: string | null
+  piste: string | null
+  resumeCourt: string | null
   reviewedAt: string
 }
 

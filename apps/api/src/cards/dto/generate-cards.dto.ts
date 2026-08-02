@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { CardType } from '@prisma/client';
 
 export const MAX_GENERATE_TEXT_LENGTH = 50000;
 
@@ -9,4 +16,8 @@ export class GenerateCardsDto {
     message: `Le texte ne doit pas dépasser ${MAX_GENERATE_TEXT_LENGTH} caractères`,
   })
   text: string;
+
+  @IsOptional()
+  @IsEnum(CardType)
+  forceType?: CardType;
 }

@@ -265,14 +265,44 @@ function Review() {
               )}
             </div>
           ) : (
-            <div>
-              <div className="flex justify-center mb-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-center">
                 <Badge tone={openResult.aiVerdict ? VERDICT_TONES[openResult.aiVerdict] : 'neutral'}>
                   {openResult.aiVerdict ? (VERDICT_LABELS[openResult.aiVerdict] ?? openResult.aiVerdict) : 'Verdict indisponible'}
                 </Badge>
               </div>
-              <p className="font-body text-body-md text-inksoft m-0 mb-6">Réponse de référence : {card.back}</p>
-              <Button onClick={advance}>Card suivante</Button>
+
+              {(openResult.cePointsForts || openResult.cePointsAmeliorer) && (
+                <div className="flex flex-col gap-3 text-left">
+                  {openResult.cePointsForts && (
+                    <div className="border border-line rounded-sm p-4">
+                      <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">Points forts</p>
+                      <p className="font-body text-body-sm text-ink m-0">{openResult.cePointsForts}</p>
+                    </div>
+                  )}
+                  {openResult.cePointsAmeliorer && (
+                    <div className="border border-line rounded-sm p-4">
+                      <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">À améliorer</p>
+                      <p className="font-body text-body-sm text-ink m-0">{openResult.cePointsAmeliorer}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <p className="font-body text-body-md text-inksoft m-0 text-left">Réponse de référence : {card.back}</p>
+
+              {openResult.piste && (
+                <div className="flex items-start gap-2 bg-indigo-tint text-indigo-deep rounded-sm px-3.5 py-2.5 text-left">
+                  <iconify-icon icon="ph:lightbulb-bold" width="13" className="shrink-0 mt-0.5"></iconify-icon>
+                  <p className="font-body text-caption m-0">
+                    <span className="font-medium">Astuce.</span> {openResult.piste}
+                  </p>
+                </div>
+              )}
+
+              <Button className="self-start" onClick={advance}>
+                Card suivante
+              </Button>
             </div>
           )}
         </Flashcard>

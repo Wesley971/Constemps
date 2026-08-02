@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { cardsApi, ApiError } from '../services/api'
-import type { Card as CardData, GeneratedCard } from '../types/card'
+import type { Card as CardData, CardType, GeneratedCard } from '../types/card'
 import type { ToastState } from '../design-system/useToast'
 import { Card } from '../design-system/components/Card'
 import { Badge } from '../design-system/components/Badge'
@@ -8,11 +8,25 @@ import { Button } from '../design-system/components/Button'
 import { Input } from '../design-system/components/Input'
 import { Textarea } from '../design-system/components/Textarea'
 import { Checkbox } from '../design-system/components/Checkbox'
+import { Radio } from '../design-system/components/Radio'
 import { IconCircleButton } from '../design-system/components/IconCircleButton'
 import { Skeleton } from '../design-system/components/Skeleton'
 import { ModalScrim } from '../design-system/components/Modal'
+import { CARD_TYPE_LABELS } from '../design-system/constants'
 
 const MAX_TEXT_LENGTH = 50000
+
+type TypeMode = 'auto' | 'forced'
+
+const TYPE_MODE_OPTIONS = [
+  { value: 'auto', label: 'Laisser le choix se faire selon le contenu' },
+  { value: 'forced', label: 'Choisir un seul type' },
+]
+
+const FORCED_TYPE_OPTIONS = [
+  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC },
+  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION },
+]
 
 interface Proposal extends GeneratedCard {
   id: string
@@ -31,6 +45,8 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
   const [generating, setGenerating] = useState(false)
   const [proposals, setProposals] = useState<Proposal[] | null>(null)
   const [addingSelected, setAddingSelected] = useState(false)
+  const [typeMode, setTypeMode] = useState<TypeMode>('auto')
+  const [forcedType, setForcedType] = useState<CardType>('CLASSIC')
 
   const selectedCount = proposals?.filter((p) => p.selected).length ?? 0
   const overLimit = sourceText.length > MAX_TEXT_LENGTH
@@ -40,7 +56,8 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
 
     setGenerating(true)
     try {
-      const generated = await cardsApi.generate(deckId, sourceText.trim())
+      const forceType = typeMode === 'forced' ? forcedType : undefined
+      const generated = await cardsApi.generate(deckId, sourceText.trim(), forceType)
       setProposals(generated.map((card, index) => ({ ...card, id: `gen-${index}`, selected: true })))
     } catch (err) {
       notify({
@@ -119,6 +136,27 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                 </div>
               </div>
 
+              <div className="flex flex-col gap-2">
+                <span className="font-body text-label text-ink">Type de fiche</span>
+                <Radio
+                  name="generate-type-mode"
+                  options={TYPE_MODE_OPTIONS}
+                  value={typeMode}
+                  onChange={(value) => setTypeMode(value as TypeMode)}
+                  disabled={generating}
+                />
+                {typeMode === 'forced' && (
+                  <Radio
+                    name="generate-forced-type"
+                    options={FORCED_TYPE_OPTIONS}
+                    value={forcedType}
+                    onChange={(value) => setForcedType(value as CardType)}
+                    disabled={generating}
+                    inline
+                  />
+                )}
+              </div>
+
               {generating ? (
                 <div className="flex flex-col gap-2 items-center py-3">
                   <Skeleton className="w-50 h-7" radius="pill" />
@@ -144,9 +182,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                         </div>
                         <div className="flex-1 flex flex-col gap-2.5">
                           <div className="flex items-center justify-between">
-                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>
-                              {p.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
-                            </Badge>
+                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[p.type]}</Badge>
                             <IconCircleButton icon="ph:trash-bold" tone="ghost" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />
                           </div>
                           <Input

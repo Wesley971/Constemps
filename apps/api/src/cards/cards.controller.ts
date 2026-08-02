@@ -38,7 +38,12 @@ export class CardsController {
     @Param('deckId') deckId: string,
     @Body() dto: GenerateCardsDto,
   ) {
-    return this.cardsService.generateCards(user.id, deckId, dto.text);
+    return this.cardsService.generateCards(
+      user.id,
+      deckId,
+      dto.text,
+      dto.forceType,
+    );
   }
 
   @Get('decks/:deckId/cards')

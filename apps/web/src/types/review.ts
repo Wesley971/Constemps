@@ -36,4 +36,7 @@ export type ReviewSession = ReviewSessionActive | ReviewSessionGoalReached | Rev
 export interface SubmitReviewResult {
   card: Card
   aiVerdict: AiVerdict | null
+  cePointsForts: string | null
+  cePointsAmeliorer: string | null
+  piste: string | null
 }

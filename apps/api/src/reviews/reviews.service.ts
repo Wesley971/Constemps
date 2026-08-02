@@ -211,6 +211,10 @@ export class ReviewsService {
     let grade: Grade;
     let aiVerdict: AiVerdict | null = null;
     let userAnswer: string | null = null;
+    let cePointsForts: string | null = null;
+    let cePointsAmeliorer: string | null = null;
+    let piste: string | null = null;
+    let resumeCourt: string | null = null;
 
     if (card.type === 'CLASSIC') {
       if (!dto.rating) {
@@ -232,6 +236,10 @@ export class ReviewsService {
         dto.userAnswer,
       );
       aiVerdict = evaluation.verdict;
+      cePointsForts = evaluation.cePointsForts;
+      cePointsAmeliorer = evaluation.cePointsAmeliorer;
+      piste = evaluation.piste;
+      resumeCourt = evaluation.resumeCourt;
       grade = AI_VERDICT_TO_GRADE[evaluation.verdict];
     }
 
@@ -261,12 +269,22 @@ export class ReviewsService {
         rating: log.rating,
         userAnswer,
         aiVerdict,
+        cePointsForts,
+        cePointsAmeliorer,
+        piste,
+        resumeCourt,
         reviewedAt: now,
         scheduledDays: nextCardState.scheduled_days,
         elapsedDays: log.elapsed_days,
       },
     });
 
-    return { card: updatedCard, aiVerdict };
+    return {
+      card: updatedCard,
+      aiVerdict,
+      cePointsForts,
+      cePointsAmeliorer,
+      piste,
+    };
   }
 }

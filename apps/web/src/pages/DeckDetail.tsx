@@ -15,6 +15,7 @@ import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { Skeleton } from '../design-system/components/Skeleton'
 import { useToast } from '../design-system/useToast'
+import { CARD_TYPE_LABELS } from '../design-system/constants'
 import { GenerateCardsModal } from './GenerateCardsModal'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
@@ -23,8 +24,8 @@ const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
 }
 
 const CARD_TYPE_OPTIONS = [
-  { value: 'CLASSIC', label: 'Rappel classique' },
-  { value: 'OPEN_QUESTION', label: 'Question ouverte' },
+  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC },
+  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION },
 ]
 
 function DeckDetail() {
@@ -266,9 +267,7 @@ function DeckDetail() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-2">
                     <div>
-                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'}>
-                        {card.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
-                      </Badge>
+                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[card.type]}</Badge>
                     </div>
                     <p className="font-body text-body-md text-ink m-0">
                       {card.front} <span className="text-inksoft">/</span> {card.back}

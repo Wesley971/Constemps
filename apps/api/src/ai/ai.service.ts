@@ -13,7 +13,10 @@ export type AiVerdict = 'compris' | 'partiellement' | 'incompris';
 
 export interface AiEvaluationResult {
   verdict: AiVerdict;
-  justification?: string;
+  cePointsForts: string | null;
+  cePointsAmeliorer: string | null;
+  piste: string | null;
+  resumeCourt: string | null;
 }
 
 export interface GeneratedCard {
@@ -43,10 +46,17 @@ Réponse de l'élève : ${userAnswer}
 
 Juge uniquement si l'élève a compris le concept sur le fond. Ignore la formulation exacte, le style et l'orthographe.
 
-Réponds avec exactement un verdict parmi ces trois valeurs : "compris", "partiellement", "incompris".
+Détermine un verdict parmi "compris", "partiellement", "incompris", puis complète un feedback pédagogique :
+- "compris" : cePointsForts, cePointsAmeliorer, piste et resumeCourt valent tous null.
+- "partiellement" : cePointsForts décrit ce qui était juste dans la réponse, cePointsAmeliorer décrit ce qui manquait ou était imprécis, piste donne un conseil concret pour progresser, resumeCourt résume cette piste en quelques mots seulement.
+- "incompris" : cePointsForts vaut null, cePointsAmeliorer décrit concrètement ce qui était attendu, piste donne un conseil concret pour progresser, resumeCourt résume cette piste en quelques mots seulement.
+
+resumeCourt n'est jamais une phrase complète : quelques mots seulement, façon mot-clé ou punchline mémorable (par exemple "diffusion de Rayleigh" plutôt qu'une phrase qui l'explique).
+
+Consignes de ton, à respecter strictement : pas d'introduction ni de formule de politesse, uniquement les champs demandés. Ton direct et constructif, jamais culpabilisant. Tutoiement implicite (jamais de vouvoiement), de préférence à l'impératif plutôt que des phrases avec "tu". Phrases courtes.
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
-{ "verdict": "compris" }`;
+{ "verdict": "partiellement", "cePointsForts": "...", "cePointsAmeliorer": "...", "piste": "...", "resumeCourt": "..." }`;
 }
 
 function computeMaxGeneratedCards(textLength: number): number {
@@ -55,7 +65,33 @@ function computeMaxGeneratedCards(textLength: number): number {
   return BASE_MAX_GENERATED_CARDS;
 }
 
-function buildGenerateCardsPrompt(text: string, maxCards: number): string {
+function buildTypeInstructions(forceType: CardType | undefined): string {
+  if (forceType === 'CLASSIC') {
+    return `Toutes les fiches doivent être de type "CLASSIC" : vocabulaire, traduction ou définition courte (front = terme/mot/question courte, back = traduction/définition courte, reformulée). Ne génère aucune fiche "OPEN_QUESTION".`;
+  }
+  if (forceType === 'OPEN_QUESTION') {
+    return `Toutes les fiches doivent être de type "OPEN_QUESTION" : une vraie question de compréhension nécessitant une réponse rédigée (front = question de compréhension, back = réponse de référence attendue, pas une réponse d'élève). Ne génère aucune fiche "CLASSIC".`;
+  }
+  return `Pour chaque fiche, choisis toi-même le type le plus adapté :
+- "CLASSIC" pour du vocabulaire, une traduction ou une définition courte (front = terme/mot/question courte, back = traduction/définition courte, reformulée)
+- "OPEN_QUESTION" pour une vraie question de compréhension nécessitant une réponse rédigée (front = question de compréhension, back = réponse de référence attendue, pas une réponse d'élève)`;
+}
+
+function buildExampleJson(forceType: CardType | undefined): string {
+  if (forceType === 'CLASSIC') {
+    return `[{ "type": "CLASSIC", "front": "...", "back": "..." }]`;
+  }
+  if (forceType === 'OPEN_QUESTION') {
+    return `[{ "type": "OPEN_QUESTION", "front": "...", "back": "..." }]`;
+  }
+  return `[{ "type": "CLASSIC", "front": "...", "back": "..." }, { "type": "OPEN_QUESTION", "front": "...", "back": "..." }]`;
+}
+
+function buildGenerateCardsPrompt(
+  text: string,
+  maxCards: number,
+  forceType?: CardType,
+): string {
   return `Tu génères des fiches de révision (flashcards) à partir d'un texte fourni par l'utilisateur, dans une app de révision espacée. Ton rôle n'est pas d'extraire des passages du texte, mais de jouer le rôle de quelqu'un qui a compris le texte et qui l'explique avec ses propres mots à quelqu'un d'autre.
 
 Texte source :
@@ -83,14 +119,12 @@ MAUVAISE fiche (copiée du texte, trop longue, teste le rappel) :
 BONNE fiche (reformulée, un seul concept, courte, teste la compréhension) :
 { "type": "OPEN_QUESTION", "front": "Pourquoi une plante a-t-elle besoin de lumière pour fabriquer du glucose ?", "back": "La lumière apporte l'énergie que la plante convertit et stocke sous forme chimique dans le glucose ; sans cette énergie, la réaction ne peut pas se produire." }
 
-Pour chaque fiche, choisis toi-même le type le plus adapté :
-- "CLASSIC" pour du vocabulaire, une traduction ou une définition courte (front = terme/mot/question courte, back = traduction/définition courte, reformulée)
-- "OPEN_QUESTION" pour une vraie question de compréhension nécessitant une réponse rédigée (front = question de compréhension, back = réponse de référence attendue, pas une réponse d'élève)
+${buildTypeInstructions(forceType)}
 
 Ne génère pas de doublons, ne pose pas de questions triviales, reste fidèle au sens du texte (mais jamais à sa formulation exacte). Génère entre ${MIN_GENERATED_CARDS} et ${maxCards} fiches, en respectant la priorité aux concepts structurants avant tout.
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
-[{ "type": "CLASSIC", "front": "...", "back": "..." }, { "type": "OPEN_QUESTION", "front": "...", "back": "..." }]`;
+${buildExampleJson(forceType)}`;
 }
 
 function buildTranslationPrompt(text: string, targetLang: string): string {
@@ -174,15 +208,15 @@ export class AiService {
         config: { responseMimeType: 'application/json' },
       });
 
-      const verdict = this.parseVerdict(response.text);
-      if (!verdict) {
+      const evaluation = this.parseEvaluation(response.text);
+      if (!evaluation) {
         this.logger.error(
           `Réponse Gemini mal formée, repli sur le fallback : ${response.text}`,
         );
         return this.fallbackEvaluate(referenceAnswer, userAnswer);
       }
 
-      return { verdict };
+      return evaluation;
     } catch (err) {
       this.logger.error(
         "Appel Gemini échoué, repli sur l'évaluation par recouvrement lexical",
@@ -227,7 +261,10 @@ export class AiService {
     return translation;
   }
 
-  async generateCards(text: string): Promise<GeneratedCard[]> {
+  async generateCards(
+    text: string,
+    forceType?: CardType,
+  ): Promise<GeneratedCard[]> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException(
@@ -241,7 +278,7 @@ export class AiService {
     try {
       const response = await this.getClient(apiKey).models.generateContent({
         model: GEMINI_MODEL,
-        contents: buildGenerateCardsPrompt(text, maxCards),
+        contents: buildGenerateCardsPrompt(text, maxCards, forceType),
         config: { responseMimeType: 'application/json' },
       });
       responseText = response.text;
@@ -320,18 +357,39 @@ export class AiService {
     return new GoogleGenAI({ apiKey });
   }
 
-  private parseVerdict(text: string | undefined): AiVerdict | null {
+  private parseEvaluation(text: string | undefined): AiEvaluationResult | null {
     if (!text) return null;
 
     try {
-      const parsed = JSON.parse(text) as { verdict?: unknown };
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      const { verdict, cePointsForts, cePointsAmeliorer, piste, resumeCourt } =
+        parsed;
+
       if (
-        typeof parsed.verdict === 'string' &&
-        VALID_VERDICTS.includes(parsed.verdict as AiVerdict)
+        typeof verdict !== 'string' ||
+        !VALID_VERDICTS.includes(verdict as AiVerdict)
       ) {
-        return parsed.verdict as AiVerdict;
+        return null;
       }
-      return null;
+
+      const isNullableString = (value: unknown) =>
+        value === null || value === undefined || typeof value === 'string';
+      if (
+        !isNullableString(cePointsForts) ||
+        !isNullableString(cePointsAmeliorer) ||
+        !isNullableString(piste) ||
+        !isNullableString(resumeCourt)
+      ) {
+        return null;
+      }
+
+      return {
+        verdict: verdict as AiVerdict,
+        cePointsForts: (cePointsForts as string | null) ?? null,
+        cePointsAmeliorer: (cePointsAmeliorer as string | null) ?? null,
+        piste: (piste as string | null) ?? null,
+        resumeCourt: (resumeCourt as string | null) ?? null,
+      };
     } catch {
       return null;
     }
@@ -394,8 +452,11 @@ export class AiService {
     if (referenceWords.size === 0 || userWords.size === 0) {
       return {
         verdict: 'incompris',
-        justification:
-          'Réponse vide ou non comparable à la réponse de référence (fallback).',
+        cePointsForts: null,
+        cePointsAmeliorer:
+          'Aucune réponse exploitable à comparer à la réponse de référence.',
+        piste: 'Reformule ta réponse avec tes propres mots, même incomplète.',
+        resumeCourt: 'réponse à reformuler',
       };
     }
 
@@ -407,21 +468,31 @@ export class AiService {
     if (overlapRatio >= 0.6) {
       return {
         verdict: 'compris',
-        justification:
-          'La réponse couvre la majorité des éléments attendus (fallback).',
+        cePointsForts: null,
+        cePointsAmeliorer: null,
+        piste: null,
+        resumeCourt: null,
       };
     }
     if (overlapRatio >= 0.3) {
       return {
         verdict: 'partiellement',
-        justification:
-          'La réponse couvre seulement une partie des éléments attendus (fallback).',
+        cePointsForts: 'Ta réponse couvre une partie des éléments attendus.',
+        cePointsAmeliorer:
+          'Certains éléments de la réponse de référence manquent encore.',
+        piste:
+          'Compare ta réponse à la réponse de référence pour repérer ce qui manque.',
+        resumeCourt: 'éléments manquants à combler',
       };
     }
     return {
       verdict: 'incompris',
-      justification:
-        'La réponse ne correspond pas à la réponse de référence (fallback).',
+      cePointsForts: null,
+      cePointsAmeliorer:
+        'Ta réponse ne correspond pas à la réponse de référence.',
+      piste:
+        'Relis la réponse de référence et reformule-la avec tes propres mots.',
+      resumeCourt: 'relecture de la référence',
     };
   }
 }

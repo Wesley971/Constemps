@@ -61,8 +61,11 @@ export const cardsApi = {
   update: (id: string, front: string, back: string) =>
     request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back }) }),
   remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
-  generate: (deckId: string, text: string) =>
-    request<GeneratedCard[]>(`/decks/${deckId}/cards/generate`, { method: 'POST', body: JSON.stringify({ text }) }),
+  generate: (deckId: string, text: string, forceType?: CardType) =>
+    request<GeneratedCard[]>(`/decks/${deckId}/cards/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ text, forceType }),
+    }),
   generateAudio: (id: string) => request<Card>(`/cards/${id}/audio`, { method: 'POST' }),
 }
 

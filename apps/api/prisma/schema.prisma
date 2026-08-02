@@ -53,13 +53,17 @@ model Card {
 }
 
 model ReviewLog {
-  id            String   @id @default(uuid())
-  cardId        String
-  card          Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  rating        Int // Again/Hard/Good/Easy, ou verdict IA mappé
-  userAnswer    String? @db.Text // contenu réel, nécessaire pour le rappel à 6 mois
-  aiVerdict     String? // pour OPEN_QUESTION : compris/partiel/incompris
-  reviewedAt    DateTime @default(now())
-  scheduledDays Int
-  elapsedDays   Int
+  id                String   @id @default(uuid())
+  cardId            String
+  card              Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  rating            Int // Again/Hard/Good/Easy, ou verdict IA mappé
+  userAnswer        String?  @db.Text // contenu réel, nécessaire pour le rappel à 6 mois
+  aiVerdict         String? // pour OPEN_QUESTION : compris/partiel/incompris
+  cePointsForts     String?  @db.Text // feedback IA : ce qui était juste (partiellement uniquement)
+  cePointsAmeliorer String?  @db.Text // feedback IA : ce qui manquait/était attendu
+  piste             String?  @db.Text // feedback IA : conseil concret pour progresser
+  resumeCourt       String? // résumé très court de la piste, pour un rappel émotionnel rapide (voir "Ta progression")
+  reviewedAt        DateTime @default(now())
+  scheduledDays     Int
+  elapsedDays       Int
 }

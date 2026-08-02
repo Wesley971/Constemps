@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { CardType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { DecksService } from '../decks/decks.service';
@@ -30,9 +31,14 @@ export class CardsService {
     });
   }
 
-  async generateCards(userId: string, deckId: string, text: string) {
+  async generateCards(
+    userId: string,
+    deckId: string,
+    text: string,
+    forceType?: CardType,
+  ) {
     await this.decksService.findOne(userId, deckId);
-    return this.aiService.generateCards(text);
+    return this.aiService.generateCards(text, forceType);
   }
 
   async findAllForDeck(userId: string, deckId: string) {
