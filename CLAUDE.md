@@ -24,6 +24,8 @@ Projet né d'un besoin personnel : apprentissage de l'anglais avec un prof aux m
 
 IA unifiée sur **Gemini** (`@google/genai`) pour l'évaluation des réponses IA, la génération de fiches et le TTS, remplaçant les pistes initialement envisagées (Google Cloud TTS, "API type Claude" pour l'évaluation).
 
+`ReviewLog` conserve désormais le feedback pédagogique complet de l'évaluation IA (cePointsForts, cePointsAmeliorer, piste, resumeCourt), pas seulement le verdict, pour permettre une comparaison ancienne/actuelle réellement personnalisée dans le mécanisme "Ta progression".
+
 ## Principes UX non négociables
 
 Ces règles priment sur toute simplification technique. Ne pas les casser pour aller plus vite.
@@ -38,8 +40,8 @@ Ces règles priment sur toute simplification technique. Ne pas les casser pour a
 
 Deux types seulement pour le MVP :
 
-1. **Rappel classique** : recto/verso, notation manuelle Again/Hard/Good/Easy (comme Anki)
-2. **Question ouverte** : champ question + champ réponse de référence en texte libre (pas de checklist structurée). La réponse de l'utilisateur est évaluée par une IA (appel API type Claude) qui rend un verdict (compris/partiellement/incompris) remplaçant la notation manuelle et alimentant FSRS.
+1. **Rappel classique** (affiché "Appréciation personnelle" depuis la v1) : recto/verso, notation manuelle Again/Hard/Good/Easy (comme Anki)
+2. **Question ouverte** (affiché "Avis assisté" depuis la v1) : champ question + champ réponse de référence en texte libre (pas de checklist structurée). La réponse de l'utilisateur est évaluée par une IA (appel API type Claude) qui rend un verdict (compris/partiellement/incompris) remplaçant la notation manuelle et alimentant FSRS.
 
 Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mais le modèle de données doit prévoir un champ `type` extensible dès le départ (voir modèle Prisma ci-dessous).
 
@@ -62,69 +64,15 @@ Audio : génération TTS **à la volée** sur les fiches (prononciation), pas d'
 
 ## v1 en cours
 
-- Renommage des types de cards ("Rappel classique" -> "Appréciation personnelle", "Question ouverte" -> "Avis assisté"), affichage uniquement
-- Feedback pédagogique enrichi après évaluation IA
-- Choix du type de card à la génération (mix auto vs type forcé)
-- Nouveau design system à intégrer
-- Refonte ergonomique pour accessibilité
+- Renommage des types de cards ("Rappel classique" -> "Appréciation personnelle", "Question ouverte" -> "Avis assisté"), affichage uniquement ✅ Terminé
+- Feedback pédagogique enrichi après évaluation IA (verdict + points forts/à améliorer + piste + résumé court, persisté en base dans ReviewLog) ✅ Terminé
+- Choix du type de card à la génération par IA (forceType, mix auto vs type unique forcé) ✅ Terminé
+- Nouveau design system "Constemps Design System" intégré (tokens, composants, nouveau logo, remplace "Bento Profile") ✅ Terminé
+- Refonte ergonomique pour accessibilité : objectif transverse continu, partiellement couvert par le nouveau design system mais pas un chantier fermé
 
-## Modèle de données Prisma (base de départ)
+## Modèle de données Prisma
 
-```prisma
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  decks     Deck[]
-}
-
-model Deck {
-  id        String   @id @default(uuid())
-  name      String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  dailyGoal Int      @default(10) // palier adaptatif, recalculé par job
-  cards     Card[]
-  createdAt DateTime @default(now())
-}
-
-enum CardType {
-  CLASSIC
-  OPEN_QUESTION
-}
-
-model Card {
-  id          String    @id @default(uuid())
-  deckId      String
-  deck        Deck      @relation(fields: [deckId], references: [id])
-  type        CardType
-  front       String    // recto, ou question
-  back        String    // verso, ou réponse de référence
-  // état FSRS
-  stability   Float     @default(0)
-  difficulty  Float     @default(0)
-  due         DateTime  @default(now())
-  lapses      Int       @default(0)
-  reps        Int       @default(0)
-  state       Int       @default(0) // New/Learning/Review/Relearning (enum FSRS)
-  audioUrl    String?
-  createdAt   DateTime  @default(now())
-  reviewLogs  ReviewLog[]
-}
-
-model ReviewLog {
-  id            String   @id @default(uuid())
-  cardId        String
-  card          Card     @relation(fields: [cardId], references: [id])
-  rating        Int      // Again/Hard/Good/Easy, ou verdict IA mappé
-  userAnswer    String?  // contenu réel, nécessaire pour le rappel à 6 mois
-  aiVerdict     String?  // pour OPEN_QUESTION : compris/partiel/incompris
-  reviewedAt    DateTime @default(now())
-  scheduledDays Int
-  elapsedDays   Int
-}
-```
+Voir `apps/api/prisma/schema.prisma` pour le modèle de données à jour.
 
 Le champ `type` sur `Card` suffit pour l'extensibilité V2 (ajout de valeurs à l'enum + adaptation front). Pas de table polymorphe pour un MVP à 2 types.
 
