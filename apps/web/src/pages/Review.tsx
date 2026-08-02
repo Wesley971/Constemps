@@ -289,7 +289,10 @@ function Review() {
                 </div>
               )}
 
-              <p className="font-body text-body-md text-inksoft m-0 text-left">Réponse de référence : {card.back}</p>
+              <div className="bg-paper-sunken rounded-sm p-4 text-left">
+                <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">Réponse de référence</p>
+                <p className="font-body text-body-sm text-ink m-0">{card.back}</p>
+              </div>
 
               {openResult.piste && (
                 <div className="flex items-start gap-2 bg-indigo-tint text-indigo-deep rounded-sm px-3.5 py-2.5 text-left">
