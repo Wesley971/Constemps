@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import type { ChangeEventHandler } from 'react'
 
 interface InputProps {
@@ -20,7 +20,7 @@ interface InputProps {
 
 export function Input({
   label,
-  placeholder = 'Type here',
+  placeholder = '',
   hint,
   error,
   icon,
@@ -34,10 +34,9 @@ export function Input({
   minLength,
   className,
 }: InputProps) {
-  const [focused, setFocused] = useState(false)
   const generatedId = useId()
   const fieldId = id ?? generatedId
-  const borderColor = error ? 'border-danger' : focused ? 'border-teal-deep' : 'border-line'
+  const borderColor = error ? 'border-danger' : 'border-line focus-within:border-indigo-deep'
 
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
@@ -46,13 +45,16 @@ export function Input({
           {label}
         </label>
       ) : null}
+      {/* Le ring de focus vit uniquement sur ce wrapper (focus-within). L'input natif
+          neutralise le ring global hérité de :focus-visible (focus-visible:shadow-none,
+          spécificité plus forte) pour éviter le double contour. */}
       <div
-        className={`flex items-center gap-2 rounded-input px-3.5 py-2.75 border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard ${borderColor} ${
-          disabled ? 'bg-canvas opacity-55' : 'bg-white'
-        } ${focused ? 'shadow-focus' : ''}`}
+        className={`flex items-center gap-2 rounded-sm px-3.5 py-2.75 border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard focus-within:shadow-focus-ring ${borderColor} ${
+          disabled ? 'bg-paper-sunken opacity-60' : 'bg-paper'
+        }`}
       >
         {icon ? (
-          <span className="text-inksoft flex items-center">
+          <span className="text-inkfaint flex items-center">
             <iconify-icon icon={icon} width="16"></iconify-icon>
           </span>
         ) : null}
@@ -66,15 +68,13 @@ export function Input({
           onChange={onChange}
           required={required}
           minLength={minLength}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          className="border-none outline-none flex-1 bg-transparent font-body text-body-md text-ink w-full"
+          className="border-none outline-none focus-visible:shadow-none flex-1 bg-transparent font-body text-body-md text-ink w-full"
         />
       </div>
       {error ? (
         <span className="font-body text-caption text-danger">{error}</span>
       ) : hint ? (
-        <span className="font-body text-caption text-inksoft">{hint}</span>
+        <span className="font-body text-caption text-inkfaint">{hint}</span>
       ) : null}
     </div>
   )

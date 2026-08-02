@@ -55,7 +55,7 @@ function Login() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </Button>
         </form>
-        <p className="font-body text-body-sm text-inksoft mt-5">
+        <p className="font-body text-body-sm text-inkfaint mt-5">
           Pas encore de compte ? <Link to="/register">Créer un compte</Link>
         </p>
       </Card>

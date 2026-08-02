@@ -94,7 +94,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-170 max-w-[92vw] max-h-[88vh] bg-white rounded-modal shadow-elevation-4 p-7 flex flex-col gap-4"
+        className="relative w-170 max-w-[92vw] max-h-[88vh] bg-paper rounded-lg shadow-modal p-7 flex flex-col gap-4"
       >
         <div className="flex items-center justify-between">
           <span className="font-display text-display-sm text-ink">Générer des cards depuis un texte</span>
@@ -114,7 +114,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                   disabled={generating}
                   error={overLimit ? `Le texte dépasse la limite de ${MAX_TEXT_LENGTH.toLocaleString('fr-FR')} caractères` : undefined}
                 />
-                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
+                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inkfaint'}`}>
                   {sourceText.length.toLocaleString('fr-FR')} / {MAX_TEXT_LENGTH.toLocaleString('fr-FR')}
                 </div>
               </div>
@@ -144,7 +144,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                         </div>
                         <div className="flex-1 flex flex-col gap-2.5">
                           <div className="flex items-center justify-between">
-                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'teal'}>
+                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>
                               {p.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
                             </Badge>
                             <IconCircleButton icon="ph:trash-bold" tone="ghost" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />

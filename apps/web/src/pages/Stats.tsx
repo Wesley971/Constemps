@@ -37,13 +37,13 @@ function formatShortDate(dateKey: string): string {
   return `${day}/${month}`
 }
 
-function StatBlock({ value, caption, tone }: { value: string; caption: string; tone: 'teal' | 'ink' }) {
+function StatBlock({ value, caption, tone }: { value: string; caption: string; tone: 'accent' | 'ink' }) {
   return (
     <div
-      className={`flex-1 min-w-40 ${tone === 'teal' ? 'bg-teal' : 'bg-ink'} text-white rounded-tile shadow-soft p-5 flex flex-col gap-1.5`}
+      className={`flex-1 min-w-40 ${tone === 'accent' ? 'bg-indigo-deep' : 'bg-ink'} text-paper rounded-lg shadow-1 p-5 flex flex-col gap-1.5`}
     >
-      <div className="font-display text-stat tracking-tight">{value}</div>
-      <div className="font-body text-body-sm text-white/80">{caption}</div>
+      <div className="font-display text-display-lg tracking-tight">{value}</div>
+      <div className="font-body text-body-sm text-paper/82">{caption}</div>
     </div>
   )
 }
@@ -65,23 +65,23 @@ function HistoryChart({ days }: { days: HistoryDay[] }) {
             >
               {/* hauteur pilotée par une valeur continue calculée depuis les données réelles :
                   ne peut pas être exprimée en classe Tailwind statique */}
-              {remainderHeight > 0 && <div style={{ height: remainderHeight }} className="bg-ink/16 rounded-t-[2px]" />}
+              {remainderHeight > 0 && <div style={{ height: remainderHeight }} className="bg-ink/14 rounded-t-[2px]" />}
               {successHeight > 0 && <div style={{ height: successHeight }} className="bg-success rounded-t-[2px]" />}
             </div>
           )
         })}
       </div>
-      <div className="flex justify-between font-body text-body-sm text-inksoft mt-2">
+      <div className="flex justify-between font-body text-body-sm text-inkfaint mt-2">
         <span>{days.length > 0 && formatShortDate(days[0].date)}</span>
         <span>{days.length > 0 && formatShortDate(days[days.length - 1].date)}</span>
       </div>
       <div className="flex gap-4 mt-3">
-        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inksoft">
+        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inkfaint">
           <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-success" />
           Réussi
         </span>
-        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inksoft">
-          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-ink/16" />
+        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inkfaint">
+          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-ink/14" />
           À retravailler
         </span>
       </div>
@@ -111,7 +111,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
       <p className="font-body text-body-md text-ink m-0 mb-4">{card.front}</p>
       <div className="flex gap-4 flex-wrap">
         <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Il y a environ un mois</p>
+          <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-2.5">Il y a environ un mois</p>
           <Badge tone={RATING_TONES[oldReview.rating] ?? 'neutral'}>{RATING_LABELS[oldReview.rating] ?? oldReview.rating}</Badge>
           {oldReview.aiVerdict && (
             <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[oldReview.aiVerdict] ?? oldReview.aiVerdict}</p>
@@ -121,7 +121,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
           )}
         </div>
         <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase text-inksoft m-0 mb-2.5">Plus récemment</p>
+          <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-2.5">Plus récemment</p>
           <Badge tone={RATING_TONES[recentReview.rating] ?? 'neutral'}>{RATING_LABELS[recentReview.rating] ?? recentReview.rating}</Badge>
           {recentReview.aiVerdict && (
             <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[recentReview.aiVerdict] ?? recentReview.aiVerdict}</p>
@@ -199,13 +199,13 @@ function Stats() {
       <p className="mt-1 mb-5">
         <Link to={`/decks/${id}`}>Retour au deck</Link>
       </p>
-      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Stats — {deck?.name}</h1>
+      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Stats : {deck?.name}</h1>
 
       {overview && (
         <>
           <div className="flex gap-4 mb-3 flex-wrap">
             <StatBlock
-              tone="teal"
+              tone="accent"
               value={overview.retentionRate === null ? '–' : `${overview.retentionRate}%`}
               caption="Taux de rétention (30 derniers jours)"
             />

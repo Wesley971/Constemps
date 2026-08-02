@@ -22,7 +22,7 @@ const colors: Record<NotificationTone, string> = {
 
 export function Notification({ title, message, tone = 'info' }: NotificationProps) {
   return (
-    <div className="flex gap-3 items-start bg-white border border-line rounded-sm shadow-elevation-3 p-4 max-w-85">
+    <div className="flex gap-3 items-start bg-paper border border-line rounded-sm shadow-3 p-4 max-w-85">
       <span className={`shrink-0 mt-px ${colors[tone]}`}>
         <iconify-icon icon={icons[tone]} width="20"></iconify-icon>
       </span>

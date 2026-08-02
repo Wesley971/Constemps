@@ -20,7 +20,7 @@ export function Checkbox({ checked, onChange, label, disabled }: CheckboxProps) 
         />
         <span
           className={`absolute inset-0 rounded-xs border-[1.5px] flex items-center justify-center ${
-            checked ? 'border-teal-deep bg-teal text-white' : 'border-line bg-white'
+            checked ? 'border-indigo-deep bg-indigo text-paper' : 'border-line bg-paper'
           }`}
         >
           {checked ? <iconify-icon icon="ph:check-bold" width="13"></iconify-icon> : null}

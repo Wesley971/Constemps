@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-type ChipTone = 'default' | 'on-dark' | 'on-tint' | 'glass'
+type ChipTone = 'default' | 'on-dark' | 'on-tint'
 
 interface ChipProps {
   children: ReactNode
@@ -10,10 +10,9 @@ interface ChipProps {
 }
 
 const tones: Record<ChipTone, string> = {
-  default: 'bg-white text-ink border border-line',
-  'on-dark': 'bg-white/10 text-white border border-white/14',
-  'on-tint': 'bg-white/60 text-teal-deep border border-teal/18',
-  glass: 'bg-white/70 text-ink border border-white/50 backdrop-blur-glass',
+  default: 'bg-paper text-ink border border-line',
+  'on-dark': 'bg-paper/12 text-paper border border-paper/20',
+  'on-tint': 'bg-white/60 text-indigo-deep border border-indigo/18',
 }
 
 export function Chip({ children, icon, tone = 'default', className }: ChipProps) {

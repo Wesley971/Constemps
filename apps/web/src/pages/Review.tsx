@@ -7,6 +7,8 @@ import { Chip } from '../design-system/components/Chip'
 import { Badge } from '../design-system/components/Badge'
 import { Button } from '../design-system/components/Button'
 import { IconCircleButton } from '../design-system/components/IconCircleButton'
+import { Flashcard } from '../design-system/components/Flashcard'
+import { MilestoneBanner } from '../design-system/components/MilestoneBanner'
 import { Textarea } from '../design-system/components/Textarea'
 import { Notification } from '../design-system/components/Notification'
 import { ToastViewport } from '../design-system/components/ToastViewport'
@@ -151,12 +153,11 @@ function Review() {
   if (session.state === 'capped') {
     return (
       <div className="max-w-120 mx-auto">
-        <Card className="p-8 text-center">
-          <div className="mb-5">
-            <ProgressBar value={100} label="Palier du jour" tone="success" />
-          </div>
-          <p className="font-body text-body-md text-ink m-0 mb-4">{session.message}</p>
-          <Link to="/decks">Retour aux decks</Link>
+        <Card className="p-10">
+          <MilestoneBanner message={session.message} />
+          <p className="text-center mt-6 mb-0">
+            <Link to="/decks">Retour aux decks</Link>
+          </p>
         </Card>
       </div>
     )
@@ -165,15 +166,14 @@ function Review() {
   if (session.state === 'goal_reached') {
     return (
       <div className="max-w-120 mx-auto">
-        <Card className="p-8 text-center">
-          <div className="mb-5">
-            <ProgressBar value={100} label="Palier du jour" tone="success" />
-          </div>
-          <p className="font-body text-body-md text-ink m-0 mb-5">{session.message}</p>
-          <div className="flex gap-2.5 justify-center flex-wrap mb-4">
-            <Button onClick={handleContinueToday}>Continuer aujourd'hui</Button>
-          </div>
-          <Link to="/decks">Retour aux decks</Link>
+        <Card className="p-10">
+          <MilestoneBanner
+            message={session.message}
+            action={<Button variant="ghost" onClick={handleContinueToday}>Continuer aujourd'hui</Button>}
+          />
+          <p className="text-center mt-6 mb-0">
+            <Link to="/decks">Retour aux decks</Link>
+          </p>
         </Card>
       </div>
     )
@@ -212,76 +212,71 @@ function Review() {
         </Chip>
       </div>
 
-      <Card className="p-8">
-        {card.type === 'CLASSIC' ? (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2.5 mb-5">
-              <h2 className="font-display text-display-md text-ink tracking-tight m-0">{card.front}</h2>
-              {card.audioUrl && (
-                <IconCircleButton
-                  icon="ph:speaker-high-bold"
-                  tone="ghost"
-                  size="md"
-                  title="Écouter"
-                  onClick={() => handlePlayAudio(card.audioUrl!)}
-                />
+      {card.type === 'CLASSIC' ? (
+        <Flashcard
+          front={card.front}
+          back={card.back}
+          revealed={revealed}
+          audioAction={
+            card.audioUrl ? (
+              <IconCircleButton
+                icon="ph:speaker-high-bold"
+                tone="ghost"
+                size="md"
+                title="Écouter"
+                onClick={() => handlePlayAudio(card.audioUrl!)}
+              />
+            ) : null
+          }
+          onReveal={<Button onClick={() => setRevealed(true)}>Voir la réponse</Button>}
+          ratingButtons={
+            <>
+              <Button variant="danger" disabled={submitting} onClick={() => handleClassicRating(card.id, 'AGAIN')}>
+                Again
+              </Button>
+              <Button variant="ghost" disabled={submitting} onClick={() => handleClassicRating(card.id, 'HARD')}>
+                Hard
+              </Button>
+              <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'GOOD')}>
+                Good
+              </Button>
+              <Button variant="dark" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
+                Easy
+              </Button>
+            </>
+          }
+        />
+      ) : (
+        <Flashcard front={card.front} revealed>
+          {!openResult ? (
+            <div>
+              <div className="mb-4 text-left">
+                <Textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} rows={4} />
+              </div>
+              {submitting ? (
+                <div className="flex flex-col gap-2 items-center">
+                  <Skeleton className="w-40 h-7" radius="pill" />
+                  <span className="font-body text-body-sm text-inksoft">Évaluation en cours...</span>
+                </div>
+              ) : (
+                <Button disabled={submitting} onClick={() => handleSubmitOpenQuestion(card.id)}>
+                  Valider
+                </Button>
               )}
             </div>
-            {!revealed ? (
-              <Button onClick={() => setRevealed(true)}>Voir la réponse</Button>
-            ) : (
-              <div>
-                <p className="font-body text-body-md text-inksoft m-0 mb-6">{card.back}</p>
-                <div className="flex gap-2.5 justify-center flex-wrap">
-                  <Button variant="danger" disabled={submitting} onClick={() => handleClassicRating(card.id, 'AGAIN')}>
-                    Again
-                  </Button>
-                  <Button variant="ghost" disabled={submitting} onClick={() => handleClassicRating(card.id, 'HARD')}>
-                    Hard
-                  </Button>
-                  <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'GOOD')}>
-                    Good
-                  </Button>
-                  <Button variant="dark" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
-                    Easy
-                  </Button>
-                </div>
+          ) : (
+            <div>
+              <div className="flex justify-center mb-4">
+                <Badge tone={openResult.aiVerdict ? VERDICT_TONES[openResult.aiVerdict] : 'neutral'}>
+                  {openResult.aiVerdict ? (VERDICT_LABELS[openResult.aiVerdict] ?? openResult.aiVerdict) : 'Verdict indisponible'}
+                </Badge>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center">
-            <h2 className="font-display text-display-md text-ink tracking-tight m-0 mb-5">{card.front}</h2>
-            {!openResult ? (
-              <div>
-                <div className="mb-4 text-left">
-                  <Textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} rows={4} />
-                </div>
-                {submitting ? (
-                  <div className="flex flex-col gap-2 items-center">
-                    <Skeleton className="w-40 h-7" radius="pill" />
-                    <span className="font-body text-body-sm text-inksoft">Évaluation en cours...</span>
-                  </div>
-                ) : (
-                  <Button disabled={submitting} onClick={() => handleSubmitOpenQuestion(card.id)}>
-                    Valider
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div>
-                <div className="flex justify-center mb-4">
-                  <Badge tone={openResult.aiVerdict ? VERDICT_TONES[openResult.aiVerdict] : 'neutral'}>
-                    {openResult.aiVerdict ? (VERDICT_LABELS[openResult.aiVerdict] ?? openResult.aiVerdict) : 'Verdict indisponible'}
-                  </Badge>
-                </div>
-                <p className="font-body text-body-md text-inksoft m-0 mb-6">Réponse de référence : {card.back}</p>
-                <Button onClick={advance}>Card suivante</Button>
-              </div>
-            )}
-          </div>
-        )}
-      </Card>
+              <p className="font-body text-body-md text-inksoft m-0 mb-6">Réponse de référence : {card.back}</p>
+              <Button onClick={advance}>Card suivante</Button>
+            </div>
+          )}
+        </Flashcard>
+      )}
     </div>
   )
 }

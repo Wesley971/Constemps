@@ -22,14 +22,14 @@ interface LinkButtonProps {
 }
 
 const base =
-  'inline-flex items-center gap-2 font-body font-semibold text-[13.5px] px-5 py-2.5 rounded-pill border border-transparent transition-colors duration-base no-underline whitespace-nowrap'
+  'inline-flex items-center gap-2 font-body font-semibold text-[13.5px] px-5.5 py-2.75 rounded-md border border-transparent transition-colors duration-base ease-standard no-underline whitespace-nowrap min-h-hit'
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-teal text-white shadow-glow-teal',
-  dark: 'bg-ink text-white',
-  ghost: 'bg-transparent text-ink border-line',
-  'ghost-on-dark': 'bg-white/8 text-white border-white/16',
-  danger: 'bg-danger text-white',
+  primary: 'bg-indigo text-paper hover:bg-indigo-deep',
+  dark: 'bg-ink text-paper hover:bg-black',
+  ghost: 'bg-transparent text-ink border-line hover:bg-paper-sunken',
+  'ghost-on-dark': 'bg-paper/10 text-paper border-paper/22 hover:bg-paper/18',
+  danger: 'bg-danger text-paper hover:bg-danger-deep',
 }
 
 export function Button({ children, variant = 'primary', icon, type = 'button', disabled, onClick, className }: ButtonProps) {
@@ -38,7 +38,7 @@ export function Button({ children, variant = 'primary', icon, type = 'button', d
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`${base} ${variants[variant]} ${disabled ? 'opacity-60 cursor-default' : 'cursor-pointer'} ${className ?? ''}`}
+      className={`${base} ${variants[variant]} ${disabled ? 'opacity-50 cursor-default' : 'cursor-pointer'} ${className ?? ''}`}
     >
       {icon ? <iconify-icon icon={icon} width="16"></iconify-icon> : null}
       {children}

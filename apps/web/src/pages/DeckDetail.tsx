@@ -266,7 +266,7 @@ function DeckDetail() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-2">
                     <div>
-                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'teal'}>
+                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'}>
                         {card.type === 'CLASSIC' ? 'Rappel classique' : 'Question ouverte'}
                       </Badge>
                     </div>

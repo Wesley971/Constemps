@@ -13,11 +13,16 @@ export class DecksService {
     });
   }
 
-  findAll(userId: string) {
-    return this.prisma.deck.findMany({
+  async findAll(userId: string) {
+    const decks = await this.prisma.deck.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { cards: true } } },
     });
+    return decks.map(({ _count, ...deck }) => ({
+      ...deck,
+      cardCount: _count.cards,
+    }));
   }
 
   async findOne(userId: string, id: string) {

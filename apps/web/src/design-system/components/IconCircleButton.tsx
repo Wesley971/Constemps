@@ -1,6 +1,6 @@
 import type { MouseEventHandler } from 'react'
 
-type IconCircleTone = 'ink' | 'ghost' | 'teal'
+type IconCircleTone = 'ink' | 'ghost' | 'accent'
 type IconCircleSize = 'sm' | 'md' | 'lg'
 
 interface IconCircleButtonProps {
@@ -13,9 +13,9 @@ interface IconCircleButtonProps {
 }
 
 const tones: Record<IconCircleTone, string> = {
-  ink: 'bg-ink text-white',
-  ghost: 'bg-white text-ink border border-line',
-  teal: 'bg-teal text-white',
+  ink: 'bg-ink text-paper',
+  ghost: 'bg-paper text-ink border border-line',
+  accent: 'bg-indigo text-paper',
 }
 
 // Tailles alignées sur les 3 usages réels de l'app (28px/32px/40px), avec la
@@ -33,7 +33,7 @@ export function IconCircleButton({ icon, tone = 'ink', size = 'lg', onClick, cla
       type="button"
       title={title}
       onClick={onClick}
-      className={`${box} rounded-full inline-flex items-center justify-center border-none cursor-pointer transition-transform duration-base ease-bounce hover:-translate-y-0.5 ${tones[tone]} ${className ?? ''}`}
+      className={`${box} rounded-full inline-flex items-center justify-center border-none cursor-pointer transition-opacity duration-base ease-standard hover:opacity-75 ${tones[tone]} ${className ?? ''}`}
     >
       <iconify-icon icon={icon} width={iconSize}></iconify-icon>
     </button>

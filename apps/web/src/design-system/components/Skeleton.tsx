@@ -1,4 +1,4 @@
-type SkeletonRadius = 'xs' | 'tile' | 'pill' | 'full'
+type SkeletonRadius = 'xs' | 'lg' | 'pill' | 'full'
 
 interface SkeletonProps {
   radius?: SkeletonRadius
@@ -7,11 +7,11 @@ interface SkeletonProps {
 
 const radiusClasses: Record<SkeletonRadius, string> = {
   xs: 'rounded-xs',
-  tile: 'rounded-tile',
+  lg: 'rounded-lg',
   pill: 'rounded-pill',
   full: 'rounded-full',
 }
 
 export function Skeleton({ radius = 'xs', className }: SkeletonProps) {
-  return <div className={`bg-line animate-skeleton-pulse ${radiusClasses[radius]} ${className ?? ''}`} />
+  return <div className={`bg-paper-sunken animate-skeleton-pulse ${radiusClasses[radius]} ${className ?? ''}`} />
 }

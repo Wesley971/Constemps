@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 import { AppHeader } from '../design-system/components/AppHeader'
 import { Card } from '../design-system/components/Card'
 import { Button } from '../design-system/components/Button'
-import { IconCircleButton } from '../design-system/components/IconCircleButton'
+import { DeckCard } from '../design-system/components/DeckCard'
 import { Input } from '../design-system/components/Input'
 import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
@@ -112,14 +112,13 @@ function Decks() {
       ) : (
         <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {decks.map((deck) => (
-            <Card key={deck.id} interactive className="p-5 flex flex-col gap-3 min-h-25">
-              <Link to={`/decks/${deck.id}`} className="font-display text-display-sm text-ink tracking-tight">
-                {deck.name}
-              </Link>
-              <div className="mt-auto flex justify-end">
-                <IconCircleButton icon="ph:trash-bold" tone="ghost" size="md" title="Supprimer" onClick={() => setDeckToDelete(deck)} />
-              </div>
-            </Card>
+            <DeckCard
+              key={deck.id}
+              name={deck.name}
+              cardCount={deck.cardCount ?? 0}
+              to={`/decks/${deck.id}`}
+              onDelete={() => setDeckToDelete(deck)}
+            />
           ))}
         </div>
       )}

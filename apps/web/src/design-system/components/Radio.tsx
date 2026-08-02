@@ -29,11 +29,11 @@ export function Radio({ name, options, value, onChange, disabled, inline }: Radi
                 className="absolute inset-0 opacity-0 cursor-inherit m-0"
               />
               <span
-                className={`absolute inset-0 rounded-full border-[1.5px] bg-white flex items-center justify-center ${
-                  checked ? 'border-teal-deep' : 'border-line'
+                className={`absolute inset-0 rounded-full border-[1.5px] bg-paper flex items-center justify-center ${
+                  checked ? 'border-indigo-deep' : 'border-line'
                 }`}
               >
-                {checked ? <span className="w-2.5 h-2.5 rounded-full bg-teal" /> : null}
+                {checked ? <span className="w-2.5 h-2.5 rounded-full bg-indigo" /> : null}
               </span>
             </span>
             <span className="font-body text-body-md text-ink">{opt.label}</span>
