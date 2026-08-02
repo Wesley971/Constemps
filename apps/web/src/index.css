@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
@@ -10,17 +10,21 @@
   body {
     margin: 0;
     @apply bg-canvas bg-dot-grid text-ink font-body text-body-md p-8 max-[720px]:p-4;
-    background-size: 24px 24px;
+    background-size: 22px 22px;
   }
 
   a {
-    @apply text-teal-deep no-underline;
+    @apply text-indigo-deep no-underline;
   }
   a:hover {
-    @apply text-teal underline;
+    @apply text-indigo underline;
   }
 
+  /* Ring par défaut pour tout élément focusable (liens, boutons, IconCircleButton,
+     Checkbox/Radio). Input et Textarea neutralisent ce ring sur leur <input>/<textarea>
+     natif (focus-visible:shadow-none, spécificité plus forte) et affichent le leur sur
+     le wrapper via :focus-within, pour éviter le double contour. */
   :focus-visible {
-    @apply outline-none shadow-focus;
+    @apply outline-none shadow-focus-ring;
   }
 }

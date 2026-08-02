@@ -4,4 +4,5 @@ export interface Deck {
   userId: string
   dailyGoal: number
   createdAt: string
+  cardCount?: number
 }
