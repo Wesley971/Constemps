@@ -26,10 +26,10 @@ export function Radio({ name, options, value, onChange, disabled, inline }: Radi
                 checked={checked}
                 disabled={disabled}
                 onChange={() => onChange(opt.value)}
-                className="absolute inset-0 opacity-0 cursor-inherit m-0"
+                className="peer absolute inset-0 opacity-0 cursor-inherit m-0"
               />
               <span
-                className={`absolute inset-0 rounded-full border-[1.5px] bg-paper flex items-center justify-center ${
+                className={`absolute inset-0 rounded-full border-[1.5px] bg-paper flex items-center justify-center peer-focus-visible:shadow-focus-ring ${
                   checked ? 'border-indigo-deep' : 'border-line'
                 }`}
               >

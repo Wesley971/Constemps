@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 import { AppHeader } from '../design-system/components/AppHeader'
@@ -12,15 +12,26 @@ import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
+import type { ToastState } from '../design-system/useToast'
 
 function Decks() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [decks, setDecks] = useState<Deck[]>([])
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [newDeckName, setNewDeckName] = useState('')
   const [creating, setCreating] = useState(false)
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null)
   const { toast, notify } = useToast()
+
+  useEffect(() => {
+    const state = location.state as { notify?: ToastState } | null
+    if (state?.notify) {
+      notify(state.notify)
+      navigate(location.pathname, { replace: true, state: null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     async function init() {

@@ -68,10 +68,17 @@ function DeckDetail() {
         const [deckData, cardsData] = await Promise.all([decksApi.get(deckId), cardsApi.list(deckId)])
         setDeck(deckData)
         setCards(cardsData)
-      } catch (err) {
-        notify({ tone: 'danger', title: 'Chargement impossible', message: err instanceof ApiError ? err.message : 'Impossible de charger le deck' })
-      } finally {
         setCheckingAuth(false)
+      } catch (err) {
+        navigate('/decks', {
+          state: {
+            notify: {
+              tone: 'danger',
+              title: 'Deck introuvable',
+              message: err instanceof ApiError ? err.message : 'Ce deck est introuvable ou a été supprimé.',
+            },
+          },
+        })
       }
     }
 

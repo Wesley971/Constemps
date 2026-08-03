@@ -9,7 +9,7 @@ export default {
         'paper-sunken': '#E9E1D2',
         ink: '#211D19',
         inksoft: '#4A4339',
-        inkfaint: '#8A8074',
+        inkfaint: '#756D63',
         line: 'rgba(33,29,25,0.14)',
         'line-strong': 'rgba(33,29,25,0.26)',
         'canvas-dot': 'rgba(33,29,25,0.06)',

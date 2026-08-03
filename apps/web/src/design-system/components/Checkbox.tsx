@@ -16,10 +16,10 @@ export function Checkbox({ checked, onChange, label, disabled }: CheckboxProps) 
           checked={checked}
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
-          className="absolute inset-0 opacity-0 cursor-inherit m-0"
+          className="peer absolute inset-0 opacity-0 cursor-inherit m-0"
         />
         <span
-          className={`absolute inset-0 rounded-xs border-[1.5px] flex items-center justify-center ${
+          className={`absolute inset-0 rounded-xs border-[1.5px] flex items-center justify-center peer-focus-visible:shadow-focus-ring ${
             checked ? 'border-indigo-deep bg-indigo text-paper' : 'border-line bg-paper'
           }`}
         >
