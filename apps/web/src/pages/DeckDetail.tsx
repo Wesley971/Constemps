@@ -102,7 +102,7 @@ function DeckDetail() {
 
     setTranslating(true)
     try {
-      const { translation } = await translationApi.translate(newCardFront.trim(), 'EN')
+      const { translation } = await translationApi.translate(newCardFront.trim(), 'FR')
       setNewCardBack(translation)
     } catch (err) {
       notify({ tone: 'danger', title: 'Traduction indisponible', message: err instanceof ApiError ? err.message : 'Réessaie plus tard.' })
@@ -184,9 +184,15 @@ function DeckDetail() {
       <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-4">{deck?.name}</h1>
 
       <div className="flex gap-2.5 mb-5">
-        <LinkButton to={`/decks/${id}/review`} variant="primary" icon="ph:play-bold">
-          Réviser
-        </LinkButton>
+        {cards.length > 0 ? (
+          <LinkButton to={`/decks/${id}/review`} variant="primary" icon="ph:play-bold">
+            Réviser
+          </LinkButton>
+        ) : (
+          <Button variant="primary" icon="ph:play-bold" disabled>
+            Réviser
+          </Button>
+        )}
         <LinkButton to={`/decks/${id}/stats`} variant="ghost" icon="ph:chart-bar-bold">
           Stats
         </LinkButton>

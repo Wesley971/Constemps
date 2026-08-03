@@ -156,7 +156,7 @@ function Review() {
         <Card className="p-10">
           <MilestoneBanner message={session.message} />
           <p className="text-center mt-6 mb-0">
-            <Link to="/decks">Retour aux decks</Link>
+            <Link to={`/decks/${id}`}>Retour au deck</Link>
           </p>
         </Card>
       </div>
@@ -172,7 +172,7 @@ function Review() {
             action={<Button variant="ghost" onClick={handleContinueToday}>Continuer aujourd'hui</Button>}
           />
           <p className="text-center mt-6 mb-0">
-            <Link to="/decks">Retour aux decks</Link>
+            <Link to={`/decks/${id}`}>Retour au deck</Link>
           </p>
         </Card>
       </div>
@@ -182,9 +182,13 @@ function Review() {
   if (session.cards.length === 0) {
     return (
       <div className="max-w-120 mx-auto">
-        <Card className="p-8 text-center">
-          <p className="font-body text-body-md text-ink m-0 mb-4">Pas de card à réviser pour l'instant sur ce deck.</p>
-          <Link to="/decks">Retour aux decks</Link>
+        <Card className="p-10">
+          <p className="font-body text-body-md text-ink text-center m-0 max-w-95 mx-auto">
+            Tu as fait le tour des cards disponibles pour l'instant sur ce deck. Reviens plus tard pour continuer.
+          </p>
+          <p className="text-center mt-6 mb-0">
+            <Link to={`/decks/${id}`}>Retour au deck</Link>
+          </p>
         </Card>
       </div>
     )
@@ -232,16 +236,16 @@ function Review() {
           ratingButtons={
             <>
               <Button variant="danger" disabled={submitting} onClick={() => handleClassicRating(card.id, 'AGAIN')}>
-                Again
+                Encore
               </Button>
               <Button variant="ghost" disabled={submitting} onClick={() => handleClassicRating(card.id, 'HARD')}>
-                Hard
+                Difficile
               </Button>
               <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'GOOD')}>
-                Good
+                Bien
               </Button>
               <Button variant="dark" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
-                Easy
+                Facile
               </Button>
             </>
           }
@@ -259,7 +263,7 @@ function Review() {
                   <span className="font-body text-body-sm text-inksoft">Évaluation en cours...</span>
                 </div>
               ) : (
-                <Button disabled={submitting} onClick={() => handleSubmitOpenQuestion(card.id)}>
+                <Button disabled={submitting || !openAnswer.trim()} onClick={() => handleSubmitOpenQuestion(card.id)}>
                   Valider
                 </Button>
               )}
