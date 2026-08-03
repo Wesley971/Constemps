@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 const MAX_TEXT_LENGTH = 5000;
+const SUPPORTED_TARGET_LANGS = ['FR', 'EN'] as const;
 
 export class TranslateDto {
   @IsString()
@@ -12,5 +13,9 @@ export class TranslateDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10)
+  @IsIn(SUPPORTED_TARGET_LANGS, {
+    message: `targetLang doit être l'une des valeurs suivantes : ${SUPPORTED_TARGET_LANGS.join(', ')}`,
+  })
   targetLang: string;
 }
