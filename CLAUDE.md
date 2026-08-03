@@ -68,7 +68,9 @@ Audio : génération TTS **à la volée** sur les fiches (prononciation), pas d'
 - Feedback pédagogique enrichi après évaluation IA (verdict + points forts/à améliorer + piste + résumé court, persisté en base dans ReviewLog) ✅ Terminé
 - Choix du type de card à la génération par IA (forceType, mix auto vs type unique forcé) ✅ Terminé
 - Nouveau design system "Constemps Design System" intégré (tokens, composants, nouveau logo, remplace "Bento Profile") ✅ Terminé
-- Refonte ergonomique pour accessibilité : objectif transverse continu, partiellement couvert par le nouveau design system mais pas un chantier fermé
+- Refonte ergonomique pour l'accessibilité ✅ Terminé : audit complet (parcours utilisateur, clarté des actions, accessibilité clavier/WCAG), puis corrections (notation en français, validation de réponse vide bloquée, traduction ciblée FR, distinction deck vide/session terminée, focus clavier visible sur Radio/Checkbox, piège de focus et attributs ARIA sur les modales, redirection propre sur deck introuvable, contraste WCAG corrigé sur le token inkfaint) et affordance visuelle renforcée (sélection/suppression, modale élargie et aérée) dans GenerateCardsModal
+
+**v1 complète : app prête pour les premiers tests utilisateurs externes.**
 
 ## Modèle de données Prisma
 
