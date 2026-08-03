@@ -72,6 +72,11 @@ Audio : génération TTS **à la volée** sur les fiches (prononciation), pas d'
 
 **v1 complète : app prête pour les premiers tests utilisateurs externes.**
 
+## Dette technique connue
+
+- Absence de tests unitaires réels sur la logique métier (seuls les tests scaffold NestJS par défaut existent actuellement). Zones prioritaires à couvrir le jour où ce chantier sera lancé : calcul du palier adaptatif (fenêtre glissante + garde-fou), mapping verdict IA -> rating FSRS, contrôle d'accès (appartenance deck/card/review à l'utilisateur connecté).
+- Décision assumée : ce chantier est reporté volontairement après la première vague de retours des testeurs externes de la v1, pour éviter d'écrire des tests sur un comportement encore susceptible de changer.
+
 ## Modèle de données Prisma
 
 Voir `apps/api/prisma/schema.prisma` pour le modèle de données à jour.
