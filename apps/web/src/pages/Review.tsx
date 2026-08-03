@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { authApi, reviewsApi, audioUrl, ApiError } from '../services/api'
+import { authApi, reviewsApi, ApiError } from '../services/api'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 import { Card } from '../design-system/components/Card'
 import { Chip } from '../design-system/components/Chip'
 import { Badge } from '../design-system/components/Badge'
 import { Button } from '../design-system/components/Button'
-import { IconCircleButton } from '../design-system/components/IconCircleButton'
 import { Flashcard } from '../design-system/components/Flashcard'
 import { MilestoneBanner } from '../design-system/components/MilestoneBanner'
 import { Textarea } from '../design-system/components/Textarea'
@@ -113,10 +112,6 @@ function Review() {
     }
   }
 
-  function handlePlayAudio(path: string) {
-    new Audio(audioUrl(path)).play().catch(() => {})
-  }
-
   async function handleSubmitOpenQuestion(cardId: string) {
     if (!openAnswer.trim()) return
 
@@ -221,17 +216,6 @@ function Review() {
           front={card.front}
           back={card.back}
           revealed={revealed}
-          audioAction={
-            card.audioUrl ? (
-              <IconCircleButton
-                icon="ph:speaker-high-bold"
-                tone="ghost"
-                size="md"
-                title="Écouter"
-                onClick={() => handlePlayAudio(card.audioUrl!)}
-              />
-            ) : null
-          }
           onReveal={<Button onClick={() => setRevealed(true)}>Voir la réponse</Button>}
           ratingButtons={
             <>

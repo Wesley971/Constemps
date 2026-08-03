@@ -47,7 +47,6 @@ model Card {
   lapses     Int         @default(0)
   reps       Int         @default(0)
   state      Int         @default(0) // New/Learning/Review/Relearning (enum FSRS)
-  audioUrl   String?
   createdAt  DateTime    @default(now())
   reviewLogs ReviewLog[]
 }

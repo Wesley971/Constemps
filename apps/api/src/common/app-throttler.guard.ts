@@ -1,11 +1,5 @@
-import {
-  ExecutionContext,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import type { ThrottlerLimitDetail } from '@nestjs/throttler';
 
 interface RequestWithUser {
   user?: { id: string };
@@ -33,21 +27,5 @@ export class AppThrottlerGuard extends ThrottlerGuard {
 
   protected getTracker(req: RequestWithUser): Promise<string> {
     return Promise.resolve(req.user?.id ?? req.ip ?? 'unknown');
-  }
-
-  protected async throwThrottlingException(
-    context: ExecutionContext,
-    throttlerLimitDetail: ThrottlerLimitDetail,
-  ): Promise<void> {
-    if (
-      context.getClass().name === 'CardsController' &&
-      context.getHandler().name === 'generateAudio'
-    ) {
-      throw new HttpException(
-        'Quota audio quotidien atteint, réessaie demain',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-    return super.throwThrottlingException(context, throttlerLimitDetail);
   }
 }

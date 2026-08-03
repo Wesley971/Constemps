@@ -1,6 +1,3 @@
-import { randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CardType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,8 +5,6 @@ import { AiService } from '../ai/ai.service';
 import { DecksService } from '../decks/decks.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
-
-const AUDIO_DIR = join(process.cwd(), 'uploads', 'audio');
 
 @Injectable()
 export class CardsService {
@@ -72,19 +67,5 @@ export class CardsService {
   async remove(userId: string, id: string) {
     await this.findOne(userId, id);
     await this.prisma.card.delete({ where: { id } });
-  }
-
-  async generateAudio(userId: string, id: string) {
-    const card = await this.findOne(userId, id);
-    const audioBuffer = await this.aiService.generateAudio(card.front);
-
-    mkdirSync(AUDIO_DIR, { recursive: true });
-    const filename = `${id}-${randomUUID()}.wav`;
-    writeFileSync(join(AUDIO_DIR, filename), audioBuffer);
-
-    return this.prisma.card.update({
-      where: { id },
-      data: { audioUrl: `/audio/${filename}` },
-    });
   }
 }

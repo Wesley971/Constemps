@@ -3,9 +3,6 @@
 /node_modules
 /build
 
-# fichiers audio générés par TTS, non versionnés
-/uploads
-
 # Logs
 logs
 *.log

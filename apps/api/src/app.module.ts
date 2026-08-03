@@ -1,8 +1,6 @@
-import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -18,10 +16,6 @@ import { StatsModule } from './stats/stats.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads', 'audio'),
-      serveRoot: '/audio',
-    }),
     PrismaModule,
     AuthModule,
     DecksModule,

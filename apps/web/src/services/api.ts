@@ -66,11 +66,6 @@ export const cardsApi = {
       method: 'POST',
       body: JSON.stringify({ text, forceType }),
     }),
-  generateAudio: (id: string) => request<Card>(`/cards/${id}/audio`, { method: 'POST' }),
-}
-
-export function audioUrl(path: string): string {
-  return `${API_URL}${path}`
 }
 
 export const reviewsApi = {

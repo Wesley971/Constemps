@@ -18,6 +18,5 @@ export interface Card {
   lapses: number
   reps: number
   state: number
-  audioUrl: string | null
   createdAt: string
 }

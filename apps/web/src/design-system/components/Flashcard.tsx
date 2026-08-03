@@ -7,7 +7,6 @@ interface FlashcardProps {
   revealed: boolean
   onReveal?: ReactNode
   ratingButtons?: ReactNode
-  audioAction?: ReactNode
   children?: ReactNode
 }
 
@@ -16,13 +15,10 @@ interface FlashcardProps {
  * plus une rangée de notation manuelle (classique), ou laisse `children` gérer
  * le mode question ouverte (textarea + verdict IA).
  */
-export function Flashcard({ front, back, revealed, onReveal, ratingButtons, audioAction, children }: FlashcardProps) {
+export function Flashcard({ front, back, revealed, onReveal, ratingButtons, children }: FlashcardProps) {
   return (
     <Card className="p-10 text-center">
-      <div className="flex items-center justify-center gap-2.5 mb-5">
-        <h2 className="font-display text-display-md text-ink tracking-tight m-0">{front}</h2>
-        {audioAction}
-      </div>
+      <h2 className="font-display text-display-md text-ink tracking-tight m-0 mb-5">{front}</h2>
       {!revealed ? (
         onReveal
       ) : (

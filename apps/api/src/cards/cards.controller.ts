@@ -12,7 +12,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/current-user.decorator';
-import { AI_THROTTLE, AUDIO_THROTTLE } from '../common/ai-throttle';
+import { AI_THROTTLE } from '../common/ai-throttle';
 import { CardsService } from './cards.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
@@ -76,14 +76,5 @@ export class CardsController {
   ) {
     await this.cardsService.remove(user.id, id);
     return { success: true };
-  }
-
-  @Throttle(AUDIO_THROTTLE)
-  @Post('cards/:id/audio')
-  generateAudio(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-  ) {
-    return this.cardsService.generateAudio(user.id, id);
   }
 }

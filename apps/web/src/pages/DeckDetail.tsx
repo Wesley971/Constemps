@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { authApi, cardsApi, decksApi, translationApi, audioUrl, ApiError } from '../services/api'
+import { authApi, cardsApi, decksApi, translationApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 import type { Card as CardData, CardType } from '../types/card'
 import { Card } from '../design-system/components/Card'
@@ -13,7 +13,6 @@ import { IconCircleButton } from '../design-system/components/IconCircleButton'
 import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
-import { Skeleton } from '../design-system/components/Skeleton'
 import { useToast } from '../design-system/useToast'
 import { CARD_TYPE_LABELS } from '../design-system/constants'
 import { GenerateCardsModal } from './GenerateCardsModal'
@@ -51,7 +50,6 @@ function DeckDetail() {
 
   const [cardToDelete, setCardToDelete] = useState<CardData | null>(null)
   const [showGenerateModal, setShowGenerateModal] = useState(false)
-  const [generatingAudioId, setGeneratingAudioId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -155,26 +153,6 @@ function DeckDetail() {
     } catch (err) {
       notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer la card' })
     }
-  }
-
-  async function handleGenerateAudio(cardId: string) {
-    setGeneratingAudioId(cardId)
-    try {
-      const updated = await cardsApi.generateAudio(cardId)
-      setCards((prev) => prev.map((c) => (c.id === cardId ? updated : c)))
-    } catch (err) {
-      notify({
-        tone: 'danger',
-        title: 'Génération audio impossible',
-        message: err instanceof ApiError ? err.message : "Impossible de générer l'audio",
-      })
-    } finally {
-      setGeneratingAudioId(null)
-    }
-  }
-
-  function handlePlayAudio(path: string) {
-    new Audio(audioUrl(path)).play().catch(() => {})
   }
 
   if (checkingAuth) {
@@ -287,25 +265,6 @@ function DeckDetail() {
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0 items-center">
-                    {generatingAudioId === card.id ? (
-                      <Skeleton className="w-8 h-8" radius="full" />
-                    ) : card.audioUrl ? (
-                      <IconCircleButton
-                        icon="ph:speaker-high-bold"
-                        tone="ghost"
-                        size="md"
-                        title="Écouter"
-                        onClick={() => handlePlayAudio(card.audioUrl!)}
-                      />
-                    ) : (
-                      <IconCircleButton
-                        icon="ph:waveform-bold"
-                        tone="ghost"
-                        size="md"
-                        title="Générer l'audio"
-                        onClick={() => handleGenerateAudio(card.id)}
-                      />
-                    )}
                     <IconCircleButton icon="ph:pencil-simple-bold" tone="ghost" size="md" title="Éditer" onClick={() => startEdit(card)} />
                     <IconCircleButton icon="ph:trash-bold" tone="ghost" size="md" title="Supprimer" onClick={() => setCardToDelete(card)} />
                   </div>
