@@ -111,7 +111,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     <ModalScrim onScrimClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-170 max-w-[92vw] max-h-[88vh] bg-paper rounded-lg shadow-modal p-7 flex flex-col gap-4"
+        className="relative w-220 max-w-[92vw] max-h-[88vh] bg-paper rounded-lg shadow-modal p-7 flex flex-col gap-4"
       >
         <div className="flex items-center justify-between">
           <span className="font-display text-display-sm text-ink">Générer des cards depuis un texte</span>
@@ -173,17 +173,22 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
               {proposals.length === 0 ? (
                 <p className="font-body text-body-md text-inksoft">Aucune proposition restante.</p>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-5">
                   {proposals.map((p) => (
-                    <Card key={p.id} className="p-4">
+                    <Card
+                      key={p.id}
+                      className={`p-5 transition-colors duration-fast ease-standard ${
+                        p.selected ? 'border-indigo-deep! bg-indigo-tint!' : ''
+                      }`}
+                    >
                       <div className="flex items-start gap-3">
                         <div className="pt-1.5">
                           <Checkbox checked={p.selected} onChange={(checked) => updateProposal(p.id, { selected: checked })} />
                         </div>
-                        <div className="flex-1 flex flex-col gap-2.5">
+                        <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
                             <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[p.type]}</Badge>
-                            <IconCircleButton icon="ph:trash-bold" tone="ghost" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />
+                            <IconCircleButton icon="ph:trash-bold" tone="danger" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />
                           </div>
                           <Input
                             label={p.type === 'CLASSIC' ? 'Recto' : 'Question'}
