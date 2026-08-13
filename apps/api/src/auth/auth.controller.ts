@@ -20,11 +20,14 @@ const ACCESS_TOKEN_COOKIE = 'access_token';
 const ACCESS_TOKEN_MAX_AGE_MS = 72 * 60 * 60 * 1000;
 const AUTH_THROTTLE = { default: { limit: 5, ttl: 60000 } };
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-};
+// Test temporaire via tunnel (cloudflared) : le cross-site impose sameSite 'none' + secure.
+// N'est activé que si TUNNEL_MODE=true. Défaut absolu inchangé si la variable est absente.
+// Voir TUNNEL-TESTING.md à la racine : ce bloc conditionnel est à supprimer avec ce fichier
+// une fois le vrai déploiement en place.
+const cookieOptions =
+  process.env.TUNNEL_MODE === 'true'
+    ? { httpOnly: true, secure: true, sameSite: 'none' as const }
+    : { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const };
 
 @Controller('auth')
 export class AuthController {
