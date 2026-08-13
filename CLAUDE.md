@@ -78,6 +78,7 @@ Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mai
 ## Fonctionnalités à refaire / reportées
 
 - **TTS (prononciation audio)** : retiré du code le 3 août 2026. Initialement fonctionnel (Gemini TTS, stockage local du fichier audio, quota géré, throttle dédié), mais retiré avant l'ouverture aux testeurs externes car le quota gratuit (10 générations/jour, partagé entre tous les utilisateurs) était trop restrictif pour un usage multi-utilisateurs. À refaire proprement le jour où une meilleure solution de quota est trouvée (quota par utilisateur, provider TTS plus généreux, ou passage à un plan payant Gemini). L'implémentation précédente reste consultable dans l'historique Git.
+- **Rôle admin** : pas encore implémenté. Aujourd'hui, aucun concept de rôle/admin dans l'app (tous les users sont cantonnés à leurs propres decks/cards via JWT). Pertinent à ajouter en V2 si l'app s'ouvre à plus d'utilisateurs (modération, support, consultation de la liste des users sans passer par Prisma Studio). Implémentation envisagée : un flag `isAdmin` sur le modèle `User` + un guard dédié pour protéger les futures routes admin (ex. `GET /users`).
 
 ## Modèle de données Prisma
 
