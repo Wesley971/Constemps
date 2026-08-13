@@ -14,7 +14,7 @@ interface RadioProps {
 
 export function Radio({ name, options, value, onChange, disabled, inline }: RadioProps) {
   return (
-    <div className={`flex ${inline ? 'flex-row gap-5' : 'flex-col gap-2.5'} ${disabled ? 'opacity-55' : ''}`}>
+    <div className={`flex ${inline ? 'flex-row flex-wrap gap-x-5 gap-y-2' : 'flex-col gap-2.5'} ${disabled ? 'opacity-55' : ''}`}>
       {options.map((opt) => {
         const checked = value === opt.value
         return (

@@ -40,7 +40,7 @@ export function IconCircleButton({ icon, tone = 'ink', size = 'lg', onClick, cla
       type="button"
       title={title}
       onClick={onClick}
-      className={`${box} rounded-full inline-flex items-center justify-center border-none cursor-pointer transition-[opacity,background-color,color,border-color] duration-base ease-standard ${dimOnHover} ${tones[tone]} ${className ?? ''}`}
+      className={`${box} min-h-hit min-w-hit rounded-full inline-flex items-center justify-center border-none cursor-pointer transition-[opacity,background-color,color,border-color] duration-base ease-standard ${dimOnHover} ${tones[tone]} ${className ?? ''}`}
     >
       <iconify-icon icon={icon} width={iconSize}></iconify-icon>
     </button>

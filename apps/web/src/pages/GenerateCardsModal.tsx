@@ -177,30 +177,44 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                   {proposals.map((p) => (
                     <Card
                       key={p.id}
-                      className={`p-5 transition-colors duration-fast ease-standard ${
+                      onClick={() => updateProposal(p.id, { selected: !p.selected })}
+                      className={`p-5 cursor-pointer transition-colors duration-fast ease-standard ${
                         p.selected ? 'border-indigo-deep! bg-indigo-tint!' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="pt-1.5">
+                        <div className="pt-1.5" onClick={(e) => e.stopPropagation()}>
                           <Checkbox checked={p.selected} onChange={(checked) => updateProposal(p.id, { selected: checked })} />
                         </div>
                         <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
                             <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[p.type]}</Badge>
-                            <IconCircleButton icon="ph:trash-bold" tone="danger" size="sm" title="Retirer" onClick={() => removeProposal(p.id)} />
+                            <IconCircleButton
+                              icon="ph:trash-bold"
+                              tone="danger"
+                              size="sm"
+                              title="Retirer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeProposal(p.id)
+                              }}
+                            />
                           </div>
-                          <Input
-                            label={p.type === 'CLASSIC' ? 'Recto' : 'Question'}
-                            value={p.front}
-                            onChange={(e) => updateProposal(p.id, { front: e.target.value })}
-                          />
-                          <Textarea
-                            label={p.type === 'CLASSIC' ? 'Verso' : 'Réponse de référence'}
-                            value={p.back}
-                            rows={2}
-                            onChange={(e) => updateProposal(p.id, { back: e.target.value })}
-                          />
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              label={p.type === 'CLASSIC' ? 'Recto' : 'Question'}
+                              value={p.front}
+                              onChange={(e) => updateProposal(p.id, { front: e.target.value })}
+                            />
+                          </div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Textarea
+                              label={p.type === 'CLASSIC' ? 'Verso' : 'Réponse de référence'}
+                              value={p.back}
+                              rows={2}
+                              onChange={(e) => updateProposal(p.id, { back: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -208,7 +222,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                 </div>
               )}
 
-              <div className="flex gap-2.5 justify-end">
+              <div className="flex gap-2.5 justify-end flex-wrap">
                 <Button variant="ghost" disabled={addingSelected} onClick={() => setProposals(null)}>
                   Recommencer
                 </Button>
