@@ -9,7 +9,7 @@ export class DecksService {
 
   create(userId: string, dto: CreateDeckDto) {
     return this.prisma.deck.create({
-      data: { name: dto.name, userId },
+      data: { name: dto.name, color: dto.color, icon: dto.icon, userId },
     });
   }
 
@@ -37,7 +37,7 @@ export class DecksService {
     await this.findOne(userId, id);
     return this.prisma.deck.update({
       where: { id },
-      data: { name: dto.name },
+      data: { name: dto.name, color: dto.color, icon: dto.icon },
     });
   }
 

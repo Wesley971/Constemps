@@ -59,6 +59,10 @@ Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mai
 - UC7 : génération automatique de fiches depuis texte/PDF (voire vidéo, encore plus tard). ✅ Terminé pour le texte, implémenté en avance sur le plan initial (PDF et vidéo restent hors scope)
 - Formats de cartes avancés (contexte, détection d'erreur)
 - Mécanismes de rappel/notification pour la régularité (rien prévu en v0)
+- Personnalisation visuelle des decks (façon pochette de playlist) : idée émise lors des retours utilisateur, à explorer en v2/v3. Deux niveaux distincts :
+  - Couleur de deck : simple à implémenter (sélecteur de teintes prédéfinies cohérentes avec le design system), prévu pour la modale de création de deck en cours d'implémentation.
+  - Image/photo de deck : vrai sous-chantier technique à part (upload, stockage, redimensionnement, validation de format), pas à mélanger avec la modale de création simple. Reporté, pas encore scopé.
+- Titre de deck stylisé (police custom par deck) : idée évoquée mais écartée pour l'instant, car ça casserait la cohérence typographique du design system (Newsreader partout). À reconsidérer seulement si une vraie demande utilisateur récurrente émerge.
 
 ## v1 en cours
 

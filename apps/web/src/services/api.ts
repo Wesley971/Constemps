@@ -1,5 +1,5 @@
 import type { User } from '../types/user'
-import type { Deck } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import type { Card, CardType, GeneratedCard } from '../types/card'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
@@ -50,7 +50,10 @@ export const authApi = {
 export const decksApi = {
   list: () => request<Deck[]>('/decks'),
   get: (id: string) => request<Deck>(`/decks/${id}`),
-  create: (name: string) => request<Deck>('/decks', { method: 'POST', body: JSON.stringify({ name }) }),
+  create: (name: string, color: DeckColor | null = null, icon: DeckIcon | null = null) =>
+    request<Deck>('/decks', { method: 'POST', body: JSON.stringify({ name, color, icon }) }),
+  update: (id: string, name: string, color: DeckColor | null = null, icon: DeckIcon | null = null) =>
+    request<Deck>(`/decks/${id}`, { method: 'PATCH', body: JSON.stringify({ name, color, icon }) }),
   remove: (id: string) => request<{ success: boolean }>(`/decks/${id}`, { method: 'DELETE' }),
 }
 

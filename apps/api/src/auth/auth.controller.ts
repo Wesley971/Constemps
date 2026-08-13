@@ -27,7 +27,11 @@ const AUTH_THROTTLE = { default: { limit: 5, ttl: 60000 } };
 const cookieOptions =
   process.env.TUNNEL_MODE === 'true'
     ? { httpOnly: true, secure: true, sameSite: 'none' as const }
-    : { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const };
+    : {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+      };
 
 @Controller('auth')
 export class AuthController {

@@ -21,6 +21,8 @@ model User {
 model Deck {
   id        String   @id @default(uuid())
   name      String
+  color     String? // teinte de personnalisation, parmi DECK_COLORS (voir decks/deck-colors.ts) ; null = pas de couleur choisie
+  icon      String? // identifiant Phosphor, parmi DECK_ICONS (voir decks/deck-icons.ts) ; null = pas d'icône choisie
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   dailyGoal Int      @default(10) // palier adaptatif, recalculé par job

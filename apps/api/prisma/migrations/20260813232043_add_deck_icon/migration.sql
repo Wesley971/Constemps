@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Deck` ADD COLUMN `icon` VARCHAR(191) NULL;

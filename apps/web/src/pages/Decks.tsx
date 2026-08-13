@@ -1,26 +1,26 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
-import type { Deck } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import { AppHeader } from '../design-system/components/AppHeader'
-import { Card } from '../design-system/components/Card'
 import { Button } from '../design-system/components/Button'
 import { DeckCard } from '../design-system/components/DeckCard'
-import { Input } from '../design-system/components/Input'
 import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import type { ToastState } from '../design-system/useToast'
+import { DeckFormModal } from './DeckFormModal'
+
+type FormModalState = { mode: 'create' } | { mode: 'edit'; deck: Deck } | null
 
 function Decks() {
   const navigate = useNavigate()
   const location = useLocation()
   const [decks, setDecks] = useState<Deck[]>([])
   const [checkingAuth, setCheckingAuth] = useState(true)
-  const [newDeckName, setNewDeckName] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [formModal, setFormModal] = useState<FormModalState>(null)
+  const [saving, setSaving] = useState(false)
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null)
   const { toast, notify } = useToast()
 
@@ -56,19 +56,26 @@ function Decks() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault()
-    if (!newDeckName.trim()) return
-
-    setCreating(true)
+  async function handleSubmitDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
+    const editing = formModal?.mode === 'edit' ? formModal.deck : null
+    setSaving(true)
     try {
-      const deck = await decksApi.create(newDeckName.trim())
-      setDecks((prev) => [deck, ...prev])
-      setNewDeckName('')
+      if (editing) {
+        const updated = await decksApi.update(editing.id, name, color, icon)
+        setDecks((prev) => prev.map((d) => (d.id === updated.id ? { ...d, ...updated } : d)))
+      } else {
+        const deck = await decksApi.create(name, color, icon)
+        setDecks((prev) => [deck, ...prev])
+      }
+      setFormModal(null)
     } catch (err) {
-      notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Impossible de créer le deck' })
+      notify({
+        tone: 'danger',
+        title: editing ? 'Modification impossible' : 'Création impossible',
+        message: err instanceof ApiError ? err.message : 'Une erreur est survenue',
+      })
     } finally {
-      setCreating(false)
+      setSaving(false)
     }
   }
 
@@ -107,16 +114,12 @@ function Decks() {
         }
       />
 
-      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Mes decks</h1>
-
-      <Card className="p-5 mb-6">
-        <form onSubmit={handleCreate} className="flex gap-3 items-start">
-          <Input placeholder="Nom du deck" value={newDeckName} onChange={(e) => setNewDeckName(e.target.value)} required className="flex-1" />
-          <Button type="submit" disabled={creating} icon="ph:plus-bold">
-            {creating ? 'Création...' : 'Créer un deck'}
-          </Button>
-        </form>
-      </Card>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
+        <h1 className="font-display text-display-lg text-ink tracking-tight m-0">Mes decks</h1>
+        <Button icon="ph:plus-bold" onClick={() => setFormModal({ mode: 'create' })}>
+          Créer un deck
+        </Button>
+      </div>
 
       {decks.length === 0 ? (
         <p className="font-body text-body-md text-inksoft">Aucun deck pour l'instant.</p>
@@ -128,6 +131,9 @@ function Decks() {
               name={deck.name}
               cardCount={deck.cardCount ?? 0}
               to={`/decks/${deck.id}`}
+              color={deck.color}
+              icon={deck.icon}
+              onEdit={() => setFormModal({ mode: 'edit', deck })}
               onDelete={() => setDeckToDelete(deck)}
             />
           ))}
@@ -144,6 +150,15 @@ function Decks() {
         >
           Le deck "{deckToDelete.name}" et toutes ses cards seront supprimés définitivement. Cette action est irréversible.
         </ConfirmModal>
+      )}
+
+      {formModal && (
+        <DeckFormModal
+          deck={formModal.mode === 'edit' ? formModal.deck : null}
+          saving={saving}
+          onClose={() => setFormModal(null)}
+          onSubmit={handleSubmitDeck}
+        />
       )}
     </div>
   )
