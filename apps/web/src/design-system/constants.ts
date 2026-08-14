@@ -6,6 +6,19 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   OPEN_QUESTION: 'Avis assisté',
 }
 
+// Icône distinctive par type de card, réutilisée partout où le type est affiché
+// (radio de sélection, badges sur les cards, propositions générées). "sparkle"
+// reprend l'icône déjà utilisée pour "Générer des cards depuis un texte" (IA).
+export const CARD_TYPE_ICONS: Record<CardType, string> = {
+  CLASSIC: 'ph:pencil-simple-bold',
+  OPEN_QUESTION: 'ph:sparkle-bold',
+}
+
+export const CARD_TYPE_HELP: Record<CardType, string> = {
+  CLASSIC: 'Tu notes toi-même ta réponse (comme Anki).',
+  OPEN_QUESTION: 'Ton IA évalue ta réponse rédigée et te donne un retour.',
+}
+
 // Sous-ensemble des teintes déjà définies dans tailwind.config.js, réutilisées comme
 // couleurs de personnalisation de deck. "clay" est volontairement exclu : réservé à
 // l'état "palier atteint" (MilestoneBanner / ProgressBar tone="positive").

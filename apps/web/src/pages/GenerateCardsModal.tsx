@@ -8,24 +8,40 @@ import { Button } from '../design-system/components/Button'
 import { Input } from '../design-system/components/Input'
 import { Textarea } from '../design-system/components/Textarea'
 import { Checkbox } from '../design-system/components/Checkbox'
-import { Radio } from '../design-system/components/Radio'
 import { IconCircleButton } from '../design-system/components/IconCircleButton'
 import { Skeleton } from '../design-system/components/Skeleton'
 import { ModalScrim } from '../design-system/components/Modal'
-import { CARD_TYPE_LABELS } from '../design-system/constants'
+import { CARD_TYPE_LABELS, CARD_TYPE_ICONS, CARD_TYPE_HELP } from '../design-system/constants'
 
 const MAX_TEXT_LENGTH = 50000
 
-type TypeMode = 'auto' | 'forced'
+interface TypeChoice {
+  value: CardType | null
+  label: string
+  icon: string
+  helpText: string
+}
 
-const TYPE_MODE_OPTIONS = [
-  { value: 'auto', label: 'Laisser le choix se faire selon le contenu' },
-  { value: 'forced', label: 'Choisir un seul type' },
-]
-
-const FORCED_TYPE_OPTIONS = [
-  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC },
-  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION },
+// null = "laisser le contenu décider" (comportement par défaut, IA choisit selon le texte)
+const TYPE_CHOICES: TypeChoice[] = [
+  {
+    value: null,
+    label: 'Laisser le contenu décider',
+    icon: 'ph:magic-wand-bold',
+    helpText: "L'IA choisit le type le plus adapté selon le texte.",
+  },
+  {
+    value: 'CLASSIC',
+    label: CARD_TYPE_LABELS.CLASSIC,
+    icon: CARD_TYPE_ICONS.CLASSIC,
+    helpText: CARD_TYPE_HELP.CLASSIC,
+  },
+  {
+    value: 'OPEN_QUESTION',
+    label: CARD_TYPE_LABELS.OPEN_QUESTION,
+    icon: CARD_TYPE_ICONS.OPEN_QUESTION,
+    helpText: CARD_TYPE_HELP.OPEN_QUESTION,
+  },
 ]
 
 interface Proposal extends GeneratedCard {
@@ -45,8 +61,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
   const [generating, setGenerating] = useState(false)
   const [proposals, setProposals] = useState<Proposal[] | null>(null)
   const [addingSelected, setAddingSelected] = useState(false)
-  const [typeMode, setTypeMode] = useState<TypeMode>('auto')
-  const [forcedType, setForcedType] = useState<CardType>('CLASSIC')
+  const [forceType, setForceType] = useState<CardType | null>(null)
 
   const selectedCount = proposals?.filter((p) => p.selected).length ?? 0
   const overLimit = sourceText.length > MAX_TEXT_LENGTH
@@ -56,8 +71,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
 
     setGenerating(true)
     try {
-      const forceType = typeMode === 'forced' ? forcedType : undefined
-      const generated = await cardsApi.generate(deckId, sourceText.trim(), forceType)
+      const generated = await cardsApi.generate(deckId, sourceText.trim(), forceType ?? undefined)
       setProposals(generated.map((card, index) => ({ ...card, id: `gen-${index}`, selected: true })))
     } catch (err) {
       notify({
@@ -138,23 +152,28 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
 
               <div className="flex flex-col gap-2">
                 <span className="font-body text-label text-ink">Type de fiche</span>
-                <Radio
-                  name="generate-type-mode"
-                  options={TYPE_MODE_OPTIONS}
-                  value={typeMode}
-                  onChange={(value) => setTypeMode(value as TypeMode)}
-                  disabled={generating}
-                />
-                {typeMode === 'forced' && (
-                  <Radio
-                    name="generate-forced-type"
-                    options={FORCED_TYPE_OPTIONS}
-                    value={forcedType}
-                    onChange={(value) => setForcedType(value as CardType)}
-                    disabled={generating}
-                    inline
-                  />
-                )}
+                <div className="flex gap-3 flex-wrap">
+                  {TYPE_CHOICES.map((choice) => {
+                    const selected = choice.value === forceType
+                    return (
+                      <Card
+                        key={choice.label}
+                        onClick={() => !generating && setForceType(choice.value)}
+                        className={`flex-1 min-w-55 p-4 transition-colors duration-fast ease-standard ${
+                          generating ? 'opacity-55' : 'cursor-pointer'
+                        } ${selected ? 'border-indigo-deep! bg-indigo-tint!' : ''}`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`shrink-0 flex items-center ${selected ? 'text-indigo-deep' : 'text-inkfaint'}`}>
+                            <iconify-icon icon={choice.icon} width="18"></iconify-icon>
+                          </span>
+                          <span className="font-body text-body-md text-ink">{choice.label}</span>
+                        </div>
+                        <p className="font-body text-caption text-inkfaint m-0">{choice.helpText}</p>
+                      </Card>
+                    )
+                  })}
+                </div>
               </div>
 
               {generating ? (
@@ -188,7 +207,9 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                         </div>
                         <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
-                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[p.type]}</Badge>
+                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'} icon={CARD_TYPE_ICONS[p.type]}>
+                              {CARD_TYPE_LABELS[p.type]}
+                            </Badge>
                             <IconCircleButton
                               icon="ph:trash-bold"
                               tone="danger"

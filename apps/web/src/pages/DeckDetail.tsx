@@ -14,7 +14,7 @@ import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
-import { CARD_TYPE_LABELS } from '../design-system/constants'
+import { CARD_TYPE_LABELS, CARD_TYPE_ICONS, CARD_TYPE_HELP } from '../design-system/constants'
 import { GenerateCardsModal } from './GenerateCardsModal'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
@@ -23,8 +23,8 @@ const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
 }
 
 const CARD_TYPE_OPTIONS = [
-  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC },
-  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION },
+  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC, icon: CARD_TYPE_ICONS.CLASSIC, helpText: CARD_TYPE_HELP.CLASSIC },
+  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION, icon: CARD_TYPE_ICONS.OPEN_QUESTION, helpText: CARD_TYPE_HELP.OPEN_QUESTION },
 ]
 
 function DeckDetail() {
@@ -196,7 +196,7 @@ function DeckDetail() {
         <Card className="p-6 mb-6">
           <form onSubmit={handleCreate}>
             <div className="mb-4">
-              <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} inline />
+              <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} />
             </div>
 
             <div className="mb-4">
@@ -258,7 +258,9 @@ function DeckDetail() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-2">
                     <div>
-                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'}>{CARD_TYPE_LABELS[card.type]}</Badge>
+                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'} icon={CARD_TYPE_ICONS[card.type]}>
+                        {CARD_TYPE_LABELS[card.type]}
+                      </Badge>
                     </div>
                     <p className="font-body text-body-md text-ink m-0">
                       {card.front} <span className="text-inksoft">/</span> {card.back}
