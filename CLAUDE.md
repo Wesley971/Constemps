@@ -59,11 +59,9 @@ Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mai
 - UC7 : génération automatique de fiches depuis texte/PDF (voire vidéo, encore plus tard). ✅ Terminé pour le texte, implémenté en avance sur le plan initial (PDF et vidéo restent hors scope)
 - Formats de cartes avancés (contexte, détection d'erreur)
 - Mécanismes de rappel/notification pour la régularité (rien prévu en v0)
-- Personnalisation visuelle des decks (façon pochette de playlist) : idée émise lors des retours utilisateur, à explorer en v2/v3. Deux niveaux distincts :
-  - Couleur de deck : simple à implémenter (sélecteur de teintes prédéfinies cohérentes avec le design system), prévu pour la modale de création de deck en cours d'implémentation.
-  - Image/photo de deck : vrai sous-chantier technique à part (upload, stockage, redimensionnement, validation de format), pas à mélanger avec la modale de création simple. Reporté, pas encore scopé.
+- Personnalisation visuelle des decks (façon pochette de playlist) : idée émise lors des retours utilisateur. Couleur de deck implémentée (voir "Modale de création/édition de deck" ✅ Terminé, section v2 ci-dessous). Image/photo de deck reste un vrai sous-chantier technique à part (upload, stockage, redimensionnement, validation de format), pas à mélanger avec la modale de création simple. Reporté, pas encore scopé.
 - Titre de deck stylisé (police custom par deck) : idée évoquée mais écartée pour l'instant, car ça casserait la cohérence typographique du design system (Newsreader partout). À reconsidérer seulement si une vraie demande utilisateur récurrente émerge.
-- Visualisation de régularité sur le dashboard (grille calendaire façon heatmap 90 jours) : retirée de l'affichage le 19 août 2026, décision produit assumée. Même avec un vocabulaire neutre (jamais de case rouge ni de mot négatif), la structure même d'une grille calendaire montre un "vide" visible pour les comptes jeunes, ce qui va à l'encontre de l'objectif de motivation du dashboard. L'endpoint back (`GET /dashboard/activity`) est conservé pour un usage futur. À retravailler avec une métaphore visuelle différente qui ne pose pas ce problème structurel (piste : un chemin/trace qui s'allonge au fil de l'activité, jamais de case vide visible), une fois plus de recul sur l'usage réel.
+- Visualisation de régularité sur le dashboard (grille calendaire façon heatmap) : retirée le 19 août 2026, jugée structurellement démotivante pour les jeunes comptes malgré un vocabulaire neutre (voir "Dashboard" ✅ Terminé, section v2 ci-dessous). Endpoint back conservé. Piste v3 : métaphore différente (chemin/trace qui s'allonge, jamais de case vide visible), une fois plus de recul sur l'usage réel.
 
 ## v1 en cours
 
@@ -74,6 +72,13 @@ Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mai
 - Refonte ergonomique pour l'accessibilité ✅ Terminé : audit complet (parcours utilisateur, clarté des actions, accessibilité clavier/WCAG), puis corrections (notation en français, validation de réponse vide bloquée, traduction ciblée FR, distinction deck vide/session terminée, focus clavier visible sur Radio/Checkbox, piège de focus et attributs ARIA sur les modales, redirection propre sur deck introuvable, contraste WCAG corrigé sur le token inkfaint) et affordance visuelle renforcée (sélection/suppression, modale élargie et aérée) dans GenerateCardsModal
 
 **v1 complète : app prête pour les premiers tests utilisateurs externes.**
+
+## v2 en cours
+
+- Modale de création/édition de deck ✅ Terminé : remplace le formulaire inline ; choix de couleur (fond de card teinté) et icône Phosphor prédéfinie à la création ; modification possible après création via un bouton crayon sur DeckCard.
+- Clarté des types de cards ✅ Terminé : icônes distinctives (crayon pour Appréciation personnelle, étincelle pour Avis assisté) et texte d'aide sous chaque option, centralisés dans `constants.ts`, appliqués partout où le type est affiché.
+- Choix du type à la génération par IA (front) ✅ Terminé : remplace le système de radios imbriqués par 3 cartes cliquables toujours visibles ("Laisser le contenu décider" / "Appréciation personnelle" / "Avis assisté").
+- Dashboard "espace de reconnaissance" ✅ Terminé : nouvelle page `/dashboard`, page d'atterrissage post-connexion. Message narratif généré par IA, mis en cache et régénéré selon l'activité (jamais à chaque chargement). Jalons surprise sur seuils de régularité cumulée (7/30/66 jours, repère UCL sur la formation des habitudes), affichés une seule fois. Garde-fou architectural : Gemini ne reçoit jamais de donnée d'échec, seulement des signaux positifs. Anti-répétition (formulation variée d'une génération à l'autre) et mélange occasionnel d'un sujet ancien/récent, vérifiés sur 14 générations réelles. Visualisation heatmap retirée (voir Hors scope MVP (V2) ci-dessus), endpoint conservé pour une future métaphore visuelle.
 
 ## Dette technique connue
 
