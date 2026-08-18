@@ -28,6 +28,13 @@ export interface DashboardActivitySummaryInput {
   currentStreakDays: number;
   accountAgeDays: number;
   recentResumeCourts: string[];
+  // Sujet retravaillé il y a un moment (voir DashboardService), fourni seulement
+  // occasionnellement : permet au message d'évoquer parfois un chemin parcouru
+  // dans le temps plutôt que juste l'activité de la semaine.
+  olderResumeCourt?: string | null;
+  // Dernier message affiché à cet utilisateur (cache existant), pour éviter que
+  // deux générations successives se ressemblent trop dans leur formulation.
+  previousMessage?: string | null;
 }
 
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
@@ -137,13 +144,22 @@ function buildDashboardMessagePrompt(
       ? summary.recentResumeCourts.map((r) => `"${r}"`).join(', ')
       : 'aucun pour le moment';
 
+  const olderSubjectLine = summary.olderResumeCourt
+    ? `\n- Un sujet plus ancien, retravaillé de nouveau il y a peu (pas forcément lié aux autres) : "${summary.olderResumeCourt}"`
+    : '';
+
+  const previousMessageBlock = summary.previousMessage
+    ? `\n\nDernier message affiché à cet utilisateur, à ne surtout pas reproduire : "${summary.previousMessage}"
+Formule ce nouveau message différemment : change la structure de phrase, l'ouverture et le vocabulaire par rapport à ce message précédent, même si les données ci-dessus lui ressemblent.`
+    : '';
+
   return `Tu écris le message d'accueil d'un tableau de bord pour une app de révision espacée (flashcards). C'est la toute première chose que l'utilisateur voit en arrivant sur l'app.
 
 Résumé de son activité, tous ses decks confondus :
 - Révisions réussies sur les 7 derniers jours : ${summary.successfulReviewsLast7Days}
 - Jours d'affilée avec au moins une révision, en ce moment : ${summary.currentStreakDays}
 - Ancienneté du compte : ${summary.accountAgeDays} jour(s)
-- Quelques sujets récemment travaillés (résumés courts, pas forcément liés entre eux) : ${resumeCourtList}
+- Quelques sujets récemment travaillés (résumés courts, pas forcément liés entre eux) : ${resumeCourtList}${olderSubjectLine}${previousMessageBlock}
 
 Écris UNE à deux phrases courtes, chaleureuses et sincères, qui donnent du sens humain à cette activité.
 
@@ -153,7 +169,7 @@ Consignes de ton, à respecter strictement :
 - Jamais culpabilisant, même si l'activité récente est faible : pas de "tu devrais", pas de rappel de retard, pas d'allusion à ce qui n'a pas été fait.
 - Jamais la tournure "Tu y es presque !" ni ses variantes.
 - Tutoiement, ton direct et sincère, comme un ami qui remarque un vrai progrès, jamais un coach qui motive.
-- Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.
+- Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.${olderSubjectLine ? "\n- Un sujet plus ancien est mentionné ci-dessus : si ça sonne naturel, évoque un vrai chemin parcouru dans le temps entre ce sujet-là et l'activité récente, sans jamais forcer artificiellement ce lien." : ''}
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "message": "..." }`;

@@ -11,6 +11,12 @@ const MESSAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const SIGNIFICANT_ACTIVITY_DELTA = 5;
 const RECENT_RESUME_COURT_LIMIT = 3;
 const SUCCESSFUL_REVIEWS_WINDOW_DAYS = 7;
+// "Ancien" au même sens que le mécanisme de progress-highlight existant
+// (StatsService) : un sujet retravaillé il y a au moins ce nombre de jours.
+const OLDER_SUBJECT_MIN_AGE_DAYS = 25;
+// Mélangé occasionnellement, pas à chaque génération : le message doit rester
+// centré sur l'activité récente la plupart du temps.
+const OLDER_SUBJECT_MIX_PROBABILITY = 0.35;
 export const DEFAULT_ACTIVITY_DAYS = 90;
 const MAX_ACTIVITY_DAYS = 365;
 
@@ -48,6 +54,7 @@ interface ActivityAggregate {
   cumulativeActiveDays: number;
   accountAgeDays: number;
   recentResumeCourts: string[];
+  olderResumeCourt: string | null;
 }
 
 export interface DashboardMilestone {
@@ -127,10 +134,13 @@ export class DashboardService {
     accountCreatedAt: Date,
     reviewDayTimestamps: Set<number>,
   ): Promise<ActivityAggregate> {
+    const shouldMixOlderSubject = Math.random() < OLDER_SUBJECT_MIX_PROBABILITY;
+
     const [
       totalReviewCount,
       successfulReviewsLast7Days,
       recentResumeCourtLogs,
+      olderResumeCourtLog,
     ] = await Promise.all([
       this.prisma.reviewLog.count({
         where: { card: { deck: { userId } } },
@@ -150,11 +160,34 @@ export class DashboardService {
         take: RECENT_RESUME_COURT_LIMIT,
         select: { resumeCourt: true },
       }),
+      shouldMixOlderSubject
+        ? this.prisma.reviewLog.findFirst({
+            where: {
+              card: { deck: { userId } },
+              resumeCourt: { not: null },
+              reviewedAt: {
+                lte: subDays(new Date(), OLDER_SUBJECT_MIN_AGE_DAYS),
+              },
+            },
+            orderBy: { reviewedAt: 'desc' },
+            select: { resumeCourt: true },
+          })
+        : Promise.resolve(null),
     ]);
 
     const accountAgeDays = Math.floor(
       (Date.now() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
+
+    const recentResumeCourts = recentResumeCourtLogs
+      .map((log) => log.resumeCourt)
+      .filter((r): r is string => Boolean(r));
+
+    const olderResumeCourt =
+      olderResumeCourtLog?.resumeCourt &&
+      !recentResumeCourts.includes(olderResumeCourtLog.resumeCourt)
+        ? olderResumeCourtLog.resumeCourt
+        : null;
 
     return {
       totalReviewCount,
@@ -162,9 +195,8 @@ export class DashboardService {
       currentStreakDays: this.computeCurrentStreak(reviewDayTimestamps),
       cumulativeActiveDays: reviewDayTimestamps.size,
       accountAgeDays,
-      recentResumeCourts: recentResumeCourtLogs
-        .map((log) => log.resumeCourt)
-        .filter((r): r is string => Boolean(r)),
+      recentResumeCourts,
+      olderResumeCourt,
     };
   }
 
@@ -193,6 +225,8 @@ export class DashboardService {
       currentStreakDays: aggregate.currentStreakDays,
       accountAgeDays: aggregate.accountAgeDays,
       recentResumeCourts: aggregate.recentResumeCourts,
+      olderResumeCourt: aggregate.olderResumeCourt,
+      previousMessage: user.dashboardMessage,
     });
 
     const message = generated ?? this.buildFallbackMessage(aggregate);
