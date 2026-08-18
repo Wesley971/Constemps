@@ -12,6 +12,7 @@ import { CardsModule } from './cards/cards.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { TranslationModule } from './translation/translation.module';
 import { StatsModule } from './stats/stats.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { StatsModule } from './stats/stats.module';
     ReviewsModule,
     TranslationModule,
     StatsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

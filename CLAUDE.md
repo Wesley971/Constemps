@@ -63,6 +63,7 @@ Formats avancés (mise en contexte, détection d'erreur) : repoussés en V2, mai
   - Couleur de deck : simple à implémenter (sélecteur de teintes prédéfinies cohérentes avec le design system), prévu pour la modale de création de deck en cours d'implémentation.
   - Image/photo de deck : vrai sous-chantier technique à part (upload, stockage, redimensionnement, validation de format), pas à mélanger avec la modale de création simple. Reporté, pas encore scopé.
 - Titre de deck stylisé (police custom par deck) : idée évoquée mais écartée pour l'instant, car ça casserait la cohérence typographique du design system (Newsreader partout). À reconsidérer seulement si une vraie demande utilisateur récurrente émerge.
+- Visualisation de régularité sur le dashboard (grille calendaire façon heatmap 90 jours) : retirée de l'affichage le 19 août 2026, décision produit assumée. Même avec un vocabulaire neutre (jamais de case rouge ni de mot négatif), la structure même d'une grille calendaire montre un "vide" visible pour les comptes jeunes, ce qui va à l'encontre de l'objectif de motivation du dashboard. L'endpoint back (`GET /dashboard/activity`) est conservé pour un usage futur. À retravailler avec une métaphore visuelle différente qui ne pose pas ce problème structurel (piste : un chemin/trace qui s'allonge au fil de l'activité, jamais de case vide visible), une fois plus de recul sur l'usage réel.
 
 ## v1 en cours
 

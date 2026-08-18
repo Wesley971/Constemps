@@ -20,7 +20,7 @@ function Login() {
     setLoading(true)
     try {
       await authApi.login(email, password)
-      navigate('/decks')
+      navigate('/dashboard')
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Une erreur est survenue')
     } finally {

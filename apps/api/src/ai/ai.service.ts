@@ -23,6 +23,13 @@ export interface GeneratedCard {
   back: string;
 }
 
+export interface DashboardActivitySummaryInput {
+  successfulReviewsLast7Days: number;
+  currentStreakDays: number;
+  accountAgeDays: number;
+  recentResumeCourts: string[];
+}
+
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 const MIN_GENERATED_CARDS = 5;
@@ -120,6 +127,36 @@ Ne génère pas de doublons, ne pose pas de questions triviales, reste fidèle a
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 ${buildExampleJson(forceType)}`;
+}
+
+function buildDashboardMessagePrompt(
+  summary: DashboardActivitySummaryInput,
+): string {
+  const resumeCourtList =
+    summary.recentResumeCourts.length > 0
+      ? summary.recentResumeCourts.map((r) => `"${r}"`).join(', ')
+      : 'aucun pour le moment';
+
+  return `Tu écris le message d'accueil d'un tableau de bord pour une app de révision espacée (flashcards). C'est la toute première chose que l'utilisateur voit en arrivant sur l'app.
+
+Résumé de son activité, tous ses decks confondus :
+- Révisions réussies sur les 7 derniers jours : ${summary.successfulReviewsLast7Days}
+- Jours d'affilée avec au moins une révision, en ce moment : ${summary.currentStreakDays}
+- Ancienneté du compte : ${summary.accountAgeDays} jour(s)
+- Quelques sujets récemment travaillés (résumés courts, pas forcément liés entre eux) : ${resumeCourtList}
+
+Écris UNE à deux phrases courtes, chaleureuses et sincères, qui donnent du sens humain à cette activité.
+
+Consignes de ton, à respecter strictement :
+- Jamais de pourcentage ni de chiffre affiché seul sans le remettre en contexte dans une phrase.
+- Jamais de vocabulaire de performance ou de comparaison ("meilleur", "record", "classement", "score", "objectif").
+- Jamais culpabilisant, même si l'activité récente est faible : pas de "tu devrais", pas de rappel de retard, pas d'allusion à ce qui n'a pas été fait.
+- Jamais la tournure "Tu y es presque !" ni ses variantes.
+- Tutoiement, ton direct et sincère, comme un ami qui remarque un vrai progrès, jamais un coach qui motive.
+- Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.
+
+Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
+{ "message": "..." }`;
 }
 
 function buildTranslationPrompt(text: string, targetLang: string): string {
@@ -260,6 +297,58 @@ export class AiService {
     }
 
     return cards;
+  }
+
+  // Contrairement à evaluate/translate/generateCards, cet appel n'est jamais
+  // bloquant pour l'utilisateur : en cas d'absence de clé ou d'échec, on
+  // retourne null et c'est à l'appelant (DashboardService) de décider du
+  // message de repli, sans jamais faire échouer le chargement du dashboard.
+  async generateDashboardMessage(
+    summary: DashboardActivitySummaryInput,
+  ): Promise<string | null> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return null;
+    }
+
+    try {
+      const response = await this.getClient(apiKey).models.generateContent({
+        model: GEMINI_MODEL,
+        contents: buildDashboardMessagePrompt(summary),
+        config: { responseMimeType: 'application/json' },
+      });
+
+      const message = this.parseDashboardMessage(response.text);
+      if (!message) {
+        this.logger.error(
+          `Réponse Gemini mal formée pour le message du dashboard : ${response.text}`,
+        );
+      }
+      return message;
+    } catch (err) {
+      this.logger.error(
+        'Appel Gemini échoué pour le message du dashboard',
+        err instanceof Error ? err.stack : String(err),
+      );
+      return null;
+    }
+  }
+
+  private parseDashboardMessage(text: string | undefined): string | null {
+    if (!text) return null;
+
+    try {
+      const parsed = JSON.parse(text) as { message?: unknown };
+      if (
+        typeof parsed.message === 'string' &&
+        parsed.message.trim().length > 0
+      ) {
+        return parsed.message.trim();
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   private getClient(apiKey: string): GoogleGenAI {

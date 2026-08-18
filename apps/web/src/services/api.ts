@@ -3,6 +3,7 @@ import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import type { Card, CardType, GeneratedCard } from '../types/card'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
+import type { ActivityDay, DashboardSummary } from '../types/dashboard'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -92,4 +93,9 @@ export const statsApi = {
   getOverview: (deckId: string) => request<StatsOverview>(`/decks/${deckId}/stats/overview`),
   getHistory: (deckId: string) => request<HistoryDay[]>(`/decks/${deckId}/stats/history`),
   getProgressHighlight: (deckId: string) => request<ProgressHighlight>(`/decks/${deckId}/stats/progress-highlight`),
+}
+
+export const dashboardApi = {
+  getSummary: () => request<DashboardSummary>('/dashboard'),
+  getActivity: (days = 90) => request<ActivityDay[]>(`/dashboard/activity?days=${days}`),
 }

@@ -16,6 +16,29 @@ model User {
   password  String
   createdAt DateTime @default(now())
   decks     Deck[]
+
+  // Cache du message narratif du dashboard (voir DashboardService) : régénéré
+  // au maximum 1x/jour ou si l'activité a significativement changé, jamais à
+  // chaque chargement de page, pour ne pas gaspiller le quota Gemini.
+  dashboardMessage            String?   @db.Text
+  dashboardMessageAt          DateTime?
+  dashboardMessageReviewCount Int?
+
+  accountMilestones AccountMilestone[]
+}
+
+// Jalon "surprise" atteint sur la régularité cumulée du compte (voir
+// DashboardService, MILESTONE_THRESHOLDS). Un jalon n'est enregistré qu'une
+// fois, la première fois qu'il est atteint : sa présence en base suffit à
+// savoir qu'il ne doit plus jamais être réaffiché.
+model AccountMilestone {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  threshold Int
+  reachedAt DateTime @default(now())
+
+  @@unique([userId, threshold])
 }
 
 model Deck {
