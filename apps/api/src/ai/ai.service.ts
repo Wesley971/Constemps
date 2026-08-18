@@ -37,6 +37,21 @@ export interface DashboardActivitySummaryInput {
   previousMessage?: string | null;
 }
 
+export interface DeckStatsSummaryInput {
+  deckName: string;
+  successfulReviewsLast7Days: number;
+  retentionRate: number | null;
+  masteredCards: number;
+  totalCards: number;
+  currentStreakDays: number;
+  recentResumeCourts: string[];
+  // Comparaison de volume de reviews vs les deux semaines précédentes, calculée
+  // côté back (voir StatsService) ; null si le deck est trop récent pour comparer.
+  activityTrend: 'hausse' | 'stable' | 'baisse' | null;
+  // Dernier message affiché pour ce deck (cache existant), même rôle que pour le dashboard.
+  previousMessage?: string | null;
+}
+
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 const MIN_GENERATED_CARDS = 5;
@@ -161,15 +176,67 @@ Résumé de son activité, tous ses decks confondus :
 - Ancienneté du compte : ${summary.accountAgeDays} jour(s)
 - Quelques sujets récemment travaillés (résumés courts, pas forcément liés entre eux) : ${resumeCourtList}${olderSubjectLine}${previousMessageBlock}
 
-Écris UNE à deux phrases courtes, chaleureuses et sincères, qui donnent du sens humain à cette activité.
+Écris UNE à deux phrases courtes, chaleureuses et sincères, qui donnent du sens humain à cette activité. Utilise ces données uniquement pour calibrer le ton et le ressenti (une activité intense n'appelle pas le même ressenti qu'un tout début) : ne les répète jamais telles quelles dans le texte.
 
 Consignes de ton, à respecter strictement :
-- Jamais de pourcentage ni de chiffre affiché seul sans le remettre en contexte dans une phrase.
+- Jamais un seul nombre précis dans le message, sous aucune forme (jours de série, nombre de révisions, ancienneté en jours, pourcentage, fraction), même intégré naturellement dans une phrase avec du contexte. Décris uniquement la dynamique et le ressenti qualitatif ("plusieurs jours de suite", "depuis un moment déjà", "une belle régularité qui s'installe"), jamais un chiffre exact ou arrondi.
 - Jamais de vocabulaire de performance ou de comparaison ("meilleur", "record", "classement", "score", "objectif").
 - Jamais culpabilisant, même si l'activité récente est faible : pas de "tu devrais", pas de rappel de retard, pas d'allusion à ce qui n'a pas été fait.
 - Jamais la tournure "Tu y es presque !" ni ses variantes.
 - Tutoiement, ton direct et sincère, comme un ami qui remarque un vrai progrès, jamais un coach qui motive.
 - Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.${olderSubjectLine ? "\n- Un sujet plus ancien est mentionné ci-dessus : si ça sonne naturel, évoque un vrai chemin parcouru dans le temps entre ce sujet-là et l'activité récente, sans jamais forcer artificiellement ce lien." : ''}
+
+Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
+{ "message": "..." }`;
+}
+
+function buildDeckStatsMessagePrompt(summary: DeckStatsSummaryInput): string {
+  const resumeCourtList =
+    summary.recentResumeCourts.length > 0
+      ? summary.recentResumeCourts.map((r) => `"${r}"`).join(', ')
+      : 'aucun pour le moment';
+
+  const retentionLine =
+    summary.retentionRate === null
+      ? 'Pas encore assez de révisions récentes sur ce deck pour calculer un taux de rétention.'
+      : `Taux de rétention sur les 30 derniers jours : ${summary.retentionRate}%`;
+
+  const trendLine = summary.activityTrend
+    ? `\n- Tendance de volume de révisions sur ce deck par rapport aux deux semaines précédentes : ${summary.activityTrend}`
+    : '';
+
+  const previousMessageBlock = summary.previousMessage
+    ? `\n\nDernier message affiché pour ce deck, à ne surtout pas reproduire : "${summary.previousMessage}"
+Formule ce nouveau message différemment : change la structure de phrase, l'ouverture et le vocabulaire par rapport à ce message précédent, même si les données ci-dessous lui ressemblent.`
+    : '';
+
+  const resumeCourtEmphasis =
+    summary.recentResumeCourts.length > 0
+      ? "\n- Ancre le message en priorité sur les sujets réels listés ci-dessus (cite-les explicitement par leur nom) : c'est ce qui rend le message concret et différent d'un deck à l'autre, bien plus que le rythme ou la régularité seuls. Le ressenti sur l'activité peut venir en complément, jamais à la place de la mention du sujet. Une formulation générale centrée uniquement sur l'activité (par exemple \"ce deck reprend vie\", \"une belle régularité s'installe\", sans rien de concret sur le contenu) est un dernier recours, pas le réflexe par défaut."
+      : '';
+
+  return `Tu écris le message narratif de la page de statistiques d'UN deck précis, dans une app de révision espacée (flashcards). C'est la phrase qui donne du sens humain à l'activité sur ce deck.
+
+Résumé de l'activité sur le deck "${summary.deckName}" :
+- Révisions réussies sur les 7 derniers jours : ${summary.successfulReviewsLast7Days}
+- ${retentionLine}
+- Cards maîtrisées : ${summary.masteredCards} sur ${summary.totalCards}
+- Jours d'affilée avec au moins une révision sur ce deck, en ce moment : ${summary.currentStreakDays}
+- Quelques sujets récemment retravaillés sur ce deck (résumés courts, pas forcément liés entre eux) : ${resumeCourtList}${trendLine}${previousMessageBlock}
+
+Écris UNE à deux phrases courtes, chaleureuses et sincères, qui donnent du sens humain à cette activité. Utilise ces données uniquement pour calibrer le ton et le ressenti (un deck très actif n'appelle pas le même ressenti qu'un deck qui débute) : ne les répète jamais telles quelles, ni listées ni juxtaposées comme des statistiques.
+
+Consignes de ton, à respecter strictement :
+- Jamais un seul nombre précis dans le message, sous aucune forme (nombre ou fraction de cards, pourcentage de rétention, jours de série), même intégré naturellement dans une phrase avec du contexte. Décris uniquement la dynamique et le ressenti qualitatif ("plusieurs jours de suite", "la plupart de tes cartes bien ancrées", "une belle régularité qui s'installe"), jamais un chiffre exact ou arrondi. Les chiffres réels restent affichés séparément dans l'interface, jamais dans ce message.
+- Jamais de vocabulaire de performance ou de comparaison ("meilleur", "record", "classement", "score", "objectif").
+- Jamais culpabilisant, même si l'activité récente est faible : pas de "tu devrais", pas de rappel de retard, pas d'allusion à ce qui n'a pas été fait.
+- Jamais la tournure "Tu y es presque !" ni ses variantes.
+- Tutoiement, ton direct et sincère, comme un ami qui remarque un vrai progrès, jamais un coach qui motive.
+- Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.${resumeCourtEmphasis}${
+    trendLine
+      ? "\n- La tendance de volume est fournie à titre indicatif seulement : ne la mentionne que si elle est stable, en hausse, ou si une baisse peut se lire positivement (ex: reprise en cours). Ne présente jamais une baisse comme un problème ou un retard ; ignore complètement cette donnée si tu ne peux pas l'intégrer sans sonner négatif."
+      : ''
+  }
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "message": "..." }`;
@@ -334,7 +401,7 @@ export class AiService {
         config: { responseMimeType: 'application/json' },
       });
 
-      const message = this.parseDashboardMessage(response.text);
+      const message = this.parseNarrativeMessage(response.text);
       if (!message) {
         this.logger.error(
           `Réponse Gemini mal formée pour le message du dashboard : ${response.text}`,
@@ -350,7 +417,42 @@ export class AiService {
     }
   }
 
-  private parseDashboardMessage(text: string | undefined): string | null {
+  // Même garde-fou que generateDashboardMessage : jamais bloquant, jamais de
+  // donnée d'échec envoyée à Gemini, repli géré par l'appelant (StatsService).
+  async generateDeckStatsMessage(
+    summary: DeckStatsSummaryInput,
+  ): Promise<string | null> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return null;
+    }
+
+    try {
+      const response = await this.getClient(apiKey).models.generateContent({
+        model: GEMINI_MODEL,
+        contents: buildDeckStatsMessagePrompt(summary),
+        config: { responseMimeType: 'application/json' },
+      });
+
+      const message = this.parseNarrativeMessage(response.text);
+      if (!message) {
+        this.logger.error(
+          `Réponse Gemini mal formée pour le message de stats de deck : ${response.text}`,
+        );
+      }
+      return message;
+    } catch (err) {
+      this.logger.error(
+        'Appel Gemini échoué pour le message de stats de deck',
+        err instanceof Error ? err.stack : String(err),
+      );
+      return null;
+    }
+  }
+
+  // Partagé entre generateDashboardMessage et generateDeckStatsMessage : les
+  // deux prompts répondent avec la même forme JSON minimale { "message": "..." }.
+  private parseNarrativeMessage(text: string | undefined): string | null {
     if (!text) return null;
 
     try {

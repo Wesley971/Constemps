@@ -51,6 +51,10 @@ model Deck {
   dailyGoal Int      @default(10) // palier adaptatif, recalculé par job
   cards     Card[]
   createdAt DateTime @default(now())
+
+  statsMessage            String?   @db.Text
+  statsMessageAt          DateTime?
+  statsMessageReviewCount Int?
 }
 
 enum CardType {
@@ -63,8 +67,8 @@ model Card {
   deckId     String
   deck       Deck        @relation(fields: [deckId], references: [id], onDelete: Cascade)
   type       CardType
-  front      String @db.Text // recto, ou question
-  back       String @db.Text // verso, ou réponse de référence
+  front      String      @db.Text // recto, ou question
+  back       String      @db.Text // verso, ou réponse de référence
   // état FSRS
   stability  Float       @default(0)
   difficulty Float       @default(0)

@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, decksApi, statsApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
-import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
+import type { ProgressHighlight, StatsOverview } from '../types/stats'
 import { Card } from '../design-system/components/Card'
 import { Chip } from '../design-system/components/Chip'
 import { Badge } from '../design-system/components/Badge'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { LinkButton } from '../design-system/components/Button'
 import type { BadgeTone } from '../design-system/components/Badge'
 
 const RATING_LABELS: Record<number, string> = {
@@ -28,65 +29,6 @@ const VERDICT_LABELS: Record<string, string> = {
   compris: 'Compris',
   partiellement: 'Partiellement compris',
   incompris: 'Incompris',
-}
-
-const CHART_MAX_BAR_HEIGHT = 90
-
-function formatShortDate(dateKey: string): string {
-  const [, month, day] = dateKey.split('-')
-  return `${day}/${month}`
-}
-
-function StatBlock({ value, caption, tone }: { value: string; caption: string; tone: 'accent' | 'ink' }) {
-  return (
-    <div
-      className={`flex-1 min-w-40 ${tone === 'accent' ? 'bg-indigo-deep' : 'bg-ink'} text-paper rounded-lg shadow-1 p-5 flex flex-col gap-1.5`}
-    >
-      <div className="font-display text-display-lg tracking-tight">{value}</div>
-      <div className="font-body text-body-sm text-paper/82">{caption}</div>
-    </div>
-  )
-}
-
-function HistoryChart({ days }: { days: HistoryDay[] }) {
-  const maxCount = Math.max(1, ...days.map((d) => d.count))
-
-  return (
-    <div>
-      <div className="flex items-end gap-0.75 h-22.5 border-b border-line">
-        {days.map((day) => {
-          const successHeight = (day.successCount / maxCount) * CHART_MAX_BAR_HEIGHT
-          const remainderHeight = ((day.count - day.successCount) / maxCount) * CHART_MAX_BAR_HEIGHT
-          return (
-            <div
-              key={day.date}
-              title={`${day.date} : ${day.count} review(s), ${day.successCount} réussie(s)`}
-              className="flex-1 flex flex-col justify-end h-full"
-            >
-              {/* hauteur pilotée par une valeur continue calculée depuis les données réelles :
-                  ne peut pas être exprimée en classe Tailwind statique */}
-              {remainderHeight > 0 && <div style={{ height: remainderHeight }} className="bg-ink/14 rounded-t-[2px]" />}
-              {successHeight > 0 && <div style={{ height: successHeight }} className="bg-success rounded-t-[2px]" />}
-            </div>
-          )
-        })}
-      </div>
-      <div className="flex justify-between font-body text-body-sm text-inkfaint mt-2">
-        <span>{days.length > 0 && formatShortDate(days[0].date)}</span>
-        <span>{days.length > 0 && formatShortDate(days[days.length - 1].date)}</span>
-      </div>
-      <div className="flex gap-4 mt-3">
-        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inkfaint">
-          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-success" />
-          Réussi
-        </span>
-        <span className="inline-flex items-center gap-1.5 font-body text-body-sm text-inkfaint">
-          <span className="inline-block w-2.5 h-2.5 rounded-[3px] bg-ink/14" />
-          À retravailler
-        </span>
-      </div>
-    </div>
-  )
 }
 
 function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight | null }) {
@@ -143,7 +85,6 @@ function Stats() {
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [deck, setDeck] = useState<Deck | null>(null)
   const [overview, setOverview] = useState<StatsOverview | null>(null)
-  const [history, setHistory] = useState<HistoryDay[]>([])
   const [progressHighlight, setProgressHighlight] = useState<ProgressHighlight | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -159,15 +100,13 @@ function Stats() {
       }
 
       try {
-        const [deckData, overviewData, historyData, progressData] = await Promise.all([
+        const [deckData, overviewData, progressData] = await Promise.all([
           decksApi.get(deckId),
           statsApi.getOverview(deckId),
-          statsApi.getHistory(deckId),
           statsApi.getProgressHighlight(deckId),
         ])
         setDeck(deckData)
         setOverview(overviewData)
-        setHistory(historyData)
         setProgressHighlight(progressData)
       } catch (err) {
         setError(err instanceof ApiError ? err.message : 'Impossible de charger les statistiques')
@@ -199,20 +138,22 @@ function Stats() {
       <p className="mt-1 mb-5">
         <Link to={`/decks/${id}`}>Retour au deck</Link>
       </p>
-      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-5">Stats : {deck?.name}</h1>
 
       {overview && (
         <>
-          <div className="flex gap-4 mb-3 flex-wrap">
-            <StatBlock
-              tone="accent"
-              value={overview.retentionRate === null ? '–' : `${overview.retentionRate}%`}
-              caption="Taux de rétention (30 derniers jours)"
-            />
-            <StatBlock tone="ink" value={String(overview.masteredCards)} caption={`Cards maîtrisées / ${overview.totalCards}`} />
+          <h1 className="font-body text-label text-inkfaint uppercase tracking-micro m-0 mb-2">{deck?.name}</h1>
+          <p className="font-display text-display-md text-ink tracking-tight m-0 mb-8 max-w-165">{overview.message}</p>
+
+          <div className="mb-8">
+            <ProgressHighlightSection highlight={progressHighlight} />
           </div>
 
-          <div className="flex items-center gap-2.5 mb-6">
+          <p className="font-body text-body-md text-inksoft mb-4">
+            {overview.masteredCards} card{overview.masteredCards > 1 ? 's' : ''} maîtrisée{overview.masteredCards > 1 ? 's' : ''} jusqu'ici, sur{' '}
+            {overview.totalCards} au total.
+          </p>
+
+          <div className="flex items-center gap-2.5 mb-8 flex-wrap">
             <Chip className="text-[11px] px-2.5 py-1 opacity-80">Streak : {overview.currentStreak} jour(s)</Chip>
             <span className="font-body text-body-sm text-inksoft">
               New {overview.cardsByState.New} · Learning {overview.cardsByState.Learning} · Review {overview.cardsByState.Review} ·
@@ -222,12 +163,11 @@ function Stats() {
         </>
       )}
 
-      <Card className="p-6 mb-6">
-        <h2 className="font-display text-display-sm text-ink m-0 mb-4">Régularité (30 derniers jours)</h2>
-        <HistoryChart days={history} />
-      </Card>
-
-      <ProgressHighlightSection highlight={progressHighlight} />
+      <div className="mt-4">
+        <LinkButton to="/dashboard" icon="ph:squares-four-bold">
+          Retrouve une vue d'ensemble de tous tes decks
+        </LinkButton>
+      </div>
     </div>
   )
 }

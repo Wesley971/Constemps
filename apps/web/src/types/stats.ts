@@ -6,6 +6,7 @@ export interface CardsByState {
 }
 
 export interface StatsOverview {
+  message: string
   totalCards: number
   cardsByState: CardsByState
   retentionRate: number | null

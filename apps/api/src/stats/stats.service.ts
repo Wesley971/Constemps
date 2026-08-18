@@ -1,12 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { Rating } from 'ts-fsrs';
-import type { Card, ReviewLog } from '@prisma/client';
+import type { Card, Deck, ReviewLog } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { DecksService } from '../decks/decks.service';
+import { AiService } from '../ai/ai.service';
 import { startOfDay, subDays, formatDateKey } from '../common/date';
 
 const HISTORY_WINDOW_DAYS = 30;
 const RETENTION_WINDOW_DAYS = 30;
+const SUCCESSFUL_REVIEWS_WINDOW_DAYS = 7;
+const TREND_WINDOW_DAYS = 7;
+const RECENT_RESUME_COURT_LIMIT = 3;
+
+// Même logique de cache que DashboardService : régénéré au maximum une fois
+// par jour, ou plus tôt si l'activité du deck a significativement changé.
+const MESSAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const SIGNIFICANT_ACTIVITY_DELTA = 5;
+
+const NEW_DECK_MESSAGE =
+  'Ce deck vient tout juste de voir le jour. Ses premières fiches attendent tranquillement une première révision.';
 
 // Seuil arbitraire mais raisonnable : une carte dont la stability FSRS dépasse 21
 // jours a une probabilité de rappel encore élevée trois semaines après sa dernière
@@ -21,11 +33,25 @@ const STATE_NAMES = ['New', 'Learning', 'Review', 'Relearning'] as const;
 // rating est stocké en simple Int côté Prisma (pas l'enum ts-fsrs), d'où le cast explicite.
 const RATING_GOOD: number = Rating.Good;
 
+type ActivityTrend = 'hausse' | 'stable' | 'baisse' | null;
+
+interface DeckStatsAggregate {
+  totalCards: number;
+  totalReviewCount: number;
+  successfulReviewsLast7Days: number;
+  retentionRate: number | null;
+  masteredCards: number;
+  currentStreakDays: number;
+  recentResumeCourts: string[];
+  activityTrend: ActivityTrend;
+}
+
 @Injectable()
 export class StatsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly decksService: DecksService,
+    private readonly aiService: AiService,
   ) {}
 
   private async computeCurrentStreak(deckId: string): Promise<number> {
@@ -55,7 +81,7 @@ export class StatsService {
   }
 
   async getOverview(userId: string, deckId: string) {
-    await this.decksService.findOne(userId, deckId);
+    const deck = await this.decksService.findOne(userId, deckId);
 
     const [
       totalCards,
@@ -63,6 +89,9 @@ export class StatsService {
       masteredCards,
       recentLogs,
       currentStreak,
+      totalReviewCount,
+      successfulReviewsLast7Days,
+      recentResumeCourtLogs,
     ] = await Promise.all([
       this.prisma.card.count({ where: { deckId } }),
       this.prisma.card.groupBy({
@@ -81,6 +110,22 @@ export class StatsService {
         select: { rating: true },
       }),
       this.computeCurrentStreak(deckId),
+      this.prisma.reviewLog.count({ where: { card: { deckId } } }),
+      this.prisma.reviewLog.count({
+        where: {
+          card: { deckId },
+          reviewedAt: {
+            gte: subDays(new Date(), SUCCESSFUL_REVIEWS_WINDOW_DAYS),
+          },
+          rating: { gte: RATING_GOOD },
+        },
+      }),
+      this.prisma.reviewLog.findMany({
+        where: { card: { deckId }, resumeCourt: { not: null } },
+        orderBy: { reviewedAt: 'desc' },
+        take: RECENT_RESUME_COURT_LIMIT,
+        select: { resumeCourt: true },
+      }),
     ]);
 
     const cardsByState = { New: 0, Learning: 0, Review: 0, Relearning: 0 };
@@ -100,7 +145,26 @@ export class StatsService {
               100,
           );
 
+    const activityTrend =
+      totalReviewCount === 0 ? null : await this.computeActivityTrend(deckId);
+
+    const aggregate: DeckStatsAggregate = {
+      totalCards,
+      totalReviewCount,
+      successfulReviewsLast7Days,
+      retentionRate,
+      masteredCards,
+      currentStreakDays: currentStreak,
+      recentResumeCourts: recentResumeCourtLogs
+        .map((log) => log.resumeCourt)
+        .filter((r): r is string => Boolean(r)),
+      activityTrend,
+    };
+
+    const message = await this.resolveStatsMessage(deck, aggregate);
+
     return {
+      message,
       totalCards,
       cardsByState,
       retentionRate,
@@ -109,6 +173,102 @@ export class StatsService {
       // ni assorti d'indicateur de rupture alarmiste (voir CLAUDE.md).
       currentStreak,
     };
+  }
+
+  // Compare le volume de reviews des 7 derniers jours à celui des 7 jours
+  // précédents. Retourne null si le deck n'a pas encore assez d'historique
+  // pour qu'une comparaison ait du sens (pas de sur-ingénierie : seuil simple,
+  // pas de moyenne pondérée).
+  private async computeActivityTrend(deckId: string): Promise<ActivityTrend> {
+    const now = new Date();
+
+    const [earliestLog, currentWindowCount, previousWindowCount] =
+      await Promise.all([
+        this.prisma.reviewLog.findFirst({
+          where: { card: { deckId } },
+          orderBy: { reviewedAt: 'asc' },
+          select: { reviewedAt: true },
+        }),
+        this.prisma.reviewLog.count({
+          where: {
+            card: { deckId },
+            reviewedAt: { gte: subDays(now, TREND_WINDOW_DAYS) },
+          },
+        }),
+        this.prisma.reviewLog.count({
+          where: {
+            card: { deckId },
+            reviewedAt: {
+              gte: subDays(now, TREND_WINDOW_DAYS * 2),
+              lt: subDays(now, TREND_WINDOW_DAYS),
+            },
+          },
+        }),
+      ]);
+
+    if (
+      !earliestLog ||
+      earliestLog.reviewedAt > subDays(now, TREND_WINDOW_DAYS * 2)
+    ) {
+      return null;
+    }
+
+    if (currentWindowCount > previousWindowCount) return 'hausse';
+    if (currentWindowCount < previousWindowCount) return 'baisse';
+    return 'stable';
+  }
+
+  private async resolveStatsMessage(
+    deck: Deck,
+    aggregate: DeckStatsAggregate,
+  ): Promise<string> {
+    if (aggregate.totalReviewCount === 0) {
+      return NEW_DECK_MESSAGE;
+    }
+
+    const cacheIsFresh =
+      deck.statsMessage !== null &&
+      deck.statsMessageAt !== null &&
+      Date.now() - deck.statsMessageAt.getTime() < MESSAGE_CACHE_MAX_AGE_MS &&
+      aggregate.totalReviewCount - (deck.statsMessageReviewCount ?? 0) <
+        SIGNIFICANT_ACTIVITY_DELTA;
+
+    if (cacheIsFresh) {
+      return deck.statsMessage as string;
+    }
+
+    const generated = await this.aiService.generateDeckStatsMessage({
+      deckName: deck.name,
+      successfulReviewsLast7Days: aggregate.successfulReviewsLast7Days,
+      retentionRate: aggregate.retentionRate,
+      masteredCards: aggregate.masteredCards,
+      totalCards: aggregate.totalCards,
+      currentStreakDays: aggregate.currentStreakDays,
+      recentResumeCourts: aggregate.recentResumeCourts,
+      activityTrend: aggregate.activityTrend,
+      previousMessage: deck.statsMessage,
+    });
+
+    const message = generated ?? this.buildFallbackMessage(aggregate);
+
+    await this.prisma.deck.update({
+      where: { id: deck.id },
+      data: {
+        statsMessage: message,
+        statsMessageAt: new Date(),
+        statsMessageReviewCount: aggregate.totalReviewCount,
+      },
+    });
+
+    return message;
+  }
+
+  private buildFallbackMessage(aggregate: DeckStatsAggregate): string {
+    if (aggregate.successfulReviewsLast7Days > 0) {
+      const count = aggregate.successfulReviewsLast7Days;
+      return `Cette semaine, tu as validé ${count} révision${count > 1 ? 's' : ''} sur ce deck. Chaque passage compte, à ton rythme.`;
+    }
+    return "Pas de révision sur ce deck cette semaine, et ce n'est pas grave : il t'attend dès que tu es prêt à y revenir.";
   }
 
   async getHistory(userId: string, deckId: string) {
