@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, dashboardApi, ApiError } from '../services/api'
 import type { DashboardSummary } from '../types/dashboard'
+import type { User } from '../types/user'
 import { AppHeader } from '../design-system/components/AppHeader'
 import { AccountMilestoneBanner } from '../design-system/components/AccountMilestoneBanner'
 import { Button, LinkButton } from '../design-system/components/Button'
@@ -12,13 +13,14 @@ function Dashboard() {
   const navigate = useNavigate()
 
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [user, setUser] = useState<User | null>(null)
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function init() {
       try {
-        await authApi.me()
+        setUser(await authApi.me())
       } catch {
         navigate('/login')
         return
@@ -50,6 +52,7 @@ function Dashboard() {
   return (
     <div className="max-w-wrap mx-auto">
       <AppHeader
+        email={user?.email}
         actions={
           <Button variant="ghost" icon="ph:sign-out-bold" onClick={handleLogout}>
             Se déconnecter

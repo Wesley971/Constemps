@@ -46,6 +46,8 @@ export const authApi = {
     request<User>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),
   me: () => request<User>('/auth/me'),
+  updateProfile: (data: { email?: string; currentPassword?: string; newPassword?: string }) =>
+    request<User>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
 }
 
 export const decksApi = {

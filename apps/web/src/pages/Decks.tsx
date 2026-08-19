@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
 import type { Deck, DeckColor, DeckIcon } from '../types/deck'
+import type { User } from '../types/user'
 import { AppHeader } from '../design-system/components/AppHeader'
 import { Button } from '../design-system/components/Button'
 import { DeckCard } from '../design-system/components/DeckCard'
@@ -19,6 +20,7 @@ function Decks() {
   const location = useLocation()
   const [decks, setDecks] = useState<Deck[]>([])
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [user, setUser] = useState<User | null>(null)
   const [formModal, setFormModal] = useState<FormModalState>(null)
   const [saving, setSaving] = useState(false)
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null)
@@ -36,7 +38,7 @@ function Decks() {
   useEffect(() => {
     async function init() {
       try {
-        await authApi.me()
+        setUser(await authApi.me())
       } catch {
         navigate('/login')
         return
@@ -107,6 +109,7 @@ function Decks() {
       <ToastViewport toast={toast} />
 
       <AppHeader
+        email={user?.email}
         actions={
           <Button variant="ghost" icon="ph:sign-out-bold" onClick={handleLogout}>
             Se déconnecter

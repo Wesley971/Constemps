@@ -6,6 +6,7 @@ import Decks from './pages/Decks'
 import DeckDetail from './pages/DeckDetail'
 import Review from './pages/Review'
 import Stats from './pages/Stats'
+import Profile from './pages/Profile'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/decks/:id" element={<DeckDetail />} />
         <Route path="/decks/:id/review" element={<Review />} />
         <Route path="/decks/:id/stats" element={<Stats />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   )

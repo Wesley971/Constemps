@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { ChangeEventHandler } from 'react'
 
 interface InputProps {
@@ -38,6 +38,10 @@ export function Input({
   const fieldId = id ?? generatedId
   const borderColor = error ? 'border-danger' : 'border-line focus-within:border-indigo-deep'
 
+  const isPassword = type === 'password'
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const effectiveType = isPassword && passwordVisible ? 'text' : type
+
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
       {label ? (
@@ -60,7 +64,7 @@ export function Input({
         ) : null}
         <input
           id={fieldId}
-          type={type}
+          type={effectiveType}
           placeholder={placeholder}
           disabled={disabled}
           value={value}
@@ -70,6 +74,17 @@ export function Input({
           minLength={minLength}
           className="border-none outline-none focus-visible:shadow-none flex-1 bg-transparent font-body text-body-md text-ink w-full"
         />
+        {isPassword ? (
+          <button
+            type="button"
+            onClick={() => setPasswordVisible((prev) => !prev)}
+            disabled={disabled}
+            aria-label={passwordVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            className="shrink-0 flex items-center text-inkfaint hover:text-ink transition-colors duration-base ease-standard bg-transparent border-none p-0 cursor-pointer disabled:cursor-default"
+          >
+            <iconify-icon icon={passwordVisible ? 'ph:eye-slash-bold' : 'ph:eye-bold'} width="16"></iconify-icon>
+          </button>
+        ) : null}
       </div>
       {error ? (
         <span className="font-body text-caption text-danger">{error}</span>
