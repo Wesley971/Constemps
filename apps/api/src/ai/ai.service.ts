@@ -185,6 +185,7 @@ Consignes de ton, à respecter strictement :
 - Jamais la tournure "Tu y es presque !" ni ses variantes.
 - Tutoiement, ton direct et sincère, comme un ami qui remarque un vrai progrès, jamais un coach qui motive.
 - Si l'activité récente est faible ou nulle, ne le souligne pas : parle plutôt de ce qui a été fait, aussi modeste soit-il, ou reste simplement accueillant.${olderSubjectLine ? "\n- Un sujet plus ancien est mentionné ci-dessus : si ça sonne naturel, évoque un vrai chemin parcouru dans le temps entre ce sujet-là et l'activité récente, sans jamais forcer artificiellement ce lien." : ''}
+- Relis-toi avant de répondre : vérifie l'orthographe, les espaces entre les mots, et la ponctuation. Le texte doit être impeccable, sans faute ni mot collé.
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "message": "..." }`;
@@ -237,6 +238,7 @@ Consignes de ton, à respecter strictement :
       ? "\n- La tendance de volume est fournie à titre indicatif seulement : ne la mentionne que si elle est stable, en hausse, ou si une baisse peut se lire positivement (ex: reprise en cours). Ne présente jamais une baisse comme un problème ou un retard ; ignore complètement cette donnée si tu ne peux pas l'intégrer sans sonner négatif."
       : ''
   }
+- Relis-toi avant de répondre : vérifie l'orthographe, les espaces entre les mots, et la ponctuation. Le texte doit être impeccable, sans faute ni mot collé.
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
 { "message": "..." }`;
