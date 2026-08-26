@@ -6,7 +6,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
 }
 
 function extractJwtFromCookie(req: Request): string | null {

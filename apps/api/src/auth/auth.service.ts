@@ -108,7 +108,7 @@ export class AuthService {
     });
   }
 
-  private signToken(user: { id: string; email: string }): string {
-    return this.jwtService.sign({ sub: user.id, email: user.email });
+  private signToken(user: { id: string }): string {
+    return this.jwtService.sign({ sub: user.id });
   }
 }
