@@ -80,6 +80,20 @@ model Card {
   reviewLogs ReviewLog[]
 }
 
+// Blocklist intérimaire de tokens JWT révoqués (voir CON-34). Le token n'est
+// jamais stocké en clair, seul son hash sert de clé de recherche. expiresAt
+// reprend l'expiration naturelle du JWT révoqué, pour purger les entrées
+// devenues inutiles (un token expiré est de toute façon déjà rejeté en amont
+// par passport-jwt, la ligne ne sert donc plus à rien une fois expirée).
+// Solution volontairement légère, remplacée à terme par CON-46 (access token
+// court + refresh token).
+model RevokedToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model ReviewLog {
   id                String   @id @default(uuid())
   cardId            String

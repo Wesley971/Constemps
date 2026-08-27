@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,11 +11,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { hashToken } from './token-hash';
 
 const BCRYPT_SALT_ROUNDS = 10;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -110,5 +114,36 @@ export class AuthService {
 
   private signToken(user: { id: string }): string {
     return this.jwtService.sign({ sub: user.id });
+  }
+
+  // Blocklist intérimaire (CON-34) : le token complet n'est jamais stocké,
+  // seul son hash sert de clé. Idempotent (upsert) pour tolérer un double
+  // appel logout. Purge les entrées déjà expirées à chaque appel : à ce
+  // volume d'usage, une ligne par logout réel suffit à borner la table sans
+  // job de nettoyage dédié.
+  async revokeToken(rawToken: string): Promise<void> {
+    const tokenHash = hashToken(rawToken);
+    const decoded: unknown = this.jwtService.decode(rawToken);
+    const exp =
+      typeof decoded === 'object' && decoded !== null && 'exp' in decoded
+        ? decoded.exp
+        : undefined;
+
+    if (typeof exp !== 'number') {
+      this.logger.warn(
+        'Token sans exp décodable au logout : impossible de le révoquer dans la blocklist',
+      );
+      return;
+    }
+
+    await this.prisma.revokedToken.upsert({
+      where: { tokenHash },
+      create: { tokenHash, expiresAt: new Date(exp * 1000) },
+      update: {},
+    });
+
+    await this.prisma.revokedToken.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
   }
 }

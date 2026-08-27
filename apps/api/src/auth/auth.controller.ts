@@ -4,12 +4,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Patch,
   Post,
+  Req,
   Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -17,6 +19,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from './public.decorator';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './current-user.decorator';
+import { extractJwtFromCookie } from './jwt.strategy';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const ACCESS_TOKEN_MAX_AGE_MS = 72 * 60 * 60 * 1000;
@@ -37,6 +40,8 @@ const cookieOptions =
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   @Public()
@@ -67,7 +72,18 @@ export class AuthController {
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = extractJwtFromCookie(req);
+    if (token) {
+      try {
+        await this.authService.revokeToken(token);
+      } catch (err) {
+        // Best-effort : une panne d'invalidation serveur ne doit jamais
+        // empêcher l'utilisateur de se déconnecter côté client.
+        this.logger.error('Échec de la révocation du token au logout', err);
+      }
+    }
+
     res.clearCookie(ACCESS_TOKEN_COOKIE, cookieOptions);
     return { success: true };
   }
