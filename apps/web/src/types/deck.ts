@@ -19,4 +19,5 @@ export interface Deck {
   dailyGoal: number
   createdAt: string
   cardCount?: number
+  dailyGoalReached?: boolean
 }

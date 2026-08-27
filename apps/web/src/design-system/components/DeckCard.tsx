@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { DeckColor, DeckIcon } from '../../types/deck'
 import { Card } from './Card'
 import { IconCircleButton } from './IconCircleButton'
+import { GoalRing } from './GoalRing'
 import { DECK_COLOR_CARD_BG, DECK_COLOR_ICON_TEXT } from '../constants'
 
 interface DeckCardProps {
@@ -10,11 +11,12 @@ interface DeckCardProps {
   to: string
   color?: DeckColor | null
   icon?: DeckIcon | null
+  dailyGoalReached?: boolean
   onEdit?: () => void
   onDelete?: () => void
 }
 
-export function DeckCard({ name, cardCount, to, color, icon, onEdit, onDelete }: DeckCardProps) {
+export function DeckCard({ name, cardCount, to, color, icon, dailyGoalReached = false, onEdit, onDelete }: DeckCardProps) {
   return (
     <Card interactive className={`relative p-5 flex flex-col gap-3.5 min-h-27 ${color ? DECK_COLOR_CARD_BG[color] : ''}`}>
       <Link to={to} aria-label={name} className="absolute inset-0 rounded-lg" />
@@ -24,8 +26,14 @@ export function DeckCard({ name, cardCount, to, color, icon, onEdit, onDelete }:
           // mais le texte adjacent (Newsreader) réserve de l'espace sous la ligne de base
           // pour les descendantes (g/p/q) que la plupart des noms de deck n'utilisent pas.
           // Sans ce correctif, l'icône paraît décalée trop bas par rapport au texte visible.
-          <span className={`shrink-0 flex items-center -translate-y-0.5 ${color ? DECK_COLOR_ICON_TEXT[color] : 'text-inkfaint'}`}>
+          <span className={`relative z-10 shrink-0 flex items-center justify-center w-7.5 h-7.5 -translate-y-0.5 ${color ? DECK_COLOR_ICON_TEXT[color] : 'text-inkfaint'}`}>
+            <GoalRing closed={dailyGoalReached} />
             <iconify-icon icon={icon} width="18"></iconify-icon>
+          </span>
+        ) : dailyGoalReached ? (
+          // Deck sans icône choisie : l'anneau reste le seul indicateur, sans glyphe dedans.
+          <span className="relative z-10 shrink-0 flex items-center justify-center w-7.5 h-7.5 -translate-y-0.5 text-inkfaint">
+            <GoalRing closed />
           </span>
         ) : null}
         <span className="font-display text-display-sm text-ink tracking-tight">{name}</span>

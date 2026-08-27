@@ -136,6 +136,7 @@ function Decks() {
               to={`/decks/${deck.id}`}
               color={deck.color}
               icon={deck.icon}
+              dailyGoalReached={deck.dailyGoalReached}
               onEdit={() => setFormModal({ mode: 'edit', deck })}
               onDelete={() => setDeckToDelete(deck)}
             />
