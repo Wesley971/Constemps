@@ -11,14 +11,14 @@ import { AiService, AiVerdict } from '../ai/ai.service';
 import { DecksService } from '../decks/decks.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
 import { startOfDay } from '../common/date';
+import {
+  computeAdaptiveDailyGoal,
+  DAILY_GOAL_WINDOW_DAYS,
+  DAILY_GOAL_WINDOW_MS,
+  MIN_DAILY_GOAL,
+  MIN_DAILY_GOAL_FRACTION_DIVISOR,
+} from '../common/daily-goal';
 
-const DAILY_GOAL_WINDOW_DAYS = 7;
-const DAILY_GOAL_WINDOW_MS = DAILY_GOAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-const MIN_DAILY_GOAL = 1;
-// Quand la moyenne mobile s'effondre au plancher (deck peu régulier), on ne
-// bloque pas complètement les cards jamais révisées : le palier remonte à une
-// fraction du dailyGoal par défaut du deck plutôt que de rester bloqué à 1.
-const MIN_DAILY_GOAL_FRACTION_DIVISOR = 3;
 // Palier étendu (opt-in) : double du palier initial, mais le bonus est
 // plafonné à 20 cards supplémentaires pour éviter un cram illimité sur les
 // decks dont le palier adaptatif est déjà élevé. Pour un dailyGoal <= 20 (cas
@@ -84,18 +84,11 @@ export class ReviewsService {
       select: { reviewedAt: true },
     });
 
-    const countsByDay = new Map<string, number>();
-    for (const log of successfulLogs) {
-      const key = startOfDay(log.reviewedAt).toISOString();
-      countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
-    }
-
-    const total = [...countsByDay.values()].reduce(
-      (sum, count) => sum + count,
-      0,
-    );
-    const average = total / DAILY_GOAL_WINDOW_DAYS;
-    return Math.max(MIN_DAILY_GOAL, Math.round(average));
+    return computeAdaptiveDailyGoal({
+      firstReviewedAt: firstLog.reviewedAt,
+      successfulLogsInWindow: successfulLogs.map((log) => log.reviewedAt),
+      defaultGoal,
+    });
   }
 
   // Regroupe tout le calcul du palier (dailyGoal adaptatif + garde-fou
