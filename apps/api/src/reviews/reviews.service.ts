@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -97,9 +98,18 @@ export class ReviewsService {
     return Math.max(MIN_DAILY_GOAL, Math.round(average));
   }
 
-  async getSession(userId: string, deckId: string, extend: boolean) {
-    const deck = await this.decksService.findOne(userId, deckId);
-    let dailyGoal = await this.computeDailyGoal(deckId, deck.dailyGoal);
+  // Regroupe tout le calcul du palier (dailyGoal adaptatif + garde-fou
+  // anti-blocage + palier étendu + compteur du jour) sans rien décider :
+  // getSession() en tire son affichage, submitReview() son blocage.
+  private async getDailyCapState(
+    deckId: string,
+    defaultGoal: number,
+  ): Promise<{
+    dailyGoal: number;
+    extendedGoal: number;
+    reviewedToday: number;
+  }> {
+    let dailyGoal = await this.computeDailyGoal(deckId, defaultGoal);
 
     // Le palier adaptatif peut retomber à son plancher (deck peu régulier).
     // S'il reste des cards jamais révisées (New) déjà dues, ce plancher ne
@@ -112,7 +122,7 @@ export class ReviewsService {
       if (hasUnseenDueCards > 0) {
         dailyGoal = Math.max(
           dailyGoal,
-          Math.round(deck.dailyGoal / MIN_DAILY_GOAL_FRACTION_DIVISOR),
+          Math.round(defaultGoal / MIN_DAILY_GOAL_FRACTION_DIVISOR),
         );
       }
     }
@@ -126,6 +136,14 @@ export class ReviewsService {
         reviewedAt: { gte: todayStart },
       },
     });
+
+    return { dailyGoal, extendedGoal, reviewedToday };
+  }
+
+  async getSession(userId: string, deckId: string, extend: boolean) {
+    const deck = await this.decksService.findOne(userId, deckId);
+    const { dailyGoal, extendedGoal, reviewedToday } =
+      await this.getDailyCapState(deckId, deck.dailyGoal);
 
     if (reviewedToday >= extendedGoal) {
       return {
@@ -202,10 +220,20 @@ export class ReviewsService {
   async submitReview(userId: string, dto: SubmitReviewDto) {
     const card = await this.prisma.card.findUnique({
       where: { id: dto.cardId },
-      include: { deck: { select: { userId: true } } },
+      include: { deck: { select: { userId: true, dailyGoal: true } } },
     });
     if (!card || card.deck.userId !== userId) {
       throw new NotFoundException('Card introuvable');
+    }
+
+    const { extendedGoal, reviewedToday } = await this.getDailyCapState(
+      card.deckId,
+      card.deck.dailyGoal,
+    );
+    if (reviewedToday >= extendedGoal) {
+      throw new ForbiddenException(
+        'Palier étendu du jour déjà atteint, review refusée.',
+      );
     }
 
     let grade: Grade;
