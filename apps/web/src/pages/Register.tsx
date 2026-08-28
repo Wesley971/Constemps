@@ -6,6 +6,7 @@ import { Card } from '../design-system/components/Card'
 import { Input } from '../design-system/components/Input'
 import { Button } from '../design-system/components/Button'
 import { Notification } from '../design-system/components/Notification'
+import logoLockup from '../assets/logo-lockup.svg'
 
 function Register() {
   const navigate = useNavigate()
@@ -30,6 +31,7 @@ function Register() {
 
   return (
     <div className="max-w-100 mt-20 mx-auto">
+      <img src={logoLockup} alt="Constemps" className="block h-10 w-auto mx-auto mb-6" />
       <Card className="p-8 text-center">
         <h1 className="font-display text-display-md text-ink tracking-tight m-0 mb-6">Créer un compte</h1>
         <form onSubmit={handleSubmit}>
