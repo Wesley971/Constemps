@@ -36,6 +36,11 @@ model AccountMilestone {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   threshold Int
+  // CON-41 : volontairement non relu aujourd'hui (l'anti-réaffichage ne
+  // dépend que de la présence de la ligne, voir commentaire ci-dessus).
+  // Conservé pour un usage futur potentiel (piste v3 régularité, CLAUDE.md :
+  // métaphore de visualisation à définir pour remplacer la heatmap retirée).
+  // Ne pas supprimer sans revalider cette décision.
   reachedAt DateTime @default(now())
 
   @@unique([userId, threshold])
@@ -106,5 +111,4 @@ model ReviewLog {
   resumeCourt       String? // résumé très court de la piste, pour un rappel émotionnel rapide (voir "Ta progression")
   reviewedAt        DateTime @default(now())
   scheduledDays     Int
-  elapsedDays       Int
 }

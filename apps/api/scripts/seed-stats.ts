@@ -51,7 +51,6 @@ interface SeedLog {
   rating: number;
   reviewedAt: Date;
   scheduledDays: number;
-  elapsedDays: number;
   userAnswer?: string;
   aiVerdict?: string;
 }
@@ -163,7 +162,7 @@ async function main() {
 
   // Streak : au moins une review chaque jour sur les 6 derniers jours.
   for (let i = 0; i < 6; i++) {
-    logs.push({ cardId: masteredCard.id, rating: 3, reviewedAt: daysAgo(i), scheduledDays: 5, elapsedDays: 1 });
+    logs.push({ cardId: masteredCard.id, rating: 3, reviewedAt: daysAgo(i), scheduledDays: 5 });
   }
 
   // Historique 30 jours avec des trous et un mélange succès/échec.
@@ -174,7 +173,6 @@ async function main() {
       rating,
       reviewedAt: daysAgo(dayOffset),
       scheduledDays: rating >= 3 ? 3 : 1,
-      elapsedDays: 2,
     });
   }
 
@@ -187,7 +185,6 @@ async function main() {
     aiVerdict: 'incompris',
     reviewedAt: daysAgo(30),
     scheduledDays: 1,
-    elapsedDays: 5,
   });
   logs.push({
     cardId: progressCardA.id,
@@ -196,7 +193,6 @@ async function main() {
     aiVerdict: 'partiellement',
     reviewedAt: daysAgo(20),
     scheduledDays: 2,
-    elapsedDays: 10,
   });
   logs.push({
     cardId: progressCardA.id,
@@ -205,7 +201,6 @@ async function main() {
     aiVerdict: 'compris',
     reviewedAt: daysAgo(10),
     scheduledDays: 6,
-    elapsedDays: 10,
   });
   logs.push({
     cardId: progressCardA.id,
@@ -214,13 +209,12 @@ async function main() {
     aiVerdict: 'compris',
     reviewedAt: daysAgo(2),
     scheduledDays: 12,
-    elapsedDays: 8,
   });
 
   // Progress highlight, candidat B : lapse à J-28, une seule review réussie
   // depuis -> moins de reviews "entre les deux" que A, donc A doit gagner.
-  logs.push({ cardId: progressCardB.id, rating: 1, reviewedAt: daysAgo(28), scheduledDays: 1, elapsedDays: 3 });
-  logs.push({ cardId: progressCardB.id, rating: 3, reviewedAt: daysAgo(4), scheduledDays: 5, elapsedDays: 24 });
+  logs.push({ cardId: progressCardB.id, rating: 1, reviewedAt: daysAgo(28), scheduledDays: 1 });
+  logs.push({ cardId: progressCardB.id, rating: 3, reviewedAt: daysAgo(4), scheduledDays: 5 });
 
   await prisma.reviewLog.createMany({ data: logs });
 

@@ -41,7 +41,6 @@ interface SeedLog {
   rating: number;
   reviewedAt: Date;
   scheduledDays: number;
-  elapsedDays: number;
   userAnswer?: string;
   aiVerdict?: string;
   resumeCourt?: string;
@@ -118,7 +117,6 @@ async function main() {
     rating: i % 5 === 0 ? 1 : 3,
     reviewedAt: daysAgo(offset),
     scheduledDays: 3,
-    elapsedDays: 2,
   }));
 
   // Quelques OPEN_QUESTION récentes avec resumeCourt, pour alimenter le
@@ -129,7 +127,6 @@ async function main() {
       rating: 3,
       reviewedAt: daysAgo(i),
       scheduledDays: 4,
-      elapsedDays: 3,
       userAnswer: `Réponse seed ${i}`,
       aiVerdict: 'compris',
       resumeCourt,

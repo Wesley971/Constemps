@@ -280,7 +280,6 @@ export class ReviewsService {
         resumeCourt,
         reviewedAt: now,
         scheduledDays: nextCardState.scheduled_days,
-        elapsedDays: log.elapsed_days,
       },
     });
 
