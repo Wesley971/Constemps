@@ -1,21 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Rating, State } from 'ts-fsrs';
+import { Rating } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import {
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_MS,
-  MIN_DAILY_GOAL,
-  MIN_DAILY_GOAL_FRACTION_DIVISOR,
 } from '../common/daily-goal';
 import { startOfDay } from '../common/date';
 
-// Card.state / ReviewLog.rating sont des colonnes Int côté Prisma : on compare
-// à des constantes typées number (plutôt qu'un cast `as number` sur l'enum,
-// que TypeScript juge inutile alors qu'eslint le juge nécessaire) pour
-// satisfaire à la fois le compilateur et no-unsafe-enum-comparison.
-const NEW_CARD_STATE: number = State.New;
+// ReviewLog.rating est une colonne Int côté Prisma : on compare à une
+// constante typée number (plutôt qu'un cast `as number` sur l'enum, que
+// TypeScript juge inutile alors qu'eslint le juge nécessaire) pour satisfaire
+// à la fois le compilateur et no-unsafe-enum-comparison.
 const GOOD_RATING: number = Rating.Good;
 
 @Injectable()
@@ -37,7 +34,7 @@ export class DecksService {
     const decks = await this.prisma.deck.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { cards: { select: { id: true, state: true, due: true } } },
+      include: { cards: { select: { id: true, due: true } } },
     });
 
     if (decks.length === 0) {
@@ -49,13 +46,11 @@ export class DecksService {
     const todayStart = startOfDay(now);
 
     const cardToDeck = new Map<string, string>();
-    const hasUnseenDueByDeck = new Map<string, boolean>();
+    const dueCardsCountByDeck = new Map<string, number>();
     for (const deck of decks) {
-      hasUnseenDueByDeck.set(
+      dueCardsCountByDeck.set(
         deck.id,
-        deck.cards.some(
-          (card) => card.state === NEW_CARD_STATE && card.due <= now,
-        ),
+        deck.cards.filter((card) => card.due <= now).length,
       );
       for (const card of deck.cards) {
         cardToDeck.set(card.id, deck.id);
@@ -102,17 +97,12 @@ export class DecksService {
     }
 
     return decks.map(({ cards, ...deck }) => {
-      let dailyGoal = computeAdaptiveDailyGoal({
+      const dueCardsCount = dueCardsCountByDeck.get(deck.id) ?? 0;
+      const dailyGoal = computeAdaptiveDailyGoal({
         firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
         successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
-        defaultGoal: deck.dailyGoal,
+        dueCardsCount,
       });
-      if (dailyGoal === MIN_DAILY_GOAL && hasUnseenDueByDeck.get(deck.id)) {
-        dailyGoal = Math.max(
-          dailyGoal,
-          Math.round(deck.dailyGoal / MIN_DAILY_GOAL_FRACTION_DIVISOR),
-        );
-      }
       const reviewedToday = reviewedTodayByDeck.get(deck.id) ?? 0;
 
       return {

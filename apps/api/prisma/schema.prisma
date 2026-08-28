@@ -48,7 +48,6 @@ model Deck {
   icon      String? // identifiant Phosphor, parmi DECK_ICONS (voir decks/deck-icons.ts) ; null = pas d'icône choisie
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  dailyGoal Int      @default(10) // palier adaptatif, recalculé par job
   cards     Card[]
   createdAt DateTime @default(now())
 

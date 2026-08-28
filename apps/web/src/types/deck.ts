@@ -16,7 +16,6 @@ export interface Deck {
   color: DeckColor | null
   icon: DeckIcon | null
   userId: string
-  dailyGoal: number
   createdAt: string
   cardCount?: number
   dailyGoalReached?: boolean

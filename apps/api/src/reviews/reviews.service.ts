@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { fsrs, Rating, State } from 'ts-fsrs';
+import { fsrs, Rating } from 'ts-fsrs';
 import type { Card as FsrsCardInput, Grade } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
@@ -15,8 +15,7 @@ import {
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_DAYS,
   DAILY_GOAL_WINDOW_MS,
-  MIN_DAILY_GOAL,
-  MIN_DAILY_GOAL_FRACTION_DIVISOR,
+  DEFAULT_DAILY_GOAL,
 } from '../common/daily-goal';
 
 // Palier étendu (opt-in) : double du palier initial, mais le bonus est
@@ -50,7 +49,7 @@ export class ReviewsService {
 
   private async computeDailyGoal(
     deckId: string,
-    defaultGoal: number,
+    dueCardsCount: number,
   ): Promise<number> {
     const firstLog = await this.prisma.reviewLog.findFirst({
       where: { card: { deckId } },
@@ -59,14 +58,14 @@ export class ReviewsService {
     });
 
     if (!firstLog) {
-      return defaultGoal;
+      return DEFAULT_DAILY_GOAL;
     }
 
     const daysSinceFirstReview = Math.floor(
       (Date.now() - firstLog.reviewedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (daysSinceFirstReview < DAILY_GOAL_WINDOW_DAYS) {
-      return defaultGoal;
+      return DEFAULT_DAILY_GOAL;
     }
 
     // Fenêtre glissante des 7×24h précédentes, pas calée sur des frontières
@@ -87,38 +86,23 @@ export class ReviewsService {
     return computeAdaptiveDailyGoal({
       firstReviewedAt: firstLog.reviewedAt,
       successfulLogsInWindow: successfulLogs.map((log) => log.reviewedAt),
-      defaultGoal,
+      dueCardsCount,
     });
   }
 
-  // Regroupe tout le calcul du palier (dailyGoal adaptatif + garde-fou
-  // anti-blocage + palier étendu + compteur du jour) sans rien décider :
-  // getSession() en tire son affichage, submitReview() son blocage.
-  private async getDailyCapState(
-    deckId: string,
-    defaultGoal: number,
-  ): Promise<{
+  // Regroupe tout le calcul du palier (dailyGoal adaptatif + palier étendu +
+  // compteur du jour) sans rien décider : getSession() en tire son affichage,
+  // submitReview() son blocage.
+  private async getDailyCapState(deckId: string): Promise<{
     dailyGoal: number;
     extendedGoal: number;
     reviewedToday: number;
   }> {
-    let dailyGoal = await this.computeDailyGoal(deckId, defaultGoal);
+    const dueCardsCount = await this.prisma.card.count({
+      where: { deckId, due: { lte: new Date() } },
+    });
 
-    // Le palier adaptatif peut retomber à son plancher (deck peu régulier).
-    // S'il reste des cards jamais révisées (New) déjà dues, ce plancher ne
-    // doit pas bloquer complètement la session : on le remonte à une
-    // fraction du dailyGoal par défaut du deck plutôt que de rester à 1.
-    if (dailyGoal === MIN_DAILY_GOAL) {
-      const hasUnseenDueCards = await this.prisma.card.count({
-        where: { deckId, state: State.New, due: { lte: new Date() } },
-      });
-      if (hasUnseenDueCards > 0) {
-        dailyGoal = Math.max(
-          dailyGoal,
-          Math.round(defaultGoal / MIN_DAILY_GOAL_FRACTION_DIVISOR),
-        );
-      }
-    }
+    const dailyGoal = await this.computeDailyGoal(deckId, dueCardsCount);
 
     const extendedGoal = dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
 
@@ -134,9 +118,9 @@ export class ReviewsService {
   }
 
   async getSession(userId: string, deckId: string, extend: boolean) {
-    const deck = await this.decksService.findOne(userId, deckId);
+    await this.decksService.findOne(userId, deckId);
     const { dailyGoal, extendedGoal, reviewedToday } =
-      await this.getDailyCapState(deckId, deck.dailyGoal);
+      await this.getDailyCapState(deckId);
 
     if (reviewedToday >= extendedGoal) {
       return {
@@ -213,7 +197,7 @@ export class ReviewsService {
   async submitReview(userId: string, dto: SubmitReviewDto) {
     const card = await this.prisma.card.findUnique({
       where: { id: dto.cardId },
-      include: { deck: { select: { userId: true, dailyGoal: true } } },
+      include: { deck: { select: { userId: true } } },
     });
     if (!card || card.deck.userId !== userId) {
       throw new NotFoundException('Card introuvable');
@@ -221,8 +205,8 @@ export class ReviewsService {
 
     const { extendedGoal, reviewedToday } = await this.getDailyCapState(
       card.deckId,
-      card.deck.dailyGoal,
     );
+
     if (reviewedToday >= extendedGoal) {
       throw new ForbiddenException(
         'Palier étendu du jour déjà atteint, review refusée.',
