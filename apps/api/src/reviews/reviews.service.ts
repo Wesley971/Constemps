@@ -93,18 +93,27 @@ export class ReviewsService {
   // Regroupe tout le calcul du palier (dailyGoal adaptatif + palier étendu +
   // compteur du jour) sans rien décider : getSession() en tire son affichage,
   // submitReview() son blocage.
+  //
+  // Le palier reste figé pour toute la durée d'une session de révision
+  // active, y compris à travers un rechargement de page (F5) : on ne
+  // recalcule que si aucun snapshot n'existe encore, si le snapshot date
+  // d'un autre jour calendaire, ou si la session qu'il décrivait était déjà
+  // conclue (palier ou palier étendu atteint), jamais juste parce que le
+  // front revient nous interroger en cours de session active. Décision
+  // actée sur CON-49 (régression CON-39 : recalcul à chaque submitReview()).
   private async getDailyCapState(deckId: string): Promise<{
     dailyGoal: number;
     extendedGoal: number;
     reviewedToday: number;
   }> {
-    const dueCardsCount = await this.prisma.card.count({
-      where: { deckId, due: { lte: new Date() } },
+    const deck = await this.prisma.deck.findUnique({
+      where: { id: deckId },
+      select: {
+        sessionDailyGoal: true,
+        sessionExtendedGoal: true,
+        sessionSnapshotAt: true,
+      },
     });
-
-    const dailyGoal = await this.computeDailyGoal(deckId, dueCardsCount);
-
-    const extendedGoal = dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
 
     const todayStart = startOfDay(new Date());
     const reviewedToday = await this.prisma.reviewLog.count({
@@ -113,6 +122,37 @@ export class ReviewsService {
         reviewedAt: { gte: todayStart },
       },
     });
+
+    let dailyGoal: number;
+    let extendedGoal: number;
+
+    if (
+      deck?.sessionDailyGoal == null ||
+      deck.sessionExtendedGoal == null ||
+      deck.sessionSnapshotAt == null ||
+      deck.sessionSnapshotAt < todayStart ||
+      reviewedToday >= deck.sessionExtendedGoal ||
+      reviewedToday >= deck.sessionDailyGoal
+    ) {
+      const dueCardsCount = await this.prisma.card.count({
+        where: { deckId, due: { lte: new Date() } },
+      });
+
+      dailyGoal = await this.computeDailyGoal(deckId, dueCardsCount);
+      extendedGoal = dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
+
+      await this.prisma.deck.update({
+        where: { id: deckId },
+        data: {
+          sessionDailyGoal: dailyGoal,
+          sessionExtendedGoal: extendedGoal,
+          sessionSnapshotAt: new Date(),
+        },
+      });
+    } else {
+      dailyGoal = deck.sessionDailyGoal;
+      extendedGoal = deck.sessionExtendedGoal;
+    }
 
     return { dailyGoal, extendedGoal, reviewedToday };
   }

@@ -59,6 +59,14 @@ model Deck {
   statsMessage            String?   @db.Text
   statsMessageAt          DateTime?
   statsMessageReviewCount Int?
+
+  // Palier figé pour la durée d'une session de révision active (CON-49) :
+  // reviewsService.getDailyCapState() ne recalcule que si ce snapshot est
+  // absent, périmé (autre jour calendaire) ou décrivait déjà une session
+  // conclue (palier/palier étendu atteint), jamais en cours de session.
+  sessionDailyGoal    Int?
+  sessionExtendedGoal Int?
+  sessionSnapshotAt   DateTime?
 }
 
 enum CardType {
