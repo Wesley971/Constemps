@@ -34,4 +34,23 @@
   :focus-visible {
     @apply outline-none shadow-focus-ring;
   }
+
+  /* L'autofill de Chrome/Edge impose sa propre couleur de texte et de fond,
+     illisible sur nos champs (voir CON-52). background-color est ignoré sur
+     un champ autofillé, d'où le contournement par box-shadow inset ; le
+     transition-delay très long évite un flash de la couleur native au
+     moment du remplissage. Couleurs alignées sur bg-paper/text-ink (seul
+     fond utilisé par Input/Textarea en état actif), à resynchroniser
+     manuellement si ces tokens changent dans tailwind.config.js. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #211d19;
+    -webkit-box-shadow: 0 0 0 1000px #fbf8f3 inset;
+    box-shadow: 0 0 0 1000px #fbf8f3 inset;
+    transition: background-color 600000s 0s, color 600000s 0s;
+  }
 }
