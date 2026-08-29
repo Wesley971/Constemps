@@ -7,6 +7,13 @@
     box-sizing: border-box;
   }
 
+  /* Thème clair unique assumé (voir CLAUDE.md) : désactive le filtre
+     d'inversion automatique de Chrome/Firefox en dark mode, qui inverse
+     sinon le rendu pixel de toute la page sans toucher au DOM/CSS calculé. */
+  :root {
+    color-scheme: light;
+  }
+
   body {
     margin: 0;
     @apply bg-canvas bg-dot-grid text-ink font-body text-body-md p-8 max-[720px]:p-4;
