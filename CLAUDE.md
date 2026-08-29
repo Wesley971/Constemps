@@ -26,6 +26,8 @@ IA unifiée sur **Gemini** (`@google/genai`) pour l'évaluation des réponses IA
 
 `ReviewLog` conserve désormais le feedback pédagogique complet de l'évaluation IA (cePointsForts, cePointsAmeliorer, piste, resumeCourt), pas seulement le verdict, pour permettre une comparaison ancienne/actuelle réellement personnalisée dans le mécanisme "Ta progression".
 
+Le design system Constemps est un thème clair unique assumé, aucune prise en charge du dark mode n'est prévue à ce stade. `color-scheme: light` est déclaré explicitement (`apps/web/src/index.css`, `:root`) pour désactiver le filtre d'inversion automatique dark mode des navigateurs (Chrome/Firefox), qui inverserait sinon le rendu pixel de toute la page sans que le code n'ait de bug réel.
+
 ## Principes UX non négociables
 
 Ces règles priment sur toute simplification technique. Ne pas les casser pour aller plus vite.
