@@ -1,10 +1,10 @@
 # Déploiement en production (VPS OVH)
 
-Contexte : CON-53. Architecture : un seul VPS OVH, Docker Compose avec trois
-services (`mysql`, `api`, `web`), `web` faisant à la fois front statique et
-reverse proxy HTTPS (Caddy, certificats Let's Encrypt automatiques). Pas de
-nom de domaine acheté pour l'instant (budget) : on utilise
-[sslip.io](https://sslip.io), qui résout automatiquement
+Contexte : déploiement production initial. Architecture : un seul VPS OVH,
+Docker Compose avec trois services (`mysql`, `api`, `web`), `web` faisant à
+la fois front statique et reverse proxy HTTPS (Caddy, certificats Let's
+Encrypt automatiques). Utilisation de sslip.io en attendant l'achat d'un
+nom de domaine dédié : ce service résout automatiquement
 `<ip-avec-tirets>.sslip.io` vers l'IP du VPS et supporte des sous-domaines
 arbitraires. Ce document explique aussi comment basculer vers un vrai domaine
 le jour venu (section 10).

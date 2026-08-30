@@ -1,6 +1,6 @@
 # Constemps
 
-App web de révision espacée (flashcards) avec moteur FSRS. Voir `CLAUDE.md` pour le contexte produit complet.
+App web de révision espacée (flashcards) avec moteur FSRS.
 
 ## Structure du monorepo
 
