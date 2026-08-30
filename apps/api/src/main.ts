@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -21,7 +22,12 @@ function assertRequiredEnvVars() {
 async function bootstrap() {
   assertRequiredEnvVars();
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Un seul hop de proxy en prod (Caddy, voir docker-compose.prod.yml) : sans ça,
+  // req.ip vaut l'IP interne Docker de Caddy pour tout le monde, et le throttle
+  // anonyme (register/login) devient un budget partagé entre tous les clients
+  // au lieu d'un budget par IP réelle.
+  app.set('trust proxy', 1);
   app.use(helmet());
   app.use(cookieParser());
   app.useGlobalPipes(
