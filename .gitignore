@@ -4,3 +4,8 @@ build/
 .env
 .env.*.local
 *.log
+
+# Notes de travail internes : pas de place dans un repo public
+CLAUDE.md
+SESSION_HANDOFF.md
+TUNNEL-TESTING.md
