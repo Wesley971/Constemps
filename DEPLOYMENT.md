@@ -109,7 +109,9 @@ nano .env
 
 Remplacer dans `.env` :
 
-- `<IP-VPS-AVEC-TIRETS>` dans `WEB_ORIGIN` par l'IP réelle avec tirets.
+- `<IP-VPS-AVEC-TIRETS>` dans `WEB_ORIGIN` **et** `VITE_API_URL` par l'IP
+  réelle avec tirets (les deux, oublier `VITE_API_URL` fait échouer tous
+  les appels du front avec `ERR_CONNECTION_REFUSED`).
 - `JWT_SECRET` : valeur forte générée, ex. `openssl rand -base64 48`.
 - `GEMINI_API_KEY` : la clé réelle.
 - `MYSQL_PASSWORD` et `MYSQL_ROOT_PASSWORD` : mots de passe forts et distincts.
@@ -167,7 +169,13 @@ Une fois un nom de domaine acheté :
 2. Remplacer les deux hosts `sslip.io` dans `apps/web/Caddyfile` par les
    sous-domaines du vrai domaine.
 3. Remplacer `WEB_ORIGIN` dans `.env` par la nouvelle URL du front.
-4. Reconstruire et relancer :
+4. Remplacer `VITE_API_URL` dans `.env` par la nouvelle URL de l'API. Cette
+   variable est figée dans le bundle front au moment du build (Vite ne la
+   lit jamais au runtime dans le navigateur) : l'oublier reproduit
+   exactement le bug rencontré au premier déploiement (front qui continue
+   d'appeler l'ancienne URL, `ERR_CONNECTION_REFUSED`). Un `up -d` sans
+   `--build` ne suffit pas, il faut bien reconstruire l'image `web`.
+5. Reconstruire et relancer :
    ```bash
    git pull
    docker compose -f docker-compose.prod.yml up -d --build api web
