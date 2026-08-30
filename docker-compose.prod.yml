@@ -1,0 +1,72 @@
+# Nom de projet explicite : sans lui, Docker Compose dérive le nom du projet
+# du nom du dossier ("constemps"), identique à docker-compose.yml (dev). Les
+# deux fichiers finiraient alors par partager conteneurs/volumes/réseau si
+# jamais exécutés sur la même machine (ex: test local avant déploiement).
+name: constemps-prod
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: constemps-prod-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          'root',
+          '-p${MYSQL_ROOT_PASSWORD}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: constemps-prod-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3000/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Nommé par rôle (front public), pas par outil : sert le build statique du
+  # front ET fait reverse proxy HTTPS vers l'API. Voir apps/web/Dockerfile
+  # (l'image finale est caddy:2-alpine) et apps/web/Caddyfile.
+  web:
+    build:
+      context: ./apps/web
+    container_name: constemps-prod-web
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - api
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:

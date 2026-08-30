@@ -1,0 +1,14 @@
+# Remplacer <IP-VPS-AVEC-TIRETS> par l'IP publique du VPS, points remplacés
+# par des tirets (ex: 51.75.20.10 -> 51-75-20-10). Voir DEPLOYMENT.md à la
+# racine. Caddy obtient et renouvelle automatiquement les certificats HTTPS
+# (Let's Encrypt) pour ces deux hosts, aucune config manuelle requise.
+
+app.<IP-VPS-AVEC-TIRETS>.sslip.io {
+	root * /srv/web
+	file_server
+	try_files {path} /index.html
+}
+
+api.<IP-VPS-AVEC-TIRETS>.sslip.io {
+	reverse_proxy api:3000
+}
