@@ -55,6 +55,8 @@ services:
   web:
     build:
       context: ./apps/web
+      args:
+        VITE_API_URL: ${VITE_API_URL}
     container_name: constemps-prod-web
     restart: unless-stopped
     ports:
