@@ -25,6 +25,7 @@ model User {
   dashboardMessageReviewCount Int?
 
   accountMilestones AccountMilestone[]
+  refreshTokens     RefreshToken[]
 }
 
 // Jalon "surprise" atteint sur la régularité cumulée du compte (voir
@@ -92,18 +93,24 @@ model Card {
   reviewLogs ReviewLog[]
 }
 
-// Blocklist intérimaire de tokens JWT révoqués (voir CON-34). Le token n'est
-// jamais stocké en clair, seul son hash sert de clé de recherche. expiresAt
-// reprend l'expiration naturelle du JWT révoqué, pour purger les entrées
-// devenues inutiles (un token expiré est de toute façon déjà rejeté en amont
-// par passport-jwt, la ligne ne sert donc plus à rien une fois expirée).
-// Solution volontairement légère, remplacée à terme par CON-46 (access token
-// court + refresh token).
-model RevokedToken {
-  id        String   @id @default(uuid())
-  tokenHash String   @unique
+// Refresh token révocable côté serveur (CON-46, remplace la blocklist
+// intérimaire RevokedToken de CON-34). Le token n'est jamais stocké en clair,
+// seul son hash sert de clé de recherche. familyId est partagé par tous les
+// tokens descendant d'un même login initial : une réutilisation d'un token
+// déjà tourné (revokedAt non nul) révoque toute la famille (voir
+// AuthService.rotateRefreshToken), pas seulement le token concerné.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  familyId  String    @default(uuid())
+  tokenHash String    @unique
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([familyId])
+  @@index([userId])
 }
 
 model ReviewLog {

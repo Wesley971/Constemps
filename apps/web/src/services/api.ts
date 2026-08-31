@@ -16,7 +16,26 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+// 401 sur un endpoint autre que login/register = access token expiré (15 min,
+// voir CON-46), pas des identifiants refusés : on tente un refresh silencieux
+// avant de laisser l'utilisateur être redirigé vers /login.
+const NO_REFRESH_RETRY_PATHS = new Set(['/auth/login', '/auth/register'])
+
+let refreshPromise: Promise<boolean> | null = null
+
+function refreshAccessToken(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_URL}/auth/refresh`, { method: 'POST', credentials: 'include' })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
+async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
@@ -25,6 +44,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   })
+
+  if (res.status === 401 && !isRetry && !NO_REFRESH_RETRY_PATHS.has(path)) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      return request<T>(path, options, true)
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)

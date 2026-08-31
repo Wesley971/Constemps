@@ -2,11 +2,11 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,11 +14,15 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { hashToken } from './token-hash';
 
 const BCRYPT_SALT_ROUNDS = 10;
+const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+export interface IssuedTokens {
+  accessToken: string;
+  refreshToken: string;
+}
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -38,7 +42,7 @@ export class AuthService {
       select: { id: true, email: true },
     });
 
-    return { user, token: this.signToken(user) };
+    return { user, ...(await this.issueTokens(user.id)) };
   }
 
   async login(dto: LoginDto) {
@@ -55,10 +59,14 @@ export class AuthService {
     }
 
     const publicUser = { id: user.id, email: user.email };
-    return { user: publicUser, token: this.signToken(publicUser) };
+    return { user: publicUser, ...(await this.issueTokens(user.id)) };
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto) {
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+    currentRawRefreshToken: string | null,
+  ) {
     const wantsEmailChange = dto.email !== undefined;
     const wantsPasswordChange =
       dto.currentPassword !== undefined || dto.newPassword !== undefined;
@@ -70,6 +78,18 @@ export class AuthService {
     if (wantsPasswordChange && (!dto.currentPassword || !dto.newPassword)) {
       throw new BadRequestException(
         'Le mot de passe actuel et le nouveau mot de passe sont tous les deux requis pour changer de mot de passe',
+      );
+    }
+
+    // La révocation des autres sessions ci-dessous a besoin d'identifier la
+    // session courante pour l'exclure. Aucun chemin applicatif ne peut émettre
+    // un access token sans refresh token associé (register/login/refresh
+    // posent toujours les deux cookies ensemble) : si ce token est absent ici,
+    // l'état est anormal, on refuse explicitement plutôt que de risquer une
+    // déconnexion surprise de la session légitime en cours.
+    if (wantsPasswordChange && !currentRawRefreshToken) {
+      throw new UnauthorizedException(
+        'Session invalide, reconnecte-toi avant de changer ton mot de passe',
       );
     }
 
@@ -105,45 +125,139 @@ export class AuthService {
       return { id: user.id, email: user.email };
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data,
       select: { id: true, email: true },
     });
-  }
 
-  private signToken(user: { id: string }): string {
-    return this.jwtService.sign({ sub: user.id });
-  }
-
-  // Blocklist intérimaire (CON-34) : le token complet n'est jamais stocké,
-  // seul son hash sert de clé. Idempotent (upsert) pour tolérer un double
-  // appel logout. Purge les entrées déjà expirées à chaque appel : à ce
-  // volume d'usage, une ligne par logout réel suffit à borner la table sans
-  // job de nettoyage dédié.
-  async revokeToken(rawToken: string): Promise<void> {
-    const tokenHash = hashToken(rawToken);
-    const decoded: unknown = this.jwtService.decode(rawToken);
-    const exp =
-      typeof decoded === 'object' && decoded !== null && 'exp' in decoded
-        ? decoded.exp
-        : undefined;
-
-    if (typeof exp !== 'number') {
-      this.logger.warn(
-        'Token sans exp décodable au logout : impossible de le révoquer dans la blocklist',
-      );
-      return;
+    if (wantsPasswordChange) {
+      await this.revokeOtherSessions(userId, currentRawRefreshToken!);
     }
 
-    await this.prisma.revokedToken.upsert({
-      where: { tokenHash },
-      create: { tokenHash, expiresAt: new Date(exp * 1000) },
-      update: {},
+    return updated;
+  }
+
+  private async issueTokens(userId: string): Promise<IssuedTokens> {
+    const refreshToken = await this.createRefreshTokenFamily(userId);
+    return { accessToken: this.signAccessToken(userId), refreshToken };
+  }
+
+  private signAccessToken(userId: string): string {
+    return this.jwtService.sign({ sub: userId });
+  }
+
+  private async createRefreshTokenFamily(userId: string): Promise<string> {
+    const rawToken = randomBytes(32).toString('hex');
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        tokenHash: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+    return rawToken;
+  }
+
+  // Rotation à chaque appel (CON-46) : l'ancien token est révoqué et un
+  // nouveau est émis dans la même transaction. Sous MySQL InnoDB
+  // (REPEATABLE READ par défaut), l'UPDATE conditionné sur revokedAt IS NULL
+  // fait une lecture "current read" verrouillée : deux appels concurrents sur
+  // le même token se sérialisent, le perdant échoue proprement sans déclencher
+  // de révocation de famille (il voyait le token non-révoqué au démarrage de
+  // sa propre transaction, ce n'est pas une réutilisation).
+  async rotateRefreshToken(rawToken: string): Promise<IssuedTokens> {
+    const tokenHash = hashToken(rawToken);
+    const now = new Date();
+
+    // Attention : une exception levée depuis le callback de $transaction fait
+    // ROLLBACK toute la transaction, y compris la révocation de famille
+    // ci-dessous. Le callback ne doit donc jamais throw : il retourne un
+    // résultat discriminé, et c'est seulement après la transaction (donc une
+    // fois les écritures validées) qu'on transforme un résultat en échec en
+    // exception.
+    const result = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.refreshToken.findUnique({
+        where: { tokenHash },
+      });
+
+      if (!existing) {
+        return { ok: false as const };
+      }
+
+      if (existing.revokedAt) {
+        // Réutilisation d'un token déjà tourné : vol probable, on coupe toute
+        // la famille pour forcer une ré-authentification complète.
+        await tx.refreshToken.updateMany({
+          where: { familyId: existing.familyId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        return { ok: false as const };
+      }
+
+      if (existing.expiresAt < now) {
+        return { ok: false as const };
+      }
+
+      const revoked = await tx.refreshToken.updateMany({
+        where: { id: existing.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      if (revoked.count === 0) {
+        // Course perdue contre une rotation concurrente sur ce même token.
+        return { ok: false as const };
+      }
+
+      const newRawToken = randomBytes(32).toString('hex');
+      await tx.refreshToken.create({
+        data: {
+          userId: existing.userId,
+          familyId: existing.familyId,
+          tokenHash: hashToken(newRawToken),
+          expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
+        },
+      });
+
+      return {
+        ok: true as const,
+        accessToken: this.signAccessToken(existing.userId),
+        refreshToken: newRawToken,
+      };
     });
 
-    await this.prisma.revokedToken.deleteMany({
+    if (!result.ok) {
+      throw new UnauthorizedException();
+    }
+    return result;
+  }
+
+  // Logout : révoque uniquement le refresh token de cette session (pas toute
+  // la famille), best-effort pour ne jamais empêcher le logout côté client.
+  // Purge aussi les entrées déjà expirées : à ce volume d'usage, une ligne par
+  // session suffit à borner la table sans job de nettoyage dédié.
+  async revokeRefreshToken(rawToken: string): Promise<void> {
+    const tokenHash = hashToken(rawToken);
+    await this.prisma.refreshToken.updateMany({
+      where: { tokenHash, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    await this.prisma.refreshToken.deleteMany({
       where: { expiresAt: { lt: new Date() } },
+    });
+  }
+
+  private async revokeOtherSessions(
+    userId: string,
+    currentRawRefreshToken: string,
+  ): Promise<void> {
+    await this.prisma.refreshToken.updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+        tokenHash: { not: hashToken(currentRawRefreshToken) },
+      },
+      data: { revokedAt: new Date() },
     });
   }
 }
