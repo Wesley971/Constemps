@@ -52,6 +52,7 @@ export interface DeckStatsSummaryInput {
   previousMessage?: string | null;
 }
 
+// Registre canonique du choix de modèle et de son historique : CLAUDE.md, section "Stack confirmée" (CON-40).
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
 const MIN_GENERATED_CARDS = 5;
