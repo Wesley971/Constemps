@@ -2,9 +2,11 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,8 +23,12 @@ export interface IssuedTokens {
   refreshToken: string;
 }
 
+type Db = PrismaService | Prisma.TransactionClient;
+
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -37,12 +43,21 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
-    const user = await this.prisma.user.create({
-      data: { email: dto.email, password: hashedPassword },
-      select: { id: true, email: true },
-    });
 
-    return { user, ...(await this.issueTokens(user.id)) };
+    // user.create() et la création du refresh token doivent réussir ou
+    // échouer ensemble : sans ça, un échec du second write (DB coupée, pool
+    // épuisé) laisserait un compte créé sans aucun token, avec l'email
+    // définitivement "pris" pour l'utilisateur sans qu'il ait pu se
+    // connecter — ni vérification email ni mot de passe oublié en v0 pour
+    // s'en sortir.
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { email: dto.email, password: hashedPassword },
+        select: { id: true, email: true },
+      });
+
+      return { user, ...(await this.issueTokens(user.id, tx)) };
+    });
   }
 
   async login(dto: LoginDto) {
@@ -132,14 +147,28 @@ export class AuthService {
     });
 
     if (wantsPasswordChange) {
-      await this.revokeOtherSessions(userId, currentRawRefreshToken!);
+      try {
+        await this.revokeOtherSessions(userId, currentRawRefreshToken!);
+      } catch (err) {
+        // Best-effort, même principe que la révocation au logout : le mot de
+        // passe a déjà été changé avec succès à cet instant, une panne sur la
+        // révocation des autres sessions ne doit jamais transformer cette
+        // réussite en une 500 trompeuse pour l'utilisateur.
+        this.logger.error(
+          'Échec de la révocation des autres sessions après changement de mot de passe',
+          err,
+        );
+      }
     }
 
     return updated;
   }
 
-  private async issueTokens(userId: string): Promise<IssuedTokens> {
-    const refreshToken = await this.createRefreshTokenFamily(userId);
+  private async issueTokens(
+    userId: string,
+    db: Db = this.prisma,
+  ): Promise<IssuedTokens> {
+    const refreshToken = await this.createRefreshTokenFamily(userId, db);
     return { accessToken: this.signAccessToken(userId), refreshToken };
   }
 
@@ -147,9 +176,12 @@ export class AuthService {
     return this.jwtService.sign({ sub: userId });
   }
 
-  private async createRefreshTokenFamily(userId: string): Promise<string> {
+  private async createRefreshTokenFamily(
+    userId: string,
+    db: Db = this.prisma,
+  ): Promise<string> {
     const rawToken = randomBytes(32).toString('hex');
-    await this.prisma.refreshToken.create({
+    await db.refreshToken.create({
       data: {
         userId,
         tokenHash: hashToken(rawToken),
