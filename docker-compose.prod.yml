@@ -47,7 +47,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      # 30s (au lieu de 10s) : le conteneur applique désormais les migrations
+      # Prisma en attente avant de démarrer le serveur (CON-59), ce qui
+      # repousse le moment où le port 3000 répond.
+      start_period: 30s
 
   # Nommé par rôle (front public), pas par outil : sert le build statique du
   # front ET fait reverse proxy HTTPS vers l'API. Voir apps/web/Dockerfile

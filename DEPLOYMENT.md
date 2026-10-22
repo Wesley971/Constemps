@@ -133,17 +133,36 @@ Attendre que MySQL soit `healthy` :
 docker compose -f docker-compose.prod.yml ps
 ```
 
-Puis lancer les migrations Prisma (avant de démarrer l'API) :
-
-```bash
-docker compose -f docker-compose.prod.yml run --rm api npx prisma migrate deploy
-```
-
-Et démarrer le reste :
+Puis démarrer le reste :
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
+
+Depuis CON-59, plus besoin de lancer `prisma migrate deploy` à la main : le
+conteneur `api` applique les migrations en attente lui-même à chaque démarrage
+(entrypoint, avant de lancer le serveur NestJS) et refuse de démarrer si la
+migration échoue plutôt que de tourner contre un schéma incohérent. Si `api`
+n'atteint jamais l'état `healthy`, regarder `docker compose -f
+docker-compose.prod.yml logs -f api` en premier réflexe : une migration en
+échec y apparaîtra explicitement.
+
+Secours si une migration échouée bloque la base (erreur Prisma `P3009`) : les
+commandes ponctuelles échouent aussi via l'entrypoint. Le contourner pour marquer
+la migration (nom dans les logs) comme annulée, puis relancer `api` :
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm --entrypoint sh api -c "./node_modules/.bin/prisma migrate resolve --rolled-back <nom_de_la_migration>"
+docker compose -f docker-compose.prod.yml up -d api
+```
+
+Attention : MySQL n'applique pas les changements de structure (DDL) de façon
+transactionnelle, une migration qui échoue à mi-chemin peut donc laisser des
+changements partiels (table créée, colonne ajoutée...). Dans ce cas,
+`--rolled-back` puis relance ne suffit pas (la migration échouera à nouveau,
+erreur `P3018`) : il faut d'abord défaire ces changements partiels à la main
+avant `--rolled-back`, ou bien terminer la migration à la main puis utiliser
+`--applied`.
 
 Si un build échoue, voir les logs détaillés :
 
