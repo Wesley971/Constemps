@@ -1,6 +1,11 @@
-# Déploiement en production (VPS OVH)
+# Déploiement en production (VPS)
 
-Contexte : déploiement production initial. Architecture : un seul VPS OVH,
+> **Note (octobre 2026)** : l'ancien déploiement de production (VPS OVH) a été
+> fermé et le projet est en pause, lancé uniquement en local (voir
+> `README.md`). Ce guide reste valable pour redéployer Constemps de zéro sur
+> un nouveau serveur.
+
+Contexte : déploiement production initial. Architecture : un seul VPS,
 Docker Compose avec trois services (`mysql`, `api`, `web`), `web` faisant à
 la fois front statique et reverse proxy HTTPS (Caddy, certificats Let's
 Encrypt automatiques). Utilisation de sslip.io en attendant l'achat d'un
@@ -11,8 +16,8 @@ le jour venu (section 10).
 
 ## Prérequis
 
-- VPS OVH déjà commandé (gamme VPS-1 2027, datacenter Strasbourg, Ubuntu 26.04
-  LTS, IP publique notée `<IP_VPS>` ci-dessous).
+- Un VPS Linux chez l'hébergeur de ton choix (par exemple Ubuntu LTS), avec
+  un accès root et une IP publique notée `<IP_VPS>` ci-dessous.
 - Une paire de clés SSH sur ta machine. Si absente :
   ```powershell
   ssh-keygen -t ed25519
@@ -22,7 +27,7 @@ Dans tout ce document, remplacer :
 
 - `<IP_VPS>` par l'IP publique réelle du VPS (format normal, avec des points).
 - `<IP-VPS-AVEC-TIRETS>` par la même IP avec des tirets à la place des points
-  (ex: `51.75.20.10` → `51-75-20-10`).
+  (ex: `203.0.113.10` → `203-0-113-10`).
 
 ## 1. Connexion SSH initiale
 
@@ -30,7 +35,7 @@ Dans tout ce document, remplacer :
 ssh root@<IP_VPS>
 ```
 
-Mot de passe root fourni par OVH (email de commande ou panel OVH).
+Mot de passe root fourni par l'hébergeur (email de commande ou panel client).
 
 ## 2. Ajouter ta clé SSH publique
 
@@ -186,7 +191,8 @@ Une fois un nom de domaine acheté :
 
 1. Créer un enregistrement DNS A pointant vers `<IP_VPS>`.
 2. Remplacer les deux hosts `sslip.io` dans `apps/web/Caddyfile` par les
-   sous-domaines du vrai domaine.
+   sous-domaines du vrai domaine (par exemple `app.ton-domaine.fr` et
+   `api.ton-domaine.fr`).
 3. Remplacer `WEB_ORIGIN` dans `.env` par la nouvelle URL du front.
 4. Remplacer `VITE_API_URL` dans `.env` par la nouvelle URL de l'API. Cette
    variable est figée dans le bundle front au moment du build (Vite ne la
