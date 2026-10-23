@@ -1,47 +1,29 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { cardsApi, ApiError } from '../services/api'
 import type { Card as CardData, CardType, GeneratedCard } from '../types/card'
 import type { ToastState } from '../design-system/useToast'
-import { Card } from '../design-system/components/Card'
-import { Badge } from '../design-system/components/Badge'
 import { Button } from '../design-system/components/Button'
-import { Input } from '../design-system/components/Input'
-import { Textarea } from '../design-system/components/Textarea'
 import { Checkbox } from '../design-system/components/Checkbox'
-import { IconCircleButton } from '../design-system/components/IconCircleButton'
-import { Skeleton } from '../design-system/components/Skeleton'
-import { ModalScrim } from '../design-system/components/Modal'
-import { CARD_TYPE_LABELS, CARD_TYPE_ICONS, CARD_TYPE_HELP } from '../design-system/constants'
+import { ChoiceCards } from '../design-system/components/ChoiceCards'
+import { Curtain } from '../design-system/components/Curtain'
+import { IconButton } from '../design-system/components/IconButton'
+import { InkRule } from '../design-system/components/InkRule'
+import { Input } from '../design-system/components/Input'
+import { Label } from '../design-system/components/Label'
+import { Textarea } from '../design-system/components/Textarea'
+import { CARD_TYPE_LABELS, CARD_TYPE_HELP } from '../design-system/constants'
+import { plural } from '../lib/today'
 
 const MAX_TEXT_LENGTH = 50000
 
-interface TypeChoice {
-  value: CardType | null
-  label: string
-  icon: string
-  helpText: string
-}
+// AUTO = « laisser le contenu décider » (comportement par défaut, l'IA choisit
+// selon le texte) ; envoyé à l'API comme absence de type forcé.
+type TypeChoice = CardType | 'AUTO'
 
-// null = "laisser le contenu décider" (comportement par défaut, IA choisit selon le texte)
-const TYPE_CHOICES: TypeChoice[] = [
-  {
-    value: null,
-    label: 'Laisser le contenu décider',
-    icon: 'ph:magic-wand-bold',
-    helpText: "L'IA choisit le type le plus adapté selon le texte.",
-  },
-  {
-    value: 'CLASSIC',
-    label: CARD_TYPE_LABELS.CLASSIC,
-    icon: CARD_TYPE_ICONS.CLASSIC,
-    helpText: CARD_TYPE_HELP.CLASSIC,
-  },
-  {
-    value: 'OPEN_QUESTION',
-    label: CARD_TYPE_LABELS.OPEN_QUESTION,
-    icon: CARD_TYPE_ICONS.OPEN_QUESTION,
-    helpText: CARD_TYPE_HELP.OPEN_QUESTION,
-  },
+const TYPE_CHOICES: { value: TypeChoice; label: string; help: string }[] = [
+  { value: 'AUTO', label: 'Laisser le contenu décider', help: 'L’IA choisit le type le plus adapté.' },
+  { value: 'CLASSIC', label: CARD_TYPE_LABELS.CLASSIC, help: CARD_TYPE_HELP.CLASSIC },
+  { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION, help: CARD_TYPE_HELP.OPEN_QUESTION },
 ]
 
 interface Proposal extends GeneratedCard {
@@ -56,12 +38,15 @@ interface GenerateCardsModalProps {
   notify: (toast: ToastState) => void
 }
 
+// Génération depuis un texte (CON-70, S18-generer) : texte source sur papier
+// quadrillé et type de carte, puis les propositions dans le même rideau.
 export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: GenerateCardsModalProps) {
+  const sourceId = useId()
   const [sourceText, setSourceText] = useState('')
   const [generating, setGenerating] = useState(false)
   const [proposals, setProposals] = useState<Proposal[] | null>(null)
   const [addingSelected, setAddingSelected] = useState(false)
-  const [forceType, setForceType] = useState<CardType | null>(null)
+  const [typeChoice, setTypeChoice] = useState<TypeChoice>('AUTO')
 
   const selectedCount = proposals?.filter((p) => p.selected).length ?? 0
   const overLimit = sourceText.length > MAX_TEXT_LENGTH
@@ -71,7 +56,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
 
     setGenerating(true)
     try {
-      const generated = await cardsApi.generate(deckId, sourceText.trim(), forceType ?? undefined)
+      const generated = await cardsApi.generate(deckId, sourceText.trim(), typeChoice === 'AUTO' ? undefined : typeChoice)
       setProposals(generated.map((card, index) => ({ ...card, id: `gen-${index}`, selected: true })))
     } catch (err) {
       notify({
@@ -121,140 +106,92 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     }
   }
 
+  // Libellé court : « Ajouter les cartes sélectionnées (12) » débordait du bouton à 360px.
+  const addIdle = `Ajouter ${selectedCount} ${plural(selectedCount, 'carte', 'cartes')}`
+  const counterId = `${sourceId}-compteur`
+
   return (
-    <ModalScrim onScrimClick={onClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-220 max-w-[92vw] max-h-[88vh] bg-paper rounded-lg shadow-modal p-7 flex flex-col gap-4"
-      >
-        <div className="flex items-center justify-between">
-          <span className="font-display text-display-sm text-ink">Générer des cartes depuis un texte</span>
-          <IconCircleButton icon="ph:x-bold" tone="ghost" size="md" onClick={onClose} />
-        </div>
+    <Curtain title={proposals ? 'Propositions' : 'Depuis un texte'} onClose={onClose}>
+      {!proposals ? (
+        <>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={sourceId}>Texte source</Label>
+            <textarea
+              id={sourceId}
+              rows={6}
+              value={sourceText}
+              onChange={(e) => setSourceText(e.target.value)}
+              disabled={generating}
+              placeholder="Colle ici un article, un cours, une fiche… l’IA en tirera des cartes."
+              aria-describedby={counterId}
+              aria-invalid={overLimit ? true : undefined}
+              className="genko block w-full py-3 px-4 border-none rounded-xs bg-on-indigo font-body text-body-sm leading-6 text-paper-ink resize-y placeholder:text-wood-ink-soft"
+            />
+            <span id={counterId} className={`self-end text-caption tabular-nums ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
+              {overLimit ? 'Trop long : ' : ''}
+              {sourceText.length.toLocaleString('fr-FR')} / {MAX_TEXT_LENGTH.toLocaleString('fr-FR')}
+            </span>
+          </div>
 
-        <div className="overflow-y-auto flex flex-col gap-4">
-          {!proposals ? (
-            <>
-              <div>
-                <Textarea
-                  label="Texte source"
-                  placeholder="Colle ici un article, un cours, une fiche... l'IA en tirera des cartes."
-                  rows={10}
-                  value={sourceText}
-                  onChange={(e) => setSourceText(e.target.value)}
-                  disabled={generating}
-                  error={overLimit ? `Le texte dépasse la limite de ${MAX_TEXT_LENGTH.toLocaleString('fr-FR')} caractères` : undefined}
-                />
-                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
-                  {sourceText.length.toLocaleString('fr-FR')} / {MAX_TEXT_LENGTH.toLocaleString('fr-FR')}
-                </div>
-              </div>
+          <ChoiceCards
+            name="generation-type"
+            legend="Type de carte"
+            layout="list"
+            options={TYPE_CHOICES}
+            value={typeChoice}
+            onChange={setTypeChoice}
+            disabled={generating}
+          />
 
-              <div className="flex flex-col gap-2">
-                <span className="font-body text-label text-ink">Type de fiche</span>
-                <div className="flex gap-3 flex-wrap">
-                  {TYPE_CHOICES.map((choice) => {
-                    const selected = choice.value === forceType
-                    return (
-                      <Card
-                        key={choice.label}
-                        onClick={() => !generating && setForceType(choice.value)}
-                        className={`flex-1 min-w-55 p-4 transition-colors duration-fast ease-standard ${
-                          generating ? 'opacity-55' : 'cursor-pointer'
-                        } ${selected ? 'border-indigo-deep! bg-indigo-tint!' : ''}`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`shrink-0 flex items-center ${selected ? 'text-indigo-deep' : 'text-inksoft'}`}>
-                            <iconify-icon icon={choice.icon} width="18"></iconify-icon>
-                          </span>
-                          <span className="font-body text-body-md text-ink">{choice.label}</span>
-                        </div>
-                        <p className="font-body text-caption text-inksoft m-0">{choice.helpText}</p>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {generating ? (
-                <div className="flex flex-col gap-2 items-center py-3">
-                  <Skeleton className="w-50 h-7" radius="pill" />
-                  <span className="font-body text-body-sm text-inksoft">Génération en cours...</span>
-                </div>
-              ) : (
-                <Button disabled={!sourceText.trim() || overLimit} onClick={handleGenerate}>
-                  Générer
-                </Button>
-              )}
-            </>
+          <Button variant="curtain" disabled={generating || !sourceText.trim() || overLimit} onClick={handleGenerate} className="w-full">
+            <span className="grid">
+              <span className={`col-start-1 row-start-1 ${generating ? 'invisible' : ''}`}>Générer</span>
+              <span className={`col-start-1 row-start-1 ${generating ? '' : 'invisible'}`}>Génération...</span>
+            </span>
+          </Button>
+        </>
+      ) : (
+        <>
+          {proposals.length === 0 ? (
+            <p className="m-0 text-body-md text-inksoft">Aucune proposition restante.</p>
           ) : (
-            <>
-              {proposals.length === 0 ? (
-                <p className="font-body text-body-md text-inksoft">Aucune proposition restante.</p>
-              ) : (
-                <div className="flex flex-col gap-5">
-                  {proposals.map((p) => (
-                    <Card
-                      key={p.id}
-                      onClick={() => updateProposal(p.id, { selected: !p.selected })}
-                      className={`p-5 cursor-pointer transition-colors duration-fast ease-standard ${
-                        p.selected ? 'border-indigo-deep! bg-indigo-tint!' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="pt-1.5" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox checked={p.selected} onChange={(checked) => updateProposal(p.id, { selected: checked })} />
-                        </div>
-                        <div className="flex-1 flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <Badge tone={p.type === 'CLASSIC' ? 'neutral' : 'accent'} icon={CARD_TYPE_ICONS[p.type]}>
-                              {CARD_TYPE_LABELS[p.type]}
-                            </Badge>
-                            <IconCircleButton
-                              icon="ph:trash-bold"
-                              tone="danger"
-                              size="sm"
-                              title="Retirer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeProposal(p.id)
-                              }}
-                            />
-                          </div>
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <Input
-                              label={p.type === 'CLASSIC' ? 'Recto' : 'Question'}
-                              value={p.front}
-                              onChange={(e) => updateProposal(p.id, { front: e.target.value })}
-                            />
-                          </div>
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <Textarea
-                              label={p.type === 'CLASSIC' ? 'Verso' : 'Réponse de référence'}
-                              value={p.back}
-                              rows={2}
-                              onChange={(e) => updateProposal(p.id, { back: e.target.value })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex gap-2.5 justify-end flex-wrap">
-                <Button variant="secondary" disabled={addingSelected} onClick={() => setProposals(null)}>
-                  Recommencer
-                </Button>
-                <Button disabled={selectedCount === 0 || addingSelected} onClick={handleAddSelected}>
-                  {addingSelected ? 'Ajout...' : `Ajouter les cartes sélectionnées (${selectedCount})`}
-                </Button>
-              </div>
-            </>
+            <ul className="m-0 p-0 list-none flex flex-col gap-4">
+              {proposals.map((p, index) => (
+                <li key={p.id} className="flex flex-col gap-2">
+                  {index > 0 ? <InkRule /> : null}
+                  <div className="flex items-center justify-between gap-2">
+                    <Checkbox
+                      checked={p.selected}
+                      onChange={(checked) => updateProposal(p.id, { selected: checked })}
+                      label={<span className="font-display font-bold">{CARD_TYPE_LABELS[p.type]}</span>}
+                    />
+                    <IconButton icon="delete" label={`Retirer la proposition « ${p.front} »`} onClick={() => removeProposal(p.id)} />
+                  </div>
+                  <Input label={p.type === 'CLASSIC' ? 'Recto' : 'Question'} value={p.front} onChange={(e) => updateProposal(p.id, { front: e.target.value })} />
+                  <Textarea
+                    label={p.type === 'CLASSIC' ? 'Verso' : 'Réponse de référence'}
+                    value={p.back}
+                    rows={2}
+                    onChange={(e) => updateProposal(p.id, { back: e.target.value })}
+                  />
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
-      </div>
-    </ModalScrim>
+
+          <div className="flex flex-col gap-2">
+            <Button variant="curtain" disabled={selectedCount === 0 || addingSelected} onClick={handleAddSelected} className="w-full">
+              <span className="grid">
+                <span className={`col-start-1 row-start-1 ${addingSelected ? 'invisible' : ''}`}>{addIdle}</span>
+                <span className={`col-start-1 row-start-1 ${addingSelected ? '' : 'invisible'}`}>Ajout...</span>
+              </span>
+            </Button>
+            <Button variant="curtain-ghost" disabled={addingSelected} onClick={() => setProposals(null)} className="w-full">
+              Recommencer
+            </Button>
+          </div>
+        </>
+      )}
+    </Curtain>
   )
 }

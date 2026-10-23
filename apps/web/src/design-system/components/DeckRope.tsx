@@ -6,6 +6,8 @@ export interface RopeItem {
   node: ReactNode
   // Plaquette immobile, au fil plus pâle (« Nouveau deck »).
   still?: boolean
+  // Couleur du fil (couleur du deck, CON-70) ; vermillon par défaut.
+  threadClass?: string
 }
 
 interface DeckRopeProps {
@@ -108,7 +110,7 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
               // Positions calculées (corde courbe) : seules valeurs hors grille, imposées par la géométrie.
               style={{ left, top, animationDelay: `${-2 * (pageIndex * PER_PAGE + slot)}s` }}
             >
-              <span aria-hidden="true" className={`w-thread bg-vermillon ${item.still ? 'opacity-50' : ''}`} style={{ height: bodyTop - top }} />
+              <span aria-hidden="true" className={`w-thread ${item.threadClass ?? 'bg-vermillon'} ${item.still ? 'opacity-50' : ''}`} style={{ height: bodyTop - top }} />
               {item.node}
             </div>
           )

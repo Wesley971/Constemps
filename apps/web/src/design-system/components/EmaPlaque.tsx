@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import type { DeckColor } from '../../types/deck'
+import { DECK_COLOR_BAND, deckThreadClass } from '../constants'
 import { BrushCircle } from './BrushCircle'
 
 interface EmaPlaqueProps {
@@ -12,13 +14,15 @@ interface EmaPlaqueProps {
   // La plaquette passe alors de 128 à 148px de haut (136 sur la planche, trop
   // court pour un nom en Kaisei sur deux lignes).
   total?: string
+  // Couleur du deck : fin liseré en haut de la plaquette (S18-nouveau-deck).
+  color?: DeckColor | null
   closeKey?: string
   delayMs?: number
 }
 
 // Plaquette ema en bois (CON-57) : pentagone, cercle de progression, nom en
 // Kaisei, état du jour. Le fil et le balancement sont portés par DeckRope.
-export function EmaPlaque({ to, name, status, progress, total, closeKey, delayMs }: EmaPlaqueProps) {
+export function EmaPlaque({ to, name, status, progress, total, color, closeKey, delayMs }: EmaPlaqueProps) {
   return (
     <Link
       to={to}
@@ -26,7 +30,7 @@ export function EmaPlaque({ to, name, status, progress, total, closeKey, delayMs
       className="block drop-shadow-ema no-underline hover:no-underline focus-visible:outline-offset-4"
     >
       <span
-        className={`ema-shape w-26 pt-6 px-2 flex flex-col items-center bg-wood text-wood-ink text-center ${total ? 'h-37 pb-2 gap-1' : 'h-32 pb-0 gap-2'}`}
+        className={`ema-shape w-26 pt-6 px-2 flex flex-col items-center bg-wood text-wood-ink text-center ${total ? 'h-37 pb-2 gap-1' : 'h-32 pb-0 gap-2'} ${color ? DECK_COLOR_BAND[color] : ''}`}
       >
         <BrushCircle value={progress} size="sm" label={status} closeKey={closeKey} delayMs={delayMs} />
         <span className="font-display text-body-sm font-bold line-clamp-2 break-words w-full">{name}</span>
@@ -45,17 +49,18 @@ interface DeckPlaqueProps {
   // Libellé complet lu par les lecteurs d'écran, ex. « 2 à revoir ».
   label: string
   progress: number
+  color?: DeckColor | null
   closeKey?: string
 }
 
 // Grande plaquette de l'intérieur d'un deck (S15-deck) : accrochée à un clou,
 // même compteur que les plaquettes de la corde, chiffre écrit dans le cercle.
-export function DeckPlaque({ remaining, status, label, progress, closeKey }: DeckPlaqueProps) {
+export function DeckPlaque({ remaining, status, label, progress, color, closeKey }: DeckPlaqueProps) {
   return (
     <div className="flex flex-col items-center shrink-0 origin-top animate-sway drop-shadow-ema">
       <span aria-hidden="true" className="size-2 rounded-full bg-rope" />
-      <span aria-hidden="true" className="w-thread h-3 bg-vermillon" />
-      <span className="ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center">
+      <span aria-hidden="true" className={`w-thread h-3 ${deckThreadClass(color)}`} />
+      <span className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}>
         <BrushCircle value={progress} size="deck" label={label} closeKey={closeKey}>
           {remaining > 0 ? <span className="font-display text-display-sm">{remaining}</span> : null}
         </BrushCircle>

@@ -60,3 +60,52 @@
 .rope-strip::-webkit-scrollbar {
   display: none;
 }
+
+/* Rideau (CON-70, série 18) : descend du haut, fond assombri qui apparaît en fondu. */
+@keyframes curtain-drop {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.curtain-drop {
+  animation: curtain-drop 0.85s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+.scrim-in {
+  animation: scrim-in 0.35s ease backwards;
+}
+
+/* Liseré de couleur en haut d'une plaquette (S18-nouveau-deck) : couleur du deck
+   portée par --ema-band, posée par les classes ema-band-*. */
+.ema-band {
+  box-shadow: inset 0 14px 0 -6px var(--ema-band);
+}
+.ema-band-indigo {
+  --ema-band: var(--color-deck-indigo);
+}
+.ema-band-success {
+  --ema-band: var(--color-deck-sage);
+}
+.ema-band-warning {
+  --ema-band: var(--color-deck-sand);
+}
+.ema-band-danger {
+  --ema-band: var(--color-deck-terracotta);
+}
+
+/* Papier quadrillé du texte source (genkō yōshi, S18-generer) : carreaux de 24px,
+   alignés sur l'interligne du texte. */
+.genko {
+  background-image:
+    linear-gradient(rgba(176, 80, 44, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(176, 80, 44, 0.16) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px 11px;
+}

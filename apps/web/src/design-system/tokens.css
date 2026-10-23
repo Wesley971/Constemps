@@ -30,6 +30,12 @@
   --color-cream: #efe4cc;
   --color-cream-ink: #1a2036;
   --color-cream-veil: rgba(239, 228, 204, 0.16);
+  /* Petit texte secondaire sur le rideau (7,53:1 sur l'indigo). */
+  --color-cream-soft: #c9cedb;
+  /* « Supprimer » sur le bouton crème d'une confirmation (6,44:1). */
+  --color-danger-on-cream: #8e2f24;
+  /* Texte posé sur un aplat d'accent (case cochée) : redéfini sur le rideau. */
+  --color-on-accent: #fffdf8;
   --color-line: rgba(31, 35, 51, 0.14);
   --color-line-strong: rgba(31, 35, 51, 0.26);
   --color-scrim: rgba(22, 29, 51, 0.42);
@@ -75,6 +81,14 @@
   --color-info: #26365e;
   --color-info-deep: #1a2340;
   --color-info-tint: rgba(38, 54, 94, 0.1);
+
+  /* Couleurs des decks (fil, liseré, pastille), à part des tokens d'état que le
+     rideau redéfinit. L'indigo est plus clair que celui de l'interface pour rester
+     visible sur le rideau. */
+  --color-deck-indigo: #4a5c92;
+  --color-deck-sage: #4b7a5b;
+  --color-deck-sand: #a97a2e;
+  --color-deck-terracotta: #9c4438;
 
   /* Accent de saison. */
   --color-season-spring: #b04a6e;
@@ -179,6 +193,24 @@
   --color-wood: #dccba8;
   --color-rope: #a88654;
   --color-lantern-glow: rgba(240, 186, 110, 0.7);
+}
+
+/* Contenu d'un rideau (CON-70) : mêmes composants (champs, étiquettes, cases, icônes),
+   couleurs claires sur l'indigo. Posé sur le contenu, jamais sur l'élément qui porte
+   l'indigo du rideau, que la redéfinition de --color-indigo teinterait en crème.
+   Contrastes sur #26365e : étiquette 5,15:1, petit texte 7,53:1, erreur 5,89:1,
+   trait de champ à 60 % 4,44:1. */
+[data-surface='curtain'] {
+  --color-ink: #fffdf8;
+  --color-inksoft: #c9cedb;
+  --color-indigo: #efe4cc;
+  --color-indigo-deep: #fffdf8;
+  --color-indigo-tint: rgba(239, 228, 204, 0.16);
+  --color-vermillon: #e39a72;
+  --color-line: rgba(239, 228, 204, 0.35);
+  --color-danger: #f0a493;
+  --color-on-accent: #1a2036;
+  color: var(--color-ink);
 }
 
 /* Valeurs sans espace de noms @theme en Tailwind v4 : utilitaires explicites. */

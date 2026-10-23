@@ -1,6 +1,6 @@
 import type { MouseEventHandler } from 'react'
 
-type IconButtonIcon = 'edit' | 'delete'
+type IconButtonIcon = 'edit' | 'delete' | 'close'
 
 interface IconButtonProps {
   icon: IconButtonIcon
@@ -9,10 +9,12 @@ interface IconButtonProps {
   onClick?: MouseEventHandler<HTMLButtonElement>
 }
 
-// Tracés repris de S15-deck (crayon, corbeille), dessinés au trait.
+// Tracés repris de S15-deck (crayon, corbeille) et de la série 18 (croix au pinceau),
+// dessinés au trait.
 const paths: Record<IconButtonIcon, string> = {
   edit: 'M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z M13.5 7l3.5 3.5',
   delete: 'M4.5 6.5h15 M9.5 6.5V4.5h5v2 M6.5 6.5l1 13h9l1-13 M10.5 10v6 M13.5 10v6',
+  close: 'M5 4.5c4.6 4.2 9.4 9.4 14.2 15 M19 4.8C14.6 9 9.8 14.2 5.2 19.6',
 }
 
 // Bouton à icône seule (CON-57) : sans fond, cible tactile de 44px (S15-deck en

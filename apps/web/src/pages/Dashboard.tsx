@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, dashboardApi, decksApi, ApiError } from '../services/api'
 import type { DashboardSummary } from '../types/dashboard'
-import type { Deck, DeckColor, DeckIcon } from '../types/deck'
+import type { Deck, DeckColor } from '../types/deck'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { Lantern } from '../design-system/components/Lantern'
 import { Scroll } from '../design-system/components/Scroll'
@@ -14,6 +14,7 @@ import { DeckRope } from '../design-system/components/DeckRope'
 import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
 import { deckTodayLabel, formatToday, plural, seasonOf, SEASON_LABELS, summarizeDay } from '../lib/today'
 import type { DaySummary, Season } from '../lib/today'
@@ -91,10 +92,10 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
-  async function handleCreateDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
+  async function handleCreateDeck(name: string, color: DeckColor | null) {
     setSavingDeck(true)
     try {
-      await decksApi.create(name, color, icon)
+      await decksApi.create(name, color)
       // Relecture complète : le nouveau deck doit arriver avec son palier calculé.
       setDecks(await decksApi.list())
       setCreatingDeck(false)
@@ -213,12 +214,14 @@ function Dashboard() {
             items={[
               ...day.decks.map((d, i) => ({
                 key: d.deck.id,
+                threadClass: deckThreadClass(d.deck.color),
                 node: (
                   <EmaPlaque
                     to={`/decks/${d.deck.id}`}
                     name={d.deck.name}
                     status={deckTodayLabel(d)}
                     progress={d.progress}
+                    color={d.deck.color}
                     // Fermeture animée seulement si le deck a été travaillé aujourd'hui :
                     // un deck simplement à jour s'affiche fermé, sans animation.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}

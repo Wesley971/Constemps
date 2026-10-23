@@ -1,22 +1,14 @@
 import type { CardType } from '../types/card'
-import type { DeckColor, DeckIcon } from '../types/deck'
+import type { DeckColor } from '../types/deck'
 
 export const CARD_TYPE_LABELS: Record<CardType, string> = {
   CLASSIC: 'Appréciation personnelle',
   OPEN_QUESTION: 'Avis assisté',
 }
 
-// Icône distinctive par type de card, réutilisée partout où le type est affiché
-// (radio de sélection, badges sur les cards, propositions générées). "sparkle"
-// reprend l'icône déjà utilisée pour "Générer des cards depuis un texte" (IA).
-export const CARD_TYPE_ICONS: Record<CardType, string> = {
-  CLASSIC: 'ph:pencil-simple-bold',
-  OPEN_QUESTION: 'ph:sparkle-bold',
-}
-
 export const CARD_TYPE_HELP: Record<CardType, string> = {
-  CLASSIC: 'Tu notes toi-même ta réponse (comme Anki).',
-  OPEN_QUESTION: 'Ton IA évalue ta réponse rédigée et te donne un retour.',
+  CLASSIC: 'Tu notes toi-même ta réponse.',
+  OPEN_QUESTION: 'L’IA évalue ta réponse rédigée.',
 }
 
 // Sous-ensemble des teintes déjà définies dans design-system/tokens.css, réutilisées
@@ -32,35 +24,26 @@ export const DECK_COLOR_LABELS: Record<DeckColor, string> = {
   danger: 'Terracotta',
 }
 
+// Pastille du choix, fil de la plaquette (CON-70) : couleurs dédiées aux decks,
+// que le rideau ne redéfinit pas.
 export const DECK_COLOR_SWATCH: Record<DeckColor, string> = {
-  indigo: 'bg-indigo',
-  success: 'bg-success',
-  warning: 'bg-warning',
-  danger: 'bg-danger',
+  indigo: 'bg-deck-indigo',
+  success: 'bg-deck-sage',
+  warning: 'bg-deck-sand',
+  danger: 'bg-deck-terracotta',
 }
 
-// Sélection Phosphor (poids bold) volontairement restreinte, pertinente pour des
-// sujets d'apprentissage courants. Miroir de la liste back (decks/deck-icons.ts).
-export const DECK_ICONS: DeckIcon[] = [
-  'ph:book-bold',
-  'ph:code-bold',
-  'ph:globe-bold',
-  'ph:music-notes-bold',
-  'ph:lightbulb-bold',
-  'ph:flask-bold',
-  'ph:calculator-bold',
-  'ph:palette-bold',
-]
+// Fil de la plaquette : couleur du deck, vermillon sans couleur.
+export function deckThreadClass(color: DeckColor | null | undefined): string {
+  return color ? DECK_COLOR_SWATCH[color] : 'bg-vermillon'
+}
 
-export const DECK_ICON_LABELS: Record<DeckIcon, string> = {
-  'ph:book-bold': 'Langue / lecture',
-  'ph:code-bold': 'Dev / tech',
-  'ph:globe-bold': 'Culture générale',
-  'ph:music-notes-bold': 'Musique',
-  'ph:lightbulb-bold': 'Connaissances générales',
-  'ph:flask-bold': 'Sciences',
-  'ph:calculator-bold': 'Mathématiques',
-  'ph:palette-bold': 'Art',
+// Liseré en haut de la plaquette (classes de design-system/scenery.css).
+export const DECK_COLOR_BAND: Record<DeckColor, string> = {
+  indigo: 'ema-band ema-band-indigo',
+  success: 'ema-band ema-band-success',
+  warning: 'ema-band ema-band-warning',
+  danger: 'ema-band ema-band-danger',
 }
 
 // Notation d'une révision (ReviewLog.rating, échelle FSRS 1 à 4), mêmes mots

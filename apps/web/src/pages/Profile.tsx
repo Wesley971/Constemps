@@ -6,7 +6,7 @@ import type { User } from '../types/user'
 import { Card } from '../design-system/components/Card'
 import { Input } from '../design-system/components/Input'
 import { Button } from '../design-system/components/Button'
-import { ConfirmModal } from '../design-system/components/Modal'
+import { CurtainConfirm } from '../design-system/components/Curtain'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
@@ -236,16 +236,15 @@ function Profile() {
       </button>
 
       {deleteConfirmOpen && (
-        <ConfirmModal
-          title="Supprimer ton compte ?"
-          confirmLabel={deletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
-          confirmVariant="danger"
+        <CurtainConfirm
+          title="Supprimer ton compte ?"
+          confirmLabel={deletingAccount ? 'Suppression...' : 'Supprimer'}
+          danger
+          busy={deletingAccount}
           onConfirm={confirmAccountDeletion}
           onClose={closeDeleteConfirm}
         >
-          <p className="mt-0 mb-4">
-            Ton compte, tes decks, tes cartes et tout ton historique seront supprimés. Cette action est irréversible.
-          </p>
+          <p className="m-0">Ton compte, tes decks, tes cartes et tout ton historique seront supprimés. Cette action est irréversible.</p>
           <Input
             label="Mot de passe"
             id="deletePassword"
@@ -254,18 +253,20 @@ function Profile() {
             onChange={(e) => setDeletePassword(e.target.value)}
             required
           />
-        </ConfirmModal>
+        </CurtainConfirm>
       )}
 
       {emailConfirmOpen && (
-        <ConfirmModal
-          title="Confirmer le changement d'adresse e-mail ?"
+        <CurtainConfirm
+          title="Changer d’adresse e-mail ?"
           confirmLabel="Confirmer"
           onConfirm={confirmEmailChange}
           onClose={() => setEmailConfirmOpen(false)}
         >
-          Ton adresse de connexion passera de "{user?.email}" à "{emailInput.trim()}".
-        </ConfirmModal>
+          <p className="m-0">
+            Ton adresse de connexion passera de « {user?.email} » à « {emailInput.trim()} ».
+          </p>
+        </CurtainConfirm>
       )}
     </div>
   )

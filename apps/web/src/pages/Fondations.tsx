@@ -16,6 +16,9 @@ import { DeckRope } from '../design-system/components/DeckRope'
 import { DeckPlaque, EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 import { IconButton } from '../design-system/components/IconButton'
 import { BackLink } from '../design-system/components/BackLink'
+import { Curtain, CurtainConfirm } from '../design-system/components/Curtain'
+import { ChoiceCards } from '../design-system/components/ChoiceCards'
+import { Checkbox } from '../design-system/components/Checkbox'
 
 // Démonstration des fondations du design system (CON-57). Route servie
 // seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
@@ -78,6 +81,9 @@ export default function Fondations() {
   const [loading, setLoading] = useState(false)
   const [closeRun, setCloseRun] = useState(0)
   const [recto, setRecto] = useState(LONG_TEXT)
+  const [curtain, setCurtain] = useState<'form' | 'confirm' | null>(null)
+  const [choice, setChoice] = useState<'a' | 'b'>('a')
+  const [checked, setChecked] = useState(true)
 
   function replayClose() {
     try {
@@ -223,6 +229,41 @@ export default function Fondations() {
               { key: 'demo-new', still: true, node: <NewDeckPlaque onClick={() => undefined} /> },
             ]}
           />
+        </Section>
+
+        <Section title="Rideaux">
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary" onClick={() => setCurtain('form')}>
+              Rideau de saisie
+            </Button>
+            <Button variant="secondary" onClick={() => setCurtain('confirm')}>
+              Confirmation
+            </Button>
+          </div>
+          {curtain === 'form' ? (
+            <Curtain title="Démonstration" onClose={() => setCurtain(null)}>
+              <ChoiceCards
+                name="demo-choix"
+                legend="Type de carte"
+                options={[
+                  { value: 'a', label: 'Appréciation personnelle', help: 'Tu notes toi-même ta réponse.' },
+                  { value: 'b', label: 'Avis assisté', help: 'L’IA évalue ta réponse rédigée.' },
+                ]}
+                value={choice}
+                onChange={setChoice}
+              />
+              <Input label="Recto" defaultValue={LONG_TEXT} />
+              <Checkbox checked={checked} onChange={setChecked} label="Garder cette proposition" />
+              <Button variant="curtain" className="w-full" onClick={() => setCurtain(null)}>
+                Fermer
+              </Button>
+            </Curtain>
+          ) : null}
+          {curtain === 'confirm' ? (
+            <CurtainConfirm title={'Supprimer cette carte ?'} confirmLabel="Supprimer" danger onConfirm={() => setCurtain(null)} onClose={() => setCurtain(null)}>
+              <p className="m-0">{LONG_TEXT}</p>
+            </CurtainConfirm>
+          ) : null}
         </Section>
 
         <Section title="Mes decks, intérieur d'un deck">

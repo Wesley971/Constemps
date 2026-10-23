@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
-import type { Deck, DeckColor, DeckIcon } from '../types/deck'
+import type { Deck, DeckColor } from '../types/deck'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { DeckRope } from '../design-system/components/DeckRope'
 import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
@@ -11,6 +11,7 @@ import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import type { ToastState } from '../design-system/useToast'
 import { decksSummaryLabel, deckTodayLabel, plural, summarizeDay } from '../lib/today'
+import { deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
 
 // Mes decks (CON-69, S14-decks) : toutes les plaquettes sur des cordes empilées,
@@ -57,10 +58,10 @@ function Decks() {
     void init()
   }, [navigate])
 
-  async function handleCreateDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
+  async function handleCreateDeck(name: string, color: DeckColor | null) {
     setSavingDeck(true)
     try {
-      await decksApi.create(name, color, icon)
+      await decksApi.create(name, color)
       // Relecture complète : le nouveau deck doit arriver avec son palier calculé.
       setDecks(await decksApi.list())
       setCreatingDeck(false)
@@ -98,12 +99,14 @@ function Decks() {
               const cards = d.deck.cardCount ?? 0
               return {
                 key: d.deck.id,
+                threadClass: deckThreadClass(d.deck.color),
                 node: (
                   <EmaPlaque
                     to={`/decks/${d.deck.id}`}
                     name={d.deck.name}
                     status={deckTodayLabel(d)}
                     progress={d.progress}
+                    color={d.deck.color}
                     total={cards === 0 ? 'Aucune carte' : `${cards} ${plural(cards, 'carte', 'cartes')}`}
                     // Même clé que l'accueil : la fermeture ne se joue qu'une fois par jour.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}
