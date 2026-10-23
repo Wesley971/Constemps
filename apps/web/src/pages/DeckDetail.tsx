@@ -259,7 +259,13 @@ function DeckDetail() {
                 />
                 {newCardType === 'CLASSIC' && (
                   <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
-                    {translating ? 'Traduction...' : 'Traduire'}
+                    {/* Les deux libellés sont superposés dans la même cellule de grille : le bouton
+                        prend la largeur du plus long et ne bouge plus quand l'état change.
+                        invisible retire le libellé masqué des lecteurs d'écran. */}
+                    <span className="grid">
+                      <span className={`col-start-1 row-start-1 ${translating ? 'invisible' : ''}`}>Traduire</span>
+                      <span className={`col-start-1 row-start-1 ${translating ? '' : 'invisible'}`}>Traduction...</span>
+                    </span>
                   </Button>
                 )}
                 {/* Toujours monté, masqué par visibility:hidden tant qu'il ne s'applique pas :
