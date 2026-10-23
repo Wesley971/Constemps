@@ -19,4 +19,9 @@ export interface Deck {
   createdAt: string
   cardCount?: number
   dailyGoalReached?: boolean
+  // Renvoyés par GET /decks (CON-68) : palier du jour (même règle que la
+  // révision), cartes révisées aujourd'hui, cartes dues maintenant.
+  dailyGoal?: number
+  reviewedToday?: number
+  dueCardsCount?: number
 }

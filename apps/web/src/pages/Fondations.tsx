@@ -8,6 +8,12 @@ import { Button } from '../design-system/components/Button'
 import { Input } from '../design-system/components/Input'
 import { Textarea } from '../design-system/components/Textarea'
 import { Label } from '../design-system/components/Label'
+import { Lantern } from '../design-system/components/Lantern'
+import { Scroll } from '../design-system/components/Scroll'
+import { BrushLink } from '../design-system/components/BrushLink'
+import { InkRule } from '../design-system/components/InkRule'
+import { DeckRope } from '../design-system/components/DeckRope'
+import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 
 // Démonstration des fondations du design system (CON-57). Route servie
 // seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
@@ -183,6 +189,38 @@ export default function Fondations() {
               {showError ? 'Retirer l’erreur' : 'Afficher une erreur'}
             </Button>
           </form>
+        </Section>
+
+        <Section title="Lanterne, rouleau, corde">
+          <div className="flex items-start gap-6">
+            <Lantern value={39} label="Palier du jour : 7 cartes sur 18">
+              <span className="flex flex-col items-center">
+                <span className="font-display text-display-lg">7</span>
+                <span className="text-micro font-normal text-wood-ink-soft">sur 18</span>
+              </span>
+            </Lantern>
+            <div className="flex flex-col gap-1 pt-4">
+              <Label>Aujourd'hui</Label>
+              <span className="font-display text-hero text-indigo">11</span>
+              <BrushLink to="/dashboard">Reprendre</BrushLink>
+            </div>
+          </div>
+          <Scroll label="Cette semaine">
+            <Label>Cette semaine</Label>
+            <p className="m-0 font-display text-scroll text-balance">{LONG_TEXT}</p>
+            <InkRule />
+            <p className="m-0 font-display text-body-lg text-balance">Sept jours de régularité.</p>
+          </Scroll>
+          <DeckRope
+            label="Démonstration de la corde"
+            items={[
+              ...[20, 60, 100, 0, 80].map((p, i) => ({
+                key: `demo-${i}`,
+                node: <EmaPlaque to="/fondations" name={i === 1 ? LONG_TEXT : `Deck ${i + 1}`} status={p === 100 ? 'À jour' : `${i + 3} à revoir`} progress={p} />,
+              })),
+              { key: 'demo-new', still: true, node: <NewDeckPlaque onClick={() => undefined} /> },
+            ]}
+          />
         </Section>
 
         <Section title="Cercles au pinceau">

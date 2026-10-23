@@ -8,6 +8,7 @@
 @import "tailwindcss";
 @import './design-system/tokens.css';
 @import './design-system/brush.css';
+@import './design-system/scenery.css';
 
 @layer base {
   * {

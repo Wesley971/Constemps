@@ -46,7 +46,14 @@
   --color-vermillon-tint: rgba(176, 80, 44, 0.12);
 
   --color-wood: #e4d1ac;
+  --color-wood-ink: #1a2036;
+  --color-wood-ink-soft: #4f4a40;
+  --color-wood-veil: rgba(234, 219, 190, 0.35);
   --color-rope: #8a6a3a;
+  /* Papier de la lanterne, du centre allumé vers les bords. */
+  --color-lantern-core: #fff6e2;
+  --color-lantern-mid: #f7e3c4;
+  --color-lantern-edge: #e9c79c;
   --color-seigaiha: #f2e3da;
   --color-lantern-glow: rgba(233, 170, 90, 0.5);
 
@@ -69,6 +76,8 @@
   --color-season-summer: #3c7a66;
   --color-season-autumn: #b0502c;
   --color-season-winter: #466a90;
+  /* Libellé de l'été en petit texte : #3c7a66 ne donne que 4,47:1 sur le fond. */
+  --color-season-summer-ink: #3a7664;
 
   /* Tailles de texte, interlignes sur la grille de 4px. */
   --text-display-xl: 34px;
@@ -98,6 +107,14 @@
   --text-micro--line-height: 16px;
   --text-micro--font-weight: 700;
 
+  /* Grand chiffre de l'accueil et texte des rouleaux (Kaisei). */
+  --text-hero: 58px;
+  --text-hero--line-height: 56px;
+  --text-hero--font-weight: 700;
+  --text-scroll: 18px;
+  --text-scroll--line-height: 28px;
+  --text-scroll--font-weight: 500;
+
   /* Étiquettes en petites capitales espacées. */
   --tracking-label: 0.18em;
   --tracking-micro: 0.14em;
@@ -110,9 +127,12 @@
   --radius-curtain: 20px;
   --radius-lg: 24px;
   --radius-pill: 999px;
+  --radius-lantern: 46% / 40%;
 
   /* Tailles nommées de la grille. */
   --spacing-gutter: 16px;
+  /* Épaisseur des fils et cordons (lanterne, plaquettes). */
+  --spacing-thread: 2px;
   --spacing-hit: 44px;
   --spacing-field: 28px;
   --spacing-button: 52px;
@@ -127,12 +147,15 @@
   --shadow-3: 0 18px 36px -14px rgba(31, 35, 51, 0.18);
   --shadow-modal: 0 28px 56px -18px rgba(31, 35, 51, 0.24);
   --shadow-focus-ring: 0 0 0 2px var(--color-vermillon);
+  --shadow-lantern: 0 0 28px rgba(233, 170, 90, 0.4);
+  --drop-shadow-ema: 0 6px 8px rgba(31, 35, 51, 0.12);
 
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
   --ease-brush: cubic-bezier(0.45, 0.05, 0.25, 1);
 
   --animate-skeleton-pulse: skeleton-pulse 1.4s ease-in-out infinite;
   --animate-drift: drift 16s linear infinite;
+  --animate-sway: sway 6s ease-in-out infinite;
 }
 
 /* Mode nuit (CON-57) : posé ici pour que tous les tokens vivent au même endroit,
@@ -199,6 +222,16 @@
   }
   to {
     transform: translateX(-40px);
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
   }
 }
 
