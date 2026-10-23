@@ -340,7 +340,7 @@ function DeckDetail() {
               // est vide : une région aria-live doit exister avant que son contenu change
               // pour être annoncée, et son apparition ne doit pas décaler le bouton de création.
               <p aria-live="polite" className="m-0 font-body text-caption text-inksoft">
-                {translationHint ?? ' '}
+                {translationHint ?? ' '}
               </p>
             )}
           </div>
