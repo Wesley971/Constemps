@@ -105,3 +105,27 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'nu
 export function formatToday(date: Date): string {
   return DATE_FORMAT.format(date)
 }
+
+export function plural(n: number, singular: string, pluralForm: string): string {
+  return n > 1 ? pluralForm : singular
+}
+
+// Résumé de Mes decks (S14-decks) : le nombre « à revoir » est celui de la
+// lanterne de l'accueil.
+export function decksSummaryLabel(day: DaySummary): string {
+  if (day.state === 'empty') return 'Aucun deck pour l’instant'
+  const count = `${day.decks.length} ${plural(day.decks.length, 'deck', 'decks')}`
+  if (day.state === 'active') return `${count}, ${day.remaining} ${plural(day.remaining, 'carte', 'cartes')} à revoir`
+  if (day.state === 'closed') return `${count}, palier du jour atteint`
+  return `${count}, tout est à jour`
+}
+
+// Ligne secondaire de l'intérieur d'un deck : cartes dues au total, au-delà
+// du palier du jour, puis nombre de cartes (« 11 en attente · 48 cartes »).
+export function deckCountsLabel(deck: Deck): string {
+  const total = deck.cardCount ?? 0
+  if (total === 0) return 'Aucune carte'
+  const cards = `${total} ${plural(total, 'carte', 'cartes')}`
+  const due = deck.dueCardsCount ?? 0
+  return due > 0 ? `${due} en attente · ${cards}` : cards
+}

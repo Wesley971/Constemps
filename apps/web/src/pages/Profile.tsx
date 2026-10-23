@@ -131,6 +131,15 @@ function Profile() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await authApi.logout()
+      navigate('/login')
+    } catch (err) {
+      notify({ tone: 'danger', title: 'Déconnexion impossible', message: err instanceof ApiError ? err.message : 'Réessaie dans un instant.' })
+    }
+  }
+
   if (checkingAuth) {
     return <PageSkeleton />
   }
@@ -216,6 +225,16 @@ function Profile() {
         </Button>
       </Card>
 
+      {/* Seule déconnexion de l'app depuis CON-69 (l'en-tête de Mes decks a disparu),
+          reprise au lot 5 avec la refonte du profil. */}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="min-h-hit px-0 bg-transparent border-none font-body text-body-md font-bold text-indigo underline cursor-pointer hover:text-indigo-deep"
+      >
+        Se déconnecter
+      </button>
+
       {deleteConfirmOpen && (
         <ConfirmModal
           title="Supprimer ton compte ?"
@@ -225,7 +244,7 @@ function Profile() {
           onClose={closeDeleteConfirm}
         >
           <p className="mt-0 mb-4">
-            Ton compte, tes decks, tes cards et tout ton historique seront supprimés. Cette action est irréversible.
+            Ton compte, tes decks, tes cartes et tout ton historique seront supprimés. Cette action est irréversible.
           </p>
           <Input
             label="Mot de passe"

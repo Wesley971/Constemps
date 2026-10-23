@@ -2,20 +2,26 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, cardsApi, decksApi, translationApi, ApiError } from '../services/api'
-import type { Deck } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import type { Card as CardData, CardType } from '../types/card'
 import type { TranslationResult } from '../types/translation'
-import { Card } from '../design-system/components/Card'
-import { Badge } from '../design-system/components/Badge'
-import { Button, LinkButton } from '../design-system/components/Button'
+import { AppScreen } from '../design-system/components/AppScreen'
+import { BackLink } from '../design-system/components/BackLink'
+import { BrushLink } from '../design-system/components/BrushLink'
+import { Button } from '../design-system/components/Button'
+import { DeckPlaque } from '../design-system/components/EmaPlaque'
+import { IconButton } from '../design-system/components/IconButton'
+import { InkRule } from '../design-system/components/InkRule'
 import { Input } from '../design-system/components/Input'
 import { Radio } from '../design-system/components/Radio'
-import { IconCircleButton } from '../design-system/components/IconCircleButton'
 import { ConfirmModal } from '../design-system/components/Modal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import { CARD_TYPE_LABELS, CARD_TYPE_ICONS, CARD_TYPE_HELP } from '../design-system/constants'
+import { deckCountsLabel, deckToday, deckTodayLabel } from '../lib/today'
+import { frenchSpacing } from '../lib/typography'
+import { DeckFormModal } from './DeckFormModal'
 import { GenerateCardsModal } from './GenerateCardsModal'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
@@ -43,11 +49,14 @@ function languageLabel(code: string): string {
 
 // Dernière traduction appliquée au verso, gardée avec le recto qui l'a produite :
 // le bouton "Inverser" et la ligne d'aide n'ont de sens que tant que ce recto
-// est inchangé, aucune persistance au-delà de la card en cours.
+// est inchangé, aucune persistance au-delà de la carte en cours.
 interface AppliedTranslation extends TranslationResult {
   front: string
 }
 
+// Intérieur d'un deck (CON-69, S15-deck). La plaquette compte comme l'accueil
+// et Mes decks ; ajout, génération et modification des cartes gardent leur
+// comportement, seul l'habillage change (fenêtres en rideau au lot 4).
 function DeckDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -56,6 +65,10 @@ function DeckDetail() {
   const [deck, setDeck] = useState<Deck | null>(null)
   const [cards, setCards] = useState<CardData[]>([])
   const [checkingAuth, setCheckingAuth] = useState(true)
+
+  const [editingDeck, setEditingDeck] = useState(false)
+  const [savingDeck, setSavingDeck] = useState(false)
+  const [deletingDeck, setDeletingDeck] = useState(false)
 
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newCardType, setNewCardType] = useState<CardType>('CLASSIC')
@@ -110,6 +123,44 @@ function DeckDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate])
 
+  // Une carte ajoutée est due tout de suite : dues, objectif et restantes
+  // changent. On relit le deck plutôt que de recalculer à la main. En cas
+  // d'échec, la plaquette garde son dernier état, sans bloquer l'écran.
+  async function refreshDeck() {
+    if (!id) return
+    try {
+      setDeck(await decksApi.get(id))
+    } catch {
+      // Rien à faire : la prochaine visite relira le deck.
+    }
+  }
+
+  async function handleSubmitDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
+    if (!deck) return
+    setSavingDeck(true)
+    try {
+      const updated = await decksApi.update(deck.id, name, color, icon)
+      // Fusion : la réponse ne porte pas les champs du jour (palier, dues).
+      setDeck((prev) => (prev ? { ...prev, ...updated } : prev))
+      setEditingDeck(false)
+    } catch (err) {
+      notify({ tone: 'danger', title: 'Modification impossible', message: err instanceof ApiError ? err.message : 'Une erreur est survenue' })
+    } finally {
+      setSavingDeck(false)
+    }
+  }
+
+  async function confirmDeleteDeck() {
+    if (!deck) return
+    setDeletingDeck(false)
+    try {
+      await decksApi.remove(deck.id)
+      navigate('/decks', { state: { notify: { tone: 'success', title: 'Deck supprimé', message: `« ${deck.name} » a été supprimé.` } } })
+    } catch (err) {
+      notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer le deck' })
+    }
+  }
+
   async function handleCreate(event: FormEvent) {
     event.preventDefault()
     if (!id || !newCardFront.trim() || !newCardBack.trim()) return
@@ -122,8 +173,9 @@ function DeckDetail() {
       setNewCardBack('')
       setAppliedTranslation(null)
       setShowCreateForm(false)
+      void refreshDeck()
     } catch (err) {
-      notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Impossible de créer la card' })
+      notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Impossible de créer la carte' })
     } finally {
       setCreating(false)
     }
@@ -176,7 +228,7 @@ function DeckDetail() {
       setCards((prev) => prev.map((c) => (c.id === cardId ? updated : c)))
       setEditingCardId(null)
     } catch (err) {
-      notify({ tone: 'danger', title: 'Modification impossible', message: err instanceof ApiError ? err.message : 'Impossible de modifier la card' })
+      notify({ tone: 'danger', title: 'Modification impossible', message: err instanceof ApiError ? err.message : 'Impossible de modifier la carte' })
     } finally {
       setSavingEdit(false)
     }
@@ -190,166 +242,173 @@ function DeckDetail() {
     try {
       await cardsApi.remove(card.id)
       setCards((prev) => prev.filter((c) => c.id !== card.id))
-      notify({ tone: 'success', title: 'Card supprimée' })
+      notify({ tone: 'success', title: 'Carte supprimée' })
+      void refreshDeck()
     } catch (err) {
-      notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer la card' })
+      notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer la carte' })
     }
   }
 
-  if (checkingAuth) {
+  if (checkingAuth || !deck) {
     return <PageSkeleton />
   }
 
+  const today = deckToday(deck)
+  const status = deckTodayLabel(today)
+
   return (
-    <div className="max-w-wrap mx-auto">
+    <AppScreen>
       <ToastViewport toast={toast} />
 
-      <p className="mt-1 mb-5">
-        <Link to="/decks">Retour aux decks</Link>
-      </p>
-      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-4">{deck?.name}</h1>
-
-      <div className="flex gap-2.5 mb-5">
-        {cards.length > 0 ? (
-          <LinkButton to={`/decks/${id}/review`} variant="primary" icon="ph:play-bold">
-            Réviser
-          </LinkButton>
-        ) : (
-          <Button variant="primary" icon="ph:play-bold" disabled>
-            Réviser
-          </Button>
-        )}
-        <LinkButton to={`/decks/${id}/stats`} variant="secondary" icon="ph:chart-bar-bold">
-          Stats
-        </LinkButton>
+      <div className="flex items-center justify-between gap-2">
+        <BackLink to="/decks">Mes decks</BackLink>
+        <div className="flex">
+          <IconButton icon="edit" label="Modifier le deck" onClick={() => setEditingDeck(true)} />
+          <IconButton icon="delete" label="Supprimer le deck" onClick={() => setDeletingDeck(true)} />
+        </div>
       </div>
 
-      <div className="flex gap-2.5 mb-5 flex-wrap">
+      <section aria-label="Aujourd'hui" className="flex items-start gap-5">
+        <DeckPlaque
+          remaining={today.remaining}
+          // Le chiffre est dans le cercle : la plaquette n'écrit que « à revoir ».
+          status={today.status === 'todo' ? 'à revoir' : status}
+          label={status}
+          progress={today.progress}
+          closeKey={today.done > 0 ? `deck-${deck.id}` : undefined}
+        />
+        <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4">
+          <h1 className="m-0 font-display text-display-lg break-words">{deck.name}</h1>
+          <p className="m-0 text-body-sm text-inksoft">{deckCountsLabel(deck)}</p>
+          <BrushLink to={`/decks/${deck.id}/review`} disabled={cards.length === 0} delayMs={900}>
+            Réviser
+          </BrushLink>
+          <Link
+            to={`/decks/${deck.id}/stats`}
+            className="self-start min-h-hit inline-flex items-center text-body-sm font-bold text-inksoft no-underline hover:no-underline hover:text-indigo"
+          >
+            Voir les stats
+          </Link>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)}>
-          {showCreateForm ? 'Annuler' : 'Ajouter une card'}
+          {showCreateForm ? 'Annuler' : 'Ajouter'}
         </Button>
         <Button variant="secondary" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
-          Générer des cards depuis un texte
+          Générer
         </Button>
       </div>
 
       {showCreateForm && (
-        <Card className="p-6 mb-6">
-          <form onSubmit={handleCreate}>
-            <div className="mb-4">
-              <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} />
-            </div>
-
-            <div className="mb-4">
-              <Input
-                label={FIELD_LABELS[newCardType].front}
-                value={newCardFront}
-                onChange={(e) => setNewCardFront(e.target.value)}
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <div className="flex gap-2.5 items-end">
-                <Input
-                  label={FIELD_LABELS[newCardType].back}
-                  value={newCardBack}
-                  onChange={(e) => setNewCardBack(e.target.value)}
-                  required
-                  className="flex-1"
-                />
-                {newCardType === 'CLASSIC' && (
-                  <Button type="button" variant="secondary" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
-                    {/* Les deux libellés sont superposés dans la même cellule de grille : le bouton
-                        prend la largeur du plus long et ne bouge plus quand l'état change.
-                        invisible retire le libellé masqué des lecteurs d'écran. */}
-                    <span className="grid">
-                      <span className={`col-start-1 row-start-1 ${translating ? 'invisible' : ''}`}>Traduire</span>
-                      <span className={`col-start-1 row-start-1 ${translating ? '' : 'invisible'}`}>Traduction...</span>
-                    </span>
-                  </Button>
-                )}
+        <form onSubmit={handleCreate} className="flex flex-col gap-4">
+          <Radio name="cardType" options={CARD_TYPE_OPTIONS} value={newCardType} onChange={(v) => setNewCardType(v as CardType)} />
+          <Input label={FIELD_LABELS[newCardType].front} value={newCardFront} onChange={(e) => setNewCardFront(e.target.value)} required />
+          <div className="flex flex-col gap-1">
+            <Input label={FIELD_LABELS[newCardType].back} value={newCardBack} onChange={(e) => setNewCardBack(e.target.value)} required />
+            {/* Sous le Verso plutôt qu'à côté : sur mobile, deux boutons à droite du
+                champ l'écrasaient. Deux colonnes égales, comme Ajouter / Générer. */}
+            {newCardType === 'CLASSIC' && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="secondary" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
+                  {/* Les deux libellés sont superposés dans la même cellule de grille : le bouton
+                      prend la largeur du plus long et ne bouge plus quand l'état change.
+                      invisible retire le libellé masqué des lecteurs d'écran. */}
+                  <span className="grid">
+                    <span className={`col-start-1 row-start-1 ${translating ? 'invisible' : ''}`}>Traduire</span>
+                    <span className={`col-start-1 row-start-1 ${translating ? '' : 'invisible'}`}>Traduction...</span>
+                  </span>
+                </Button>
                 {/* Toujours monté, masqué par visibility:hidden tant qu'il ne s'applique pas :
-                    son apparition ne doit ni rétrécir le champ Verso ni décaler "Traduire".
+                    son apparition ne doit pas décaler "Traduire".
                     invisible le retire aussi du clavier et des lecteurs d'écran. */}
-                {newCardType === 'CLASSIC' && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    icon="ph:arrows-left-right-bold"
-                    disabled={translating || !translationForFront}
-                    onClick={() => translationForFront && handleTranslate(!translationForFront.sourceIsFrench)}
-                    className={translationForFront ? '' : 'invisible'}
-                  >
-                    Inverser
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon="ph:arrows-left-right-bold"
+                  disabled={translating || !translationForFront}
+                  onClick={() => translationForFront && handleTranslate(!translationForFront.sourceIsFrench)}
+                  className={translationForFront ? '' : 'invisible'}
+                >
+                  Inverser
+                </Button>
               </div>
-              {newCardType === 'CLASSIC' && (
-                // Toujours monté, avec sa hauteur réservée par une espace insécable quand il
-                // est vide : une région aria-live doit exister avant que son contenu change
-                // pour être annoncée, et son apparition ne doit pas décaler le bouton de création.
-                <p aria-live="polite" className="font-body text-caption text-inksoft mt-1.5">
-                  {translationHint ?? ' '}
-                </p>
-              )}
-            </div>
+            )}
+            {newCardType === 'CLASSIC' && (
+              // Toujours monté, avec sa hauteur réservée par une espace insécable quand il
+              // est vide : une région aria-live doit exister avant que son contenu change
+              // pour être annoncée, et son apparition ne doit pas décaler le bouton de création.
+              <p aria-live="polite" className="m-0 font-body text-caption text-inksoft">
+                {translationHint ?? ' '}
+              </p>
+            )}
+          </div>
 
-            <Button type="submit" disabled={creating}>
-              {creating ? 'Création...' : 'Créer la card'}
-            </Button>
-          </form>
-        </Card>
+          <Button type="submit" disabled={creating} className="w-full">
+            {creating ? 'Création...' : 'Créer la carte'}
+          </Button>
+        </form>
       )}
 
-      {cards.length === 0 ? (
-        <p className="font-body text-body-md text-inksoft">Aucune card pour l'instant.</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {cards.map((card) => (
-            <Card key={card.id} className="p-5">
-              {editingCardId === card.id ? (
-                <div>
-                  <div className="mb-3">
-                    <Input label={FIELD_LABELS[card.type].front} value={editFront} onChange={(e) => setEditFront(e.target.value)} />
-                  </div>
-                  <div className="mb-4">
-                    <Input label={FIELD_LABELS[card.type].back} value={editBack} onChange={(e) => setEditBack(e.target.value)} />
-                  </div>
-                  <div className="flex gap-2.5">
-                    <Button disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
-                      {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
-                    </Button>
-                    <Button variant="secondary" onClick={cancelEdit}>
-                      Annuler
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex flex-col gap-2">
-                    <div>
-                      <Badge tone={card.type === 'CLASSIC' ? 'neutral' : 'accent'} icon={CARD_TYPE_ICONS[card.type]}>
-                        {CARD_TYPE_LABELS[card.type]}
-                      </Badge>
-                    </div>
-                    <p className="font-body text-body-md text-ink m-0">
-                      {card.front} <span className="text-inksoft">/</span> {card.back}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0 items-center">
-                    <IconCircleButton icon="ph:pencil-simple-bold" tone="ghost" size="md" title="Éditer" onClick={() => startEdit(card)} />
-                    <IconCircleButton icon="ph:trash-bold" tone="ghost" size="md" title="Supprimer" onClick={() => setCardToDelete(card)} />
-                  </div>
-                </div>
-              )}
-            </Card>
-          ))}
+      <section aria-labelledby="les-cartes" className="flex flex-col">
+        <div className="flex items-baseline justify-between">
+          <h2 id="les-cartes" className="m-0 font-display text-display-sm">
+            Les cartes
+          </h2>
+          <span className="text-label font-normal text-inksoft">{cards.length}</span>
         </div>
-      )}
+
+        {cards.length === 0 ? (
+          <p className="m-0 pt-2 text-body-sm text-inksoft">Aucune carte pour l’instant.</p>
+        ) : (
+          <ul className="m-0 p-0 list-none flex flex-col">
+            {cards.map((card, index) => (
+              <li key={card.id} className="flex flex-col">
+                {index > 0 ? <InkRule /> : null}
+                {editingCardId === card.id ? (
+                  <div className="flex flex-col gap-2 py-2">
+                    <Input label={FIELD_LABELS[card.type].front} value={editFront} onChange={(e) => setEditFront(e.target.value)} />
+                    <Input label={FIELD_LABELS[card.type].back} value={editBack} onChange={(e) => setEditBack(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="secondary" onClick={cancelEdit}>
+                        Annuler
+                      </Button>
+                      <Button variant="compact" disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
+                        <span className="grid">
+                          <span className={`col-start-1 row-start-1 ${savingEdit ? 'invisible' : ''}`}>Enregistrer</span>
+                          <span className={`col-start-1 row-start-1 ${savingEdit ? '' : 'invisible'}`}>Enregistrement...</span>
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="flex-1 min-w-0 flex flex-col gap-1">
+                      {card.type === 'OPEN_QUESTION' ? (
+                        <span className="inline-flex items-center gap-1 text-micro uppercase tracking-micro text-vermillon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3" fill="currentColor">
+                            <path d="M12 3c.8 4.6 2.6 7 7.5 9-4.9 2-6.7 4.4-7.5 9-.8-4.6-2.6-7-7.5-9 4.9-2 6.7-4.4 7.5-9z" />
+                          </svg>
+                          {CARD_TYPE_LABELS.OPEN_QUESTION}
+                        </span>
+                      ) : null}
+                      <span className="font-display text-display-sm break-words">{frenchSpacing(card.front)}</span>
+                      <span className="text-body-sm text-inksoft break-words">{frenchSpacing(card.back)}</span>
+                    </div>
+                    <IconButton icon="edit" label={`Modifier la carte « ${card.front} »`} onClick={() => startEdit(card)} />
+                    <IconButton icon="delete" label={`Supprimer la carte « ${card.front} »`} onClick={() => setCardToDelete(card)} />
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {cardToDelete && (
         <ConfirmModal
-          title="Supprimer cette card ?"
+          title="Supprimer cette carte ?"
           confirmLabel="Supprimer"
           confirmVariant="danger"
           onConfirm={confirmDeleteCard}
@@ -359,15 +418,32 @@ function DeckDetail() {
         </ConfirmModal>
       )}
 
+      {deletingDeck && (
+        <ConfirmModal
+          title="Supprimer ce deck ?"
+          confirmLabel="Supprimer"
+          confirmVariant="danger"
+          onConfirm={confirmDeleteDeck}
+          onClose={() => setDeletingDeck(false)}
+        >
+          Le deck « {deck.name} » et toutes ses cartes seront supprimés définitivement. Cette action est irréversible.
+        </ConfirmModal>
+      )}
+
+      {editingDeck && <DeckFormModal deck={deck} saving={savingDeck} onClose={() => setEditingDeck(false)} onSubmit={handleSubmitDeck} />}
+
       {showGenerateModal && id && (
         <GenerateCardsModal
           deckId={id}
           onClose={() => setShowGenerateModal(false)}
-          onCardsAdded={(newCards) => setCards((prev) => [...newCards, ...prev])}
+          onCardsAdded={(newCards) => {
+            setCards((prev) => [...newCards, ...prev])
+            void refreshDeck()
+          }}
           notify={notify}
         />
       )}
-    </div>
+    </AppScreen>
   )
 }
 

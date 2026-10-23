@@ -39,22 +39,6 @@ export const DECK_COLOR_SWATCH: Record<DeckColor, string> = {
   danger: 'bg-danger',
 }
 
-// Teinte de fond appliquée à toute la surface de DeckCard. Le "!" force la priorité
-// sur le bg-paper par défaut du composant Card (même convention que dans GenerateCardsModal).
-export const DECK_COLOR_CARD_BG: Record<DeckColor, string> = {
-  indigo: 'bg-indigo-tint!',
-  success: 'bg-success-tint!',
-  warning: 'bg-warning-tint!',
-  danger: 'bg-danger-tint!',
-}
-
-export const DECK_COLOR_ICON_TEXT: Record<DeckColor, string> = {
-  indigo: 'text-indigo-deep',
-  success: 'text-success-deep',
-  warning: 'text-warning-deep',
-  danger: 'text-danger-deep',
-}
-
 // Sélection Phosphor (poids bold) volontairement restreinte, pertinente pour des
 // sujets d'apprentissage courants. Miroir de la liste back (decks/deck-icons.ts).
 export const DECK_ICONS: DeckIcon[] = [
@@ -77,4 +61,21 @@ export const DECK_ICON_LABELS: Record<DeckIcon, string> = {
   'ph:flask-bold': 'Sciences',
   'ph:calculator-bold': 'Mathématiques',
   'ph:palette-bold': 'Art',
+}
+
+// Notation d'une révision (ReviewLog.rating, échelle FSRS 1 à 4), mêmes mots
+// dans la révision et dans les stats (CON-69). « à revoir » est réservé aux
+// cartes restantes du palier du jour.
+export const RATING_LABELS: Record<number, string> = {
+  1: 'Encore',
+  2: 'Difficile',
+  3: 'Correct',
+  4: 'Facile',
+}
+
+// Verdict de l'IA sur une carte Avis assisté (ReviewLog.aiVerdict).
+export const VERDICT_LABELS: Record<string, string> = {
+  compris: 'Compris',
+  partiellement: 'Partiellement compris',
+  incompris: 'Incompris',
 }

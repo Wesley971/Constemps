@@ -1,83 +1,79 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { authApi, decksApi, statsApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
-import type { ProgressHighlight, StatsOverview } from '../types/stats'
-import { Card } from '../design-system/components/Card'
-import { Chip } from '../design-system/components/Chip'
-import { Badge } from '../design-system/components/Badge'
+import type { ProgressHighlight, ProgressHighlightReview, StatsOverview } from '../types/stats'
+import { AppScreen } from '../design-system/components/AppScreen'
+import { BackLink } from '../design-system/components/BackLink'
+import { BrushStroke } from '../design-system/components/BrushStroke'
+import { InkRule } from '../design-system/components/InkRule'
+import { Label } from '../design-system/components/Label'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
-import { LinkButton } from '../design-system/components/Button'
-import type { BadgeTone } from '../design-system/components/Badge'
+import { Scroll } from '../design-system/components/Scroll'
+import { RATING_LABELS, VERDICT_LABELS } from '../design-system/constants'
+import { plural } from '../lib/today'
+import { frenchSpacing } from '../lib/typography'
 
-const RATING_LABELS: Record<number, string> = {
-  1: 'Again',
-  2: 'Hard',
-  3: 'Good',
-  4: 'Easy',
+// Couleur du verdict, sur le papier des volets (contrastes AA en petit texte).
+const RATING_TEXT: Record<number, string> = {
+  1: 'text-danger',
+  2: 'text-warning-ink',
+  3: 'text-success-deep',
+  4: 'text-success-deep',
 }
 
-const RATING_TONES: Record<number, BadgeTone> = {
-  1: 'danger',
-  2: 'warning',
-  3: 'success',
-  4: 'success',
+const VERDICT_TEXT: Record<string, string> = {
+  compris: 'text-success-deep',
+  partiellement: 'text-warning-ink',
+  incompris: 'text-danger',
 }
 
-const VERDICT_LABELS: Record<string, string> = {
-  compris: 'Compris',
-  partiellement: 'Partiellement compris',
-  incompris: 'Incompris',
-}
-
-function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight | null }) {
-  if (!highlight) {
-    return null
+// Verdict de l'IA pour une carte Avis assisté, sinon la notation de la révision.
+function reviewVerdict(review: ProgressHighlightReview): { label: string; color: string } {
+  if (review.aiVerdict) {
+    return { label: VERDICT_LABELS[review.aiVerdict] ?? review.aiVerdict, color: VERDICT_TEXT[review.aiVerdict] ?? 'text-ink' }
   }
+  return { label: RATING_LABELS[review.rating] ?? String(review.rating), color: RATING_TEXT[review.rating] ?? 'text-ink' }
+}
 
-  if (!highlight.available) {
-    return (
-      <Card className="p-6">
-        <h2 className="font-display text-display-sm text-ink m-0 mb-2">Ta progression</h2>
-        <p className="font-body text-body-md text-inksoft m-0">Continue à réviser pour voir apparaître ta progression ici.</p>
-      </Card>
-    )
-  }
-
-  const { card, oldReview, recentReview } = highlight
-
+function ReviewPanel({ when, review }: { when: string; review: ProgressHighlightReview }) {
+  const verdict = reviewVerdict(review)
   return (
-    <Card className="p-6">
-      <h2 className="font-display text-display-sm text-ink m-0 mb-1">Ta progression</h2>
-      <p className="font-body text-body-md text-ink m-0 mb-4">{card.front}</p>
-      <div className="flex gap-4 flex-wrap">
-        <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-2.5">Il y a environ un mois</p>
-          <Badge tone={RATING_TONES[oldReview.rating] ?? 'neutral'}>{RATING_LABELS[oldReview.rating] ?? oldReview.rating}</Badge>
-          {oldReview.aiVerdict && (
-            <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[oldReview.aiVerdict] ?? oldReview.aiVerdict}</p>
-          )}
-          {oldReview.userAnswer && (
-            <p className="font-body text-body-sm text-inksoft mt-2 mb-0">Réponse donnée : {oldReview.userAnswer}</p>
-          )}
-        </div>
-        <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-2.5">Plus récemment</p>
-          <Badge tone={RATING_TONES[recentReview.rating] ?? 'neutral'}>{RATING_LABELS[recentReview.rating] ?? recentReview.rating}</Badge>
-          {recentReview.aiVerdict && (
-            <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[recentReview.aiVerdict] ?? recentReview.aiVerdict}</p>
-          )}
-          {recentReview.userAnswer && (
-            <p className="font-body text-body-sm text-inksoft mt-2 mb-0">Réponse donnée : {recentReview.userAnswer}</p>
-          )}
-        </div>
-      </div>
-      <p className="font-body text-body-sm text-inksoft mt-4 mb-0">Réponse de référence : {card.back}</p>
-    </Card>
+    <div className="flex-1 min-w-0 flex flex-col gap-2 p-3 pb-4 rounded-t-xs rounded-b-md bg-paper-sunken">
+      <span className="text-caption text-inksoft">{when}</span>
+      <span className={`self-start inline-flex flex-col font-display text-body-md font-bold ${verdict.color}`}>
+        {verdict.label}
+        <BrushStroke tone="current" className="w-full h-1" delayMs={1200} />
+      </span>
+      {review.userAnswer ? <span className="text-caption text-inksoft break-words">Réponse donnée : {review.userAnswer}</span> : null}
+    </div>
   )
 }
 
+function ProgressSection({ highlight }: { highlight: ProgressHighlight }) {
+  return (
+    <section aria-labelledby="ta-progression" className="flex flex-col gap-2">
+      <Label id="ta-progression">Ta progression</Label>
+      {highlight.available ? (
+        <>
+          <span className="font-display text-display-md break-words">{frenchSpacing(highlight.card.front)}</span>
+          <div className="flex gap-2">
+            <ReviewPanel when="Il y a environ un mois" review={highlight.oldReview} />
+            <ReviewPanel when="Plus récemment" review={highlight.recentReview} />
+          </div>
+          <span className="text-body-sm text-inksoft break-words">Réponse de référence : {frenchSpacing(highlight.card.back)}</span>
+        </>
+      ) : (
+        <p className="m-0 text-body-sm text-inksoft">Continue à réviser pour voir apparaître ta progression ici.</p>
+      )}
+    </section>
+  )
+}
+
+// Stats d'un deck (CON-69, S15-stats) : message de l'IA dans le rouleau,
+// progression d'une carte, cartes maîtrisées, états des cartes, puis la série,
+// volontairement discrète (secondaire, jamais dominante).
 function Stats() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -122,53 +118,55 @@ function Stats() {
     return <PageSkeleton />
   }
 
-  if (error) {
-    return (
-      <div className="max-w-120 mx-auto">
-        <div className="mb-4">
-          <Notification tone="danger" title="Chargement impossible" message={error} />
-        </div>
-        <Link to={`/decks/${id}`}>Retour au deck</Link>
-      </div>
-    )
-  }
-
   return (
-    <div className="max-w-wrap mx-auto">
-      <p className="mt-1 mb-5">
-        <Link to={`/decks/${id}`}>Retour au deck</Link>
-      </p>
+    <AppScreen>
+      <BackLink to={`/decks/${id}`}>{deck?.name ?? 'Retour au deck'}</BackLink>
 
-      {overview && (
+      {error ? <Notification tone="danger" title="Chargement impossible" message={error} /> : null}
+
+      {overview ? (
         <>
-          <h1 className="font-body text-label text-inksoft uppercase tracking-micro m-0 mb-2">{deck?.name}</h1>
-          <p className="font-display text-display-md text-ink tracking-tight m-0 mb-8 max-w-165">{overview.message}</p>
+          <h1 className="sr-only">Stats du deck {deck?.name}</h1>
+          <Scroll label="Ce deck">
+            <p className="m-0 font-display text-scroll text-balance">{frenchSpacing(overview.message)}</p>
+          </Scroll>
 
-          <div className="mb-8">
-            <ProgressHighlightSection highlight={progressHighlight} />
-          </div>
+          {progressHighlight ? <ProgressSection highlight={progressHighlight} /> : null}
 
-          <p className="font-body text-body-md text-inksoft mb-4">
-            {overview.masteredCards} card{overview.masteredCards > 1 ? 's' : ''} maîtrisée{overview.masteredCards > 1 ? 's' : ''} jusqu'ici, sur{' '}
-            {overview.totalCards} au total.
-          </p>
+          <InkRule />
 
-          <div className="flex items-center gap-2.5 mb-8 flex-wrap">
-            <Chip className="text-[11px] px-2.5 py-1 opacity-80">Streak : {overview.currentStreak} jour(s)</Chip>
-            <span className="font-body text-body-sm text-inksoft">
-              New {overview.cardsByState.New} · Learning {overview.cardsByState.Learning} · Review {overview.cardsByState.Review} ·
-              Relearning {overview.cardsByState.Relearning}
+          <div className="flex items-baseline gap-3">
+            <span className="font-display text-display-xl text-indigo">{overview.masteredCards}</span>
+            <span className="text-body-sm">
+              {plural(overview.masteredCards, 'carte maîtrisée', 'cartes maîtrisées')}
+              <br />
+              <span className="text-inksoft">sur {overview.totalCards} au total</span>
             </span>
           </div>
-        </>
-      )}
 
-      <div className="mt-4">
-        <LinkButton to="/dashboard" icon="ph:squares-four-bold">
-          Retrouve une vue d'ensemble de tous tes decks
-        </LinkButton>
-      </div>
-    </div>
+          <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 text-label font-normal text-inksoft">
+            {[
+              ['Nouvelles', overview.cardsByState.New],
+              ['En apprentissage', overview.cardsByState.Learning],
+              ['En révision', overview.cardsByState.Review],
+              ['À reprendre', overview.cardsByState.Relearning],
+            ].map(([label, count]) => (
+              <div key={label} className="flex gap-1">
+                <dt>{label}</dt>
+                <dd className="m-0">· {count}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {/* Série affichée seulement quand elle existe : rien qui ressemble à un compteur cassé. */}
+          {overview.currentStreak > 0 ? (
+            <p className="m-0 text-caption text-inksoft">
+              Série en cours : {overview.currentStreak} {plural(overview.currentStreak, 'jour', 'jours')}
+            </p>
+          ) : null}
+        </>
+      ) : null}
+    </AppScreen>
   )
 }
 

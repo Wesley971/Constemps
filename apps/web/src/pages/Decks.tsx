@@ -2,30 +2,31 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
 import type { Deck, DeckColor, DeckIcon } from '../types/deck'
-import type { User } from '../types/user'
-import { AppHeader } from '../design-system/components/AppHeader'
-import { Button } from '../design-system/components/Button'
-import { DeckCard } from '../design-system/components/DeckCard'
-import { ConfirmModal } from '../design-system/components/Modal'
+import { AppScreen } from '../design-system/components/AppScreen'
+import { DeckRope } from '../design-system/components/DeckRope'
+import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
+import { Notification } from '../design-system/components/Notification'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import type { ToastState } from '../design-system/useToast'
+import { decksSummaryLabel, deckTodayLabel, plural, summarizeDay } from '../lib/today'
 import { DeckFormModal } from './DeckFormModal'
 
-type FormModalState = { mode: 'create' } | { mode: 'edit'; deck: Deck } | null
-
+// Mes decks (CON-69, S14-decks) : toutes les plaquettes sur des cordes empilées,
+// comptées comme sur l'accueil. La modification et la suppression d'un deck se
+// font depuis son intérieur.
 function Decks() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [decks, setDecks] = useState<Deck[]>([])
-  const [checkingAuth, setCheckingAuth] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
-  const [formModal, setFormModal] = useState<FormModalState>(null)
-  const [saving, setSaving] = useState(false)
-  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [decks, setDecks] = useState<Deck[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [creatingDeck, setCreatingDeck] = useState(false)
+  const [savingDeck, setSavingDeck] = useState(false)
   const { toast, notify } = useToast()
 
+  // Message laissé par l'écran précédent (deck supprimé, deck introuvable).
   useEffect(() => {
     const state = location.state as { notify?: ToastState } | null
     if (state?.notify) {
@@ -38,133 +39,86 @@ function Decks() {
   useEffect(() => {
     async function init() {
       try {
-        setUser(await authApi.me())
+        await authApi.me()
       } catch {
         navigate('/login')
         return
       }
 
       try {
-        const data = await decksApi.list()
-        setDecks(data)
+        setDecks(await decksApi.list())
       } catch (err) {
-        notify({ tone: 'danger', title: 'Chargement impossible', message: err instanceof ApiError ? err.message : 'Impossible de charger les decks' })
+        setError(err instanceof ApiError ? err.message : 'Impossible de charger tes decks')
       } finally {
-        setCheckingAuth(false)
+        setLoading(false)
       }
     }
 
     void init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
-  async function handleSubmitDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
-    const editing = formModal?.mode === 'edit' ? formModal.deck : null
-    setSaving(true)
+  async function handleCreateDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
+    setSavingDeck(true)
     try {
-      if (editing) {
-        const updated = await decksApi.update(editing.id, name, color, icon)
-        setDecks((prev) => prev.map((d) => (d.id === updated.id ? { ...d, ...updated } : d)))
-      } else {
-        const deck = await decksApi.create(name, color, icon)
-        setDecks((prev) => [deck, ...prev])
-      }
-      setFormModal(null)
+      await decksApi.create(name, color, icon)
+      // Relecture complète : le nouveau deck doit arriver avec son palier calculé.
+      setDecks(await decksApi.list())
+      setCreatingDeck(false)
     } catch (err) {
-      notify({
-        tone: 'danger',
-        title: editing ? 'Modification impossible' : 'Création impossible',
-        message: err instanceof ApiError ? err.message : 'Une erreur est survenue',
-      })
+      notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Une erreur est survenue' })
     } finally {
-      setSaving(false)
+      setSavingDeck(false)
     }
   }
 
-  async function confirmDelete() {
-    if (!deckToDelete) return
-    const deck = deckToDelete
-    setDeckToDelete(null)
-
-    try {
-      await decksApi.remove(deck.id)
-      setDecks((prev) => prev.filter((d) => d.id !== deck.id))
-      notify({ tone: 'success', title: 'Deck supprimé', message: `"${deck.name}" a été supprimé.` })
-    } catch (err) {
-      notify({ tone: 'danger', title: 'Suppression impossible', message: err instanceof ApiError ? err.message : 'Impossible de supprimer le deck' })
-    }
-  }
-
-  async function handleLogout() {
-    await authApi.logout()
-    navigate('/login')
-  }
-
-  if (checkingAuth) {
+  if (loading) {
     return <PageSkeleton />
   }
 
+  const day = summarizeDay(decks ?? [])
+
   return (
-    <div className="max-w-wrap mx-auto">
+    <AppScreen>
       <ToastViewport toast={toast} />
 
-      <AppHeader
-        email={user?.email}
-        actions={
-          <Button variant="secondary" icon="ph:sign-out-bold" onClick={handleLogout}>
-            Se déconnecter
-          </Button>
-        }
-      />
+      <header className="flex flex-col gap-1">
+        <h1 className="m-0 font-display text-display-lg">Mes decks</h1>
+        {decks ? <p className="m-0 text-body-sm text-inksoft">{decksSummaryLabel(day)}</p> : null}
+      </header>
 
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
-        <h1 className="font-display text-display-lg text-ink tracking-tight m-0">Mes decks</h1>
-        <Button icon="ph:plus-bold" onClick={() => setFormModal({ mode: 'create' })}>
-          Créer un deck
-        </Button>
-      </div>
+      {error ? <Notification tone="danger" title="Chargement impossible" message={error} /> : null}
 
-      {decks.length === 0 ? (
-        <p className="font-body text-body-md text-inksoft">Aucun deck pour l'instant.</p>
-      ) : (
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-          {decks.map((deck) => (
-            <DeckCard
-              key={deck.id}
-              name={deck.name}
-              cardCount={deck.cardCount ?? 0}
-              to={`/decks/${deck.id}`}
-              color={deck.color}
-              icon={deck.icon}
-              dailyGoalReached={deck.dailyGoalReached}
-              onEdit={() => setFormModal({ mode: 'edit', deck })}
-              onDelete={() => setDeckToDelete(deck)}
-            />
-          ))}
-        </div>
-      )}
-
-      {deckToDelete && (
-        <ConfirmModal
-          title="Supprimer ce deck ?"
-          confirmLabel="Supprimer"
-          confirmVariant="danger"
-          onConfirm={confirmDelete}
-          onClose={() => setDeckToDelete(null)}
-        >
-          Le deck "{deckToDelete.name}" et toutes ses cards seront supprimés définitivement. Cette action est irréversible.
-        </ConfirmModal>
-      )}
-
-      {formModal && (
-        <DeckFormModal
-          deck={formModal.mode === 'edit' ? formModal.deck : null}
-          saving={saving}
-          onClose={() => setFormModal(null)}
-          onSubmit={handleSubmitDeck}
+      {/* Sans decks chargés, pas de corde : un échec ne doit pas passer pour « aucun deck ». */}
+      {decks ? (
+        <DeckRope
+          stacked
+          label="Mes decks"
+          items={[
+            ...day.decks.map((d, i) => {
+              const cards = d.deck.cardCount ?? 0
+              return {
+                key: d.deck.id,
+                node: (
+                  <EmaPlaque
+                    to={`/decks/${d.deck.id}`}
+                    name={d.deck.name}
+                    status={deckTodayLabel(d)}
+                    progress={d.progress}
+                    total={cards === 0 ? 'Aucune carte' : `${cards} ${plural(cards, 'carte', 'cartes')}`}
+                    // Même clé que l'accueil : la fermeture ne se joue qu'une fois par jour.
+                    closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}
+                    delayMs={300 + i * 150}
+                  />
+                ),
+              }
+            }),
+            { key: 'nouveau-deck', still: true, node: <NewDeckPlaque onClick={() => setCreatingDeck(true)} /> },
+          ]}
         />
-      )}
-    </div>
+      ) : null}
+
+      {creatingDeck ? <DeckFormModal saving={savingDeck} onClose={() => setCreatingDeck(false)} onSubmit={handleCreateDeck} /> : null}
+    </AppScreen>
   )
 }
 

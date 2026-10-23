@@ -11,6 +11,8 @@ export interface RopeItem {
 interface DeckRopeProps {
   items: RopeItem[]
   label: string
+  // Cordes empilées sans défilement (Mes decks) plutôt qu'une bande qui défile (accueil).
+  stacked?: boolean
 }
 
 const PER_PAGE = 3
@@ -39,7 +41,7 @@ function chunk<T>(list: T[], size: number): T[][] {
 // animé à l'ouverture quand il existe une page suivante. Le fil de chaque
 // plaquette part exactement de la corde : sa longueur est calculée d'après la
 // largeur réelle de la bande, recalculée au redimensionnement.
-export function DeckRope({ items, label }: DeckRopeProps) {
+export function DeckRope({ items, label, stacked }: DeckRopeProps) {
   const stripRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -56,6 +58,20 @@ export function DeckRope({ items, label }: DeckRopeProps) {
   const pages = chunk(items, PER_PAGE)
   const slots = (w: number) => [GUTTER, (w - PLAQUE_WIDTH) / 2, w - GUTTER - PLAQUE_WIDTH]
 
+  // Mes decks (S14-decks) : une corde par page, empilées, sans défilement. Les
+  // plaquettes y portent leur total et font 148px : bande de 196px, ombre comprise.
+  if (stacked) {
+    return (
+      <div ref={stripRef} role="list" aria-label={label} className="-mx-gutter flex flex-col gap-2">
+        {pages.map((page, pageIndex) => (
+          <div key={page[0].key} className="relative h-49">
+            {width > 0 ? renderBand(page, pageIndex) : null}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div
       ref={stripRef}
@@ -66,33 +82,38 @@ export function DeckRope({ items, label }: DeckRopeProps) {
       <div className={`flex h-full ${pages.length > 1 ? 'rope-peek' : ''}`}>
         {pages.map((page, pageIndex) => (
           <div key={page[0].key} className="relative flex-none w-full h-full snap-start">
-            {width > 0 ? (
-              <>
-                <svg aria-hidden="true" className="absolute left-0 top-0 w-full h-8 overflow-visible" viewBox={`0 0 ${width} 32`} preserveAspectRatio="none">
-                  <path d={`M-4 6 Q ${width / 2} 34 ${width + 4} 6`} className="stroke-rope" strokeWidth="2" fill="none" />
-                </svg>
-                {page.map((item, slot) => {
-                  const left = slots(width)[slot]
-                  const top = ropeY(left + PLAQUE_WIDTH / 2, width)
-                  const bodyTop = slot === 1 ? BODY_TOP_MIDDLE : BODY_TOP_SIDE
-                  return (
-                    <div
-                      key={item.key}
-                      role="listitem"
-                      className={`absolute flex flex-col items-center w-26 origin-top ${item.still ? '' : 'animate-sway'}`}
-                      // Positions calculées (corde courbe) : seules valeurs hors grille, imposées par la géométrie.
-                      style={{ left, top, animationDelay: `${-2 * (pageIndex * PER_PAGE + slot)}s` }}
-                    >
-                      <span aria-hidden="true" className={`w-thread bg-vermillon ${item.still ? 'opacity-50' : ''}`} style={{ height: bodyTop - top }} />
-                      {item.node}
-                    </div>
-                  )
-                })}
-              </>
-            ) : null}
+            {width > 0 ? renderBand(page, pageIndex) : null}
           </div>
         ))}
       </div>
     </div>
   )
+
+  // Corde courbe et plaquettes d'une page, fils calculés pour toucher la corde.
+  function renderBand(page: RopeItem[], pageIndex: number) {
+    return (
+      <>
+        <svg aria-hidden="true" className="absolute left-0 top-0 w-full h-8 overflow-visible" viewBox={`0 0 ${width} 32`} preserveAspectRatio="none">
+          <path d={`M-4 6 Q ${width / 2} 34 ${width + 4} 6`} className="stroke-rope" strokeWidth="2" fill="none" />
+        </svg>
+        {page.map((item, slot) => {
+          const left = slots(width)[slot]
+          const top = ropeY(left + PLAQUE_WIDTH / 2, width)
+          const bodyTop = slot === 1 ? BODY_TOP_MIDDLE : BODY_TOP_SIDE
+          return (
+            <div
+              key={item.key}
+              role="listitem"
+              className={`absolute flex flex-col items-center w-26 origin-top ${item.still ? '' : 'animate-sway'}`}
+              // Positions calculées (corde courbe) : seules valeurs hors grille, imposées par la géométrie.
+              style={{ left, top, animationDelay: `${-2 * (pageIndex * PER_PAGE + slot)}s` }}
+            >
+              <span aria-hidden="true" className={`w-thread bg-vermillon ${item.still ? 'opacity-50' : ''}`} style={{ height: bodyTop - top }} />
+              {item.node}
+            </div>
+          )
+        })}
+      </>
+    )
+  }
 }

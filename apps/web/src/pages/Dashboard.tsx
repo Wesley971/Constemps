@@ -15,7 +15,7 @@ import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { DeckFormModal } from './DeckFormModal'
-import { deckTodayLabel, formatToday, seasonOf, SEASON_LABELS, summarizeDay } from '../lib/today'
+import { deckTodayLabel, formatToday, plural, seasonOf, SEASON_LABELS, summarizeDay } from '../lib/today'
 import type { DaySummary, Season } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
 
@@ -36,10 +36,6 @@ const SEASON_DOT: Record<Season, string> = {
 
 // Clé de la fermeture du cercle de la lanterne : jouée une fois par jour.
 const LANTERN_CLOSE_KEY = 'palier-du-jour'
-
-function plural(n: number, singular: string, pluralForm: string) {
-  return n > 1 ? pluralForm : singular
-}
 
 function lanternLabel(day: DaySummary): string {
   switch (day.state) {

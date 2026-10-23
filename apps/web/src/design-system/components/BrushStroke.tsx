@@ -1,4 +1,4 @@
-type BrushStrokeTone = 'indigo' | 'vermillon'
+type BrushStrokeTone = 'indigo' | 'vermillon' | 'current'
 
 interface BrushStrokeProps {
   tone?: BrushStrokeTone
@@ -13,6 +13,8 @@ interface BrushStrokeProps {
 const tones: Record<BrushStrokeTone, string> = {
   indigo: 'text-indigo',
   vermillon: 'text-vermillon',
+  // Couleur du texte souligné (verdicts des stats).
+  current: '',
 }
 
 // Trait de pinceau horizontal qui se trace à l'ouverture (soulignés de

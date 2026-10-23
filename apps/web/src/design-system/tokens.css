@@ -49,6 +49,9 @@
   --color-wood-ink: #1a2036;
   --color-wood-ink-soft: #4f4a40;
   --color-wood-veil: rgba(234, 219, 190, 0.35);
+  /* Petit total des plaquettes (« 48 cartes ») : #7A7262 des planches ne donne
+     que 3,18:1 sur le bois, celui-ci 4,87:1. */
+  --color-wood-ink-faint: #5c5648;
   --color-rope: #8a6a3a;
   /* Papier de la lanterne, du centre allumé vers les bords. */
   --color-lantern-core: #fff6e2;
@@ -64,6 +67,8 @@
   --color-warning: #a97a2e;
   --color-warning-deep: #8a6224;
   --color-warning-tint: #f1e7d3;
+  /* « Difficile » en petit texte sur papier : warning-deep ne donne que 4,40:1. */
+  --color-warning-ink: #805b21;
   --color-danger: #9c4438;
   --color-danger-deep: #7c362c;
   --color-danger-tint: #f0dfda;

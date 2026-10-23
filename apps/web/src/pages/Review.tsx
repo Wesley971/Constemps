@@ -16,12 +16,7 @@ import { Skeleton } from '../design-system/components/Skeleton'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import type { BadgeTone } from '../design-system/components/Badge'
-
-const VERDICT_LABELS: Record<string, string> = {
-  compris: 'Compris',
-  partiellement: 'Partiellement compris',
-  incompris: 'Incompris',
-}
+import { VERDICT_LABELS } from '../design-system/constants'
 
 const VERDICT_TONES: Record<string, BadgeTone> = {
   compris: 'success',
@@ -226,7 +221,7 @@ function Review() {
                 Difficile
               </Button>
               <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'GOOD')}>
-                Bien
+                Correct
               </Button>
               <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
                 Facile

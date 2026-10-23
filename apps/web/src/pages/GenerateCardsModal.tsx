@@ -77,7 +77,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
       notify({
         tone: 'danger',
         title: 'Génération impossible',
-        message: err instanceof ApiError ? err.message : 'Impossible de générer des cards depuis ce texte',
+        message: err instanceof ApiError ? err.message : 'Impossible de générer des cartes depuis ce texte',
       })
     } finally {
       setGenerating(false)
@@ -105,7 +105,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
         createdCards.push(card)
       }
       onCardsAdded(createdCards)
-      notify({ tone: 'success', title: 'Cards ajoutées', message: `${createdCards.length} card(s) ajoutée(s) au deck.` })
+      notify({ tone: 'success', title: 'Cartes ajoutées', message: `${createdCards.length} carte(s) ajoutée(s) au deck.` })
       onClose()
     } catch (err) {
       if (createdCards.length > 0) {
@@ -114,7 +114,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
       notify({
         tone: 'danger',
         title: 'Ajout incomplet',
-        message: `${createdCards.length}/${selected.length} card(s) ajoutée(s). ${err instanceof ApiError ? err.message : 'Une erreur est survenue.'}`,
+        message: `${createdCards.length}/${selected.length} carte(s) ajoutée(s). ${err instanceof ApiError ? err.message : 'Une erreur est survenue.'}`,
       })
     } finally {
       setAddingSelected(false)
@@ -128,7 +128,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
         className="relative w-220 max-w-[92vw] max-h-[88vh] bg-paper rounded-lg shadow-modal p-7 flex flex-col gap-4"
       >
         <div className="flex items-center justify-between">
-          <span className="font-display text-display-sm text-ink">Générer des cards depuis un texte</span>
+          <span className="font-display text-display-sm text-ink">Générer des cartes depuis un texte</span>
           <IconCircleButton icon="ph:x-bold" tone="ghost" size="md" onClick={onClose} />
         </div>
 
@@ -138,7 +138,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
               <div>
                 <Textarea
                   label="Texte source"
-                  placeholder="Colle ici un article, un cours, une fiche... l'IA en tirera des cards."
+                  placeholder="Colle ici un article, un cours, une fiche... l'IA en tirera des cartes."
                   rows={10}
                   value={sourceText}
                   onChange={(e) => setSourceText(e.target.value)}
@@ -248,7 +248,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                   Recommencer
                 </Button>
                 <Button disabled={selectedCount === 0 || addingSelected} onClick={handleAddSelected}>
-                  {addingSelected ? 'Ajout...' : `Ajouter les cards sélectionnées (${selectedCount})`}
+                  {addingSelected ? 'Ajout...' : `Ajouter les cartes sélectionnées (${selectedCount})`}
                 </Button>
               </div>
             </>

@@ -11,6 +11,8 @@ interface BrushLinkProps {
   onClick?: () => void
   size?: BrushLinkSize
   delayMs?: number
+  // Action indisponible (deck sans carte) : rendu en bouton désactivé, atténué.
+  disabled?: boolean
 }
 
 const textSizes: Record<BrushLinkSize, string> = {
@@ -25,7 +27,7 @@ const chevronSizes: Record<BrushLinkSize, string> = {
 
 // Action principale sans bouton (CON-57) : texte Kaisei, chevron au pinceau,
 // souligné d'un trait de pinceau. Cible tactile d'au moins 44px.
-export function BrushLink({ children, to, onClick, size = 'lg', delayMs = 0 }: BrushLinkProps) {
+export function BrushLink({ children, to, onClick, size = 'lg', delayMs = 0, disabled }: BrushLinkProps) {
   const className =
     'self-start inline-flex flex-col justify-center min-h-hit px-0 py-2 text-indigo no-underline hover:no-underline hover:text-indigo-deep bg-transparent border-none cursor-pointer'
   const content = (
@@ -40,6 +42,13 @@ export function BrushLink({ children, to, onClick, size = 'lg', delayMs = 0 }: B
     </>
   )
 
+  if (disabled) {
+    return (
+      <button type="button" disabled className={`${className} opacity-50 cursor-default hover:text-indigo`}>
+        {content}
+      </button>
+    )
+  }
   if (to) {
     return (
       <Link to={to} className={className}>

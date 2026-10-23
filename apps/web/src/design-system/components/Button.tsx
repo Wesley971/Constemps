@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 
 // primary : bouton rideau indigo (action principale). secondary : indigo à 10 %.
 // curtain / curtain-secondary : mêmes rôles posés sur un rideau indigo (fenêtres,
-// série 18). danger : rideau terracotta pour une action destructive.
-type ButtonVariant = 'primary' | 'secondary' | 'curtain' | 'curtain-secondary' | 'danger'
+// série 18). danger : rideau terracotta pour une action destructive. compact :
+// action principale à la hauteur d'un bouton secondaire (édition d'une carte).
+type ButtonVariant = 'primary' | 'compact' | 'secondary' | 'curtain' | 'curtain-secondary' | 'danger'
 
 interface ButtonProps {
   children: ReactNode
@@ -38,6 +39,7 @@ const variants: Record<ButtonVariant, string> = {
   primary: `${shapes.curtain} bg-indigo text-on-indigo hover:bg-indigo-deep hover:text-on-indigo`,
   danger: `${shapes.curtain} bg-danger text-on-indigo hover:bg-danger-deep hover:text-on-indigo`,
   curtain: `${shapes.curtain} bg-cream text-cream-ink hover:text-cream-ink`,
+  compact: `${shapes.compact} bg-indigo text-on-indigo hover:bg-indigo-deep hover:text-on-indigo`,
   secondary: `${shapes.compact} bg-indigo-tint text-indigo hover:bg-indigo-veil hover:text-indigo`,
   'curtain-secondary': `${shapes.compact} bg-cream-veil text-on-indigo hover:text-on-indigo`,
 }

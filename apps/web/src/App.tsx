@@ -39,15 +39,15 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/decks" element={<Decks />} />
+        <Route path="/decks/:id" element={<DeckDetail />} />
+        <Route path="/decks/:id/stats" element={<Stats />} />
         <Route element={<LegacyLayout withTabs={false} />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
         <Route element={<LegacyLayout withTabs />}>
-          <Route path="/decks" element={<Decks />} />
-          <Route path="/decks/:id" element={<DeckDetail />} />
           <Route path="/decks/:id/review" element={<Review />} />
-          <Route path="/decks/:id/stats" element={<Stats />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
         {Fondations ? (

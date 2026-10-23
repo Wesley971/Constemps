@@ -13,7 +13,9 @@ import { Scroll } from '../design-system/components/Scroll'
 import { BrushLink } from '../design-system/components/BrushLink'
 import { InkRule } from '../design-system/components/InkRule'
 import { DeckRope } from '../design-system/components/DeckRope'
-import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
+import { DeckPlaque, EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
+import { IconButton } from '../design-system/components/IconButton'
+import { BackLink } from '../design-system/components/BackLink'
 
 // Démonstration des fondations du design system (CON-57). Route servie
 // seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
@@ -221,6 +223,41 @@ export default function Fondations() {
               { key: 'demo-new', still: true, node: <NewDeckPlaque onClick={() => undefined} /> },
             ]}
           />
+        </Section>
+
+        <Section title="Mes decks, intérieur d'un deck">
+          <BackLink to="/fondations">{LONG_TEXT}</BackLink>
+          <DeckRope
+            stacked
+            label="Démonstration des cordes empilées"
+            items={[
+              ...[20, 60, 100, 0].map((p, i) => ({
+                key: `stack-${i}`,
+                node: (
+                  <EmaPlaque
+                    to="/fondations"
+                    name={i === 1 ? LONG_TEXT : `Deck ${i + 1}`}
+                    status={p === 100 ? 'Palier atteint' : `${i + 2} à revoir`}
+                    progress={p}
+                    total={`${12 * (i + 1)} cartes`}
+                  />
+                ),
+              })),
+              { key: 'stack-new', still: true, node: <NewDeckPlaque onClick={() => undefined} /> },
+            ]}
+          />
+          <div className="flex items-start gap-5">
+            <DeckPlaque remaining={2} status="à revoir" label="2 à revoir" progress={60} />
+            <DeckPlaque remaining={0} status="Palier atteint" label="Palier atteint" progress={100} />
+          </div>
+          <div className="flex items-center gap-2">
+            <IconButton icon="edit" label="Modifier" />
+            <IconButton icon="delete" label="Supprimer" />
+            <Button variant="compact">Enregistrer</Button>
+            <BrushLink to="/fondations" disabled>
+              Réviser
+            </BrushLink>
+          </div>
         </Section>
 
         <Section title="Cercles au pinceau">
