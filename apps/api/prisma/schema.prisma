@@ -41,7 +41,7 @@ model User {
 model AccountMilestone {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   threshold Int
   // CON-41 : volontairement non relu aujourd'hui (l'anti-réaffichage ne
   // dépend que de la présence de la ligne, voir commentaire ci-dessus).
@@ -59,7 +59,7 @@ model Deck {
   color     String? // teinte de personnalisation, parmi DECK_COLORS (voir decks/deck-colors.ts) ; null = pas de couleur choisie
   icon      String? // identifiant Phosphor, parmi DECK_ICONS (voir decks/deck-icons.ts) ; null = pas d'icône choisie
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards     Card[]
   createdAt DateTime @default(now())
 
@@ -108,7 +108,7 @@ model Card {
 model RefreshToken {
   id        String    @id @default(uuid())
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   familyId  String    @default(uuid())
   tokenHash String    @unique
   expiresAt DateTime
