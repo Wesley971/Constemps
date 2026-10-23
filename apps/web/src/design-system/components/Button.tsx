@@ -1,7 +1,10 @@
 import type { MouseEventHandler, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-type ButtonVariant = 'primary' | 'dark' | 'ghost' | 'ghost-on-dark' | 'danger'
+// primary : bouton rideau indigo (action principale). secondary : indigo à 10 %.
+// curtain / curtain-secondary : mêmes rôles posés sur un rideau indigo (fenêtres,
+// série 18). danger : rideau terracotta pour une action destructive.
+type ButtonVariant = 'primary' | 'secondary' | 'curtain' | 'curtain-secondary' | 'danger'
 
 interface ButtonProps {
   children: ReactNode
@@ -22,14 +25,25 @@ interface LinkButtonProps {
 }
 
 const base =
-  'inline-flex items-center gap-2 font-body font-semibold text-[13.5px] px-5.5 py-2.75 rounded-md border border-transparent transition-colors duration-base ease-standard no-underline whitespace-nowrap min-h-hit'
+  'inline-flex items-center justify-center gap-2 border-none no-underline whitespace-nowrap rounded-t-xs transition-colors duration-base ease-standard hover:no-underline'
+
+// Bouton rideau : coins du haut 4px, du bas 20px, Kaisei. Bouton secondaire :
+// coins du bas 16px, Zen Maru, cible tactile de 44px.
+const shapes = {
+  curtain: 'h-button px-6 rounded-b-curtain font-display text-display-sm',
+  compact: 'h-hit px-4 rounded-b-md font-body text-body-sm font-bold',
+}
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo text-paper hover:bg-indigo-deep',
-  dark: 'bg-ink text-paper hover:bg-black',
-  ghost: 'bg-transparent text-ink border-line hover:bg-paper-sunken',
-  'ghost-on-dark': 'bg-paper/10 text-paper border-paper/22 hover:bg-paper/18',
-  danger: 'bg-danger text-paper hover:bg-danger-deep',
+  primary: `${shapes.curtain} bg-indigo text-on-indigo hover:bg-indigo-deep hover:text-on-indigo`,
+  danger: `${shapes.curtain} bg-danger text-on-indigo hover:bg-danger-deep hover:text-on-indigo`,
+  curtain: `${shapes.curtain} bg-cream text-cream-ink hover:text-cream-ink`,
+  secondary: `${shapes.compact} bg-indigo-tint text-indigo hover:bg-indigo-veil hover:text-indigo`,
+  'curtain-secondary': `${shapes.compact} bg-cream-veil text-on-indigo hover:text-on-indigo`,
+}
+
+function ButtonIcon({ icon }: { icon?: string }) {
+  return icon ? <iconify-icon icon={icon} width="16" aria-hidden="true"></iconify-icon> : null
 }
 
 export function Button({ children, variant = 'primary', icon, type = 'button', disabled, onClick, className }: ButtonProps) {
@@ -40,16 +54,16 @@ export function Button({ children, variant = 'primary', icon, type = 'button', d
       onClick={onClick}
       className={`${base} ${variants[variant]} ${disabled ? 'opacity-50 cursor-default' : 'cursor-pointer'} ${className ?? ''}`}
     >
-      {icon ? <iconify-icon icon={icon} width="16"></iconify-icon> : null}
+      <ButtonIcon icon={icon} />
       {children}
     </button>
   )
 }
 
-export function LinkButton({ children, to, variant = 'ghost', icon, className }: LinkButtonProps) {
+export function LinkButton({ children, to, variant = 'secondary', icon, className }: LinkButtonProps) {
   return (
     <Link to={to} className={`${base} ${variants[variant]} ${className ?? ''}`}>
-      {icon ? <iconify-icon icon={icon} width="16"></iconify-icon> : null}
+      <ButtonIcon icon={icon} />
       {children}
     </Link>
   )

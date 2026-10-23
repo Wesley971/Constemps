@@ -111,7 +111,7 @@ function Decks() {
       <AppHeader
         email={user?.email}
         actions={
-          <Button variant="ghost" icon="ph:sign-out-bold" onClick={handleLogout}>
+          <Button variant="secondary" icon="ph:sign-out-bold" onClick={handleLogout}>
             Se déconnecter
           </Button>
         }

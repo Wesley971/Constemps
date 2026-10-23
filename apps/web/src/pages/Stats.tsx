@@ -53,7 +53,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
       <p className="font-body text-body-md text-ink m-0 mb-4">{card.front}</p>
       <div className="flex gap-4 flex-wrap">
         <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-2.5">Il y a environ un mois</p>
+          <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-2.5">Il y a environ un mois</p>
           <Badge tone={RATING_TONES[oldReview.rating] ?? 'neutral'}>{RATING_LABELS[oldReview.rating] ?? oldReview.rating}</Badge>
           {oldReview.aiVerdict && (
             <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[oldReview.aiVerdict] ?? oldReview.aiVerdict}</p>
@@ -63,7 +63,7 @@ function ProgressHighlightSection({ highlight }: { highlight: ProgressHighlight 
           )}
         </div>
         <div className="flex-1 min-w-55 border border-line rounded-sm p-4">
-          <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-2.5">Plus récemment</p>
+          <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-2.5">Plus récemment</p>
           <Badge tone={RATING_TONES[recentReview.rating] ?? 'neutral'}>{RATING_LABELS[recentReview.rating] ?? recentReview.rating}</Badge>
           {recentReview.aiVerdict && (
             <p className="font-body text-body-sm text-inksoft mt-2.5 mb-0">{VERDICT_LABELS[recentReview.aiVerdict] ?? recentReview.aiVerdict}</p>
@@ -141,7 +141,7 @@ function Stats() {
 
       {overview && (
         <>
-          <h1 className="font-body text-label text-inkfaint uppercase tracking-micro m-0 mb-2">{deck?.name}</h1>
+          <h1 className="font-body text-label text-inksoft uppercase tracking-micro m-0 mb-2">{deck?.name}</h1>
           <p className="font-display text-display-md text-ink tracking-tight m-0 mb-8 max-w-165">{overview.message}</p>
 
           <div className="mb-8">

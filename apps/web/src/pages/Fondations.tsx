@@ -1,0 +1,225 @@
+import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { Noren } from '../design-system/components/Noren'
+import { TabBar } from '../design-system/components/TabBar'
+import { Seigaiha } from '../design-system/components/Seigaiha'
+import { BrushCircle } from '../design-system/components/BrushCircle'
+import { Button } from '../design-system/components/Button'
+import { Input } from '../design-system/components/Input'
+import { Textarea } from '../design-system/components/Textarea'
+import { Label } from '../design-system/components/Label'
+
+// Démonstration des fondations du design system (CON-57). Route servie
+// seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
+// pour vérifier chaque lot à 360, 390, 430px et sur ordinateur.
+
+const COLOR_TOKENS = [
+  'canvas',
+  'paper',
+  'paper-sunken',
+  'ink',
+  'inksoft',
+  'indigo',
+  'indigo-deep',
+  'scroll-mount',
+  'vermillon',
+  'wood',
+  'rope',
+  'seigaiha',
+  'cream',
+  'success',
+  'warning',
+  'danger',
+  'season-spring',
+  'season-summer',
+  'season-autumn',
+  'season-winter',
+]
+
+const SPACING_STEPS = [1, 2, 3, 4, 6, 8, 12, 16]
+
+const LONG_TEXT = 'Un nom de deck particulièrement long, pour vérifier que rien ne déborde ni ne se coupe mal sur un petit écran'
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className="m-0 font-display text-display-md">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function Swatches() {
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {COLOR_TOKENS.map((token) => (
+        <div key={token} className="flex flex-col gap-1 min-w-0">
+          <span className="h-12 rounded-sm border border-line" style={{ background: `var(--color-${token})` }} />
+          <span className="font-body text-caption text-inksoft truncate">{token}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const CLOSE_DEMO_KEY = 'fondations-demo'
+
+export default function Fondations() {
+  const [progress, setProgress] = useState(60)
+  const [showError, setShowError] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [closeRun, setCloseRun] = useState(0)
+  const [recto, setRecto] = useState(LONG_TEXT)
+
+  function replayClose() {
+    try {
+      window.localStorage.removeItem(`constemps.brushClosed.${CLOSE_DEMO_KEY}`)
+    } catch {
+      // Stockage indisponible : la fermeture sera rejouée de toute façon.
+    }
+    setCloseRun((n) => n + 1)
+  }
+
+  return (
+    <div className="relative min-h-dvh flex flex-col overflow-hidden">
+      <Seigaiha />
+      <Noren />
+      <main className="relative flex-1 w-full max-w-wrap mx-auto px-gutter py-8 flex flex-col gap-8">
+        <header className="flex flex-col gap-2">
+          <Label>Design system</Label>
+          <h1 className="m-0 font-display text-display-xl">Fondations</h1>
+          <p className="m-0 text-inksoft">Un peu, chaque jour.</p>
+        </header>
+
+        <Section title="Couleurs, jour">
+          <Swatches />
+        </Section>
+
+        <Section title="Couleurs, nuit (non activé avant le lot 7)">
+          <div data-theme="nuit" className="bg-canvas text-ink rounded-md p-4">
+            <Swatches />
+          </div>
+        </Section>
+
+        <Section title="Typographie">
+          <div className="flex flex-col gap-2">
+            <span className="font-display text-display-xl">Kaisei 34 · 11 cartes</span>
+            <span className="font-display text-display-lg">Kaisei 26 · Mes decks</span>
+            <span className="font-display text-display-md">Kaisei 20 · to come across</span>
+            <span className="font-display text-display-sm">Kaisei 17 · Se connecter</span>
+            <span className="text-body-lg">Zen Maru 16 · wesley@exemple.fr</span>
+            <span className="text-body-md">Zen Maru 15 · texte courant</span>
+            <span className="text-body-sm">Zen Maru 14 · Pas encore de compte ?</span>
+            <span className="text-caption text-inksoft">Zen Maru 12 · Il y a environ un mois</span>
+            <span className="font-display text-display-md break-words">{LONG_TEXT}</span>
+          </div>
+        </Section>
+
+        <Section title="Grille de 4px">
+          <div className="flex flex-col gap-2">
+            {SPACING_STEPS.map((step) => (
+              <div key={step} className="flex items-center gap-4">
+                <span className="w-12 text-caption text-inksoft">{step * 4}px</span>
+                <span className="h-2 bg-vermillon rounded-xs" style={{ width: `${step * 4}px` }} />
+              </div>
+            ))}
+            <span className="text-caption text-inksoft">Gouttière : 16px sur tous les écrans.</span>
+          </div>
+        </Section>
+
+        <Section title="Étiquettes">
+          <div className="flex flex-col gap-2">
+            <Label>Aujourd'hui</Label>
+            <Label>Ta progression</Label>
+            <Label>Langue apprise</Label>
+          </div>
+        </Section>
+
+        <Section title="Boutons">
+          <div className="flex flex-col gap-4">
+            <Button className="w-full">Se connecter</Button>
+            <Button className="w-full" disabled={loading} onClick={() => setLoading((v) => !v)}>
+              {/* Libellés superposés : la largeur ne bouge pas pendant le chargement (CON-62). */}
+              <span className="grid">
+                <span className={`col-start-1 row-start-1 ${loading ? 'invisible' : ''}`}>Enregistrer</span>
+                <span className={`col-start-1 row-start-1 ${loading ? '' : 'invisible'}`}>Enregistrement...</span>
+              </span>
+            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" icon="ph:plus-bold">
+                Ajouter
+              </Button>
+              <Button variant="secondary" icon="ph:sparkle-bold">
+                Générer
+              </Button>
+              <Button variant="secondary" disabled>
+                Désactivé
+              </Button>
+            </div>
+            <Button variant="danger" className="w-full">
+              Supprimer définitivement
+            </Button>
+            <div className="bg-indigo rounded-b-lg p-4 flex flex-col gap-4">
+              <Button variant="curtain" className="w-full">
+                Ajouter la carte
+              </Button>
+              <Button variant="curtain-secondary">Traduire</Button>
+            </div>
+            {loading ? (
+              <Button variant="secondary" onClick={() => setLoading(false)}>
+                Arrêter le chargement
+              </Button>
+            ) : null}
+          </div>
+        </Section>
+
+        <Section title="Champs au pinceau">
+          <form className="flex flex-col gap-2" onSubmit={(e) => e.preventDefault()}>
+            <Input label="E-mail" type="email" defaultValue="wesley@exemple.fr" />
+            <Input label="Mot de passe" type="password" defaultValue="un mot de passe" />
+            <Input label="Nom du deck" defaultValue={LONG_TEXT} error={showError ? 'Ce nom est déjà utilisé.' : undefined} hint="Visible sur la plaquette." />
+            <Textarea label="Recto" value={recto} onChange={(e) => setRecto(e.target.value)} rows={3} />
+            <Button variant="secondary" onClick={() => setShowError((v) => !v)}>
+              {showError ? 'Retirer l’erreur' : 'Afficher une erreur'}
+            </Button>
+          </form>
+        </Section>
+
+        <Section title="Cercles au pinceau">
+          <div className="flex flex-wrap items-center gap-4">
+            {[0, 20, 39, 60, 80].map((v, i) => (
+              <BrushCircle key={v} value={v} size="sm" label={`${v} %`} delayMs={i * 150} />
+            ))}
+            <BrushCircle value={100} size="sm" label="Complet" />
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <BrushCircle value={60} size="md" tone="vermillon" label="60 %" />
+            <BrushCircle value={60} size="lg" label="Palier du jour : 7 cartes sur 18">
+              <span className="flex flex-col items-center">
+                <span className="font-display text-display-lg">7</span>
+                <span className="text-caption text-inksoft">sur 18</span>
+              </span>
+            </BrushCircle>
+            <span className="bg-indigo rounded-sm p-2 inline-flex">
+              <BrushCircle value={80} size="md" tone="cream" label="80 %" />
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="progress" className="text-body-sm">
+              Progression : {progress} %
+            </label>
+            <input id="progress" type="range" min="0" max="100" value={progress} onChange={(e) => setProgress(Number(e.target.value))} />
+            <div className="flex items-center gap-4">
+              <BrushCircle key={closeRun} value={progress} size="lg" label={`Démonstration : ${progress} %`} closeKey={CLOSE_DEMO_KEY} />
+              <Button variant="secondary" onClick={replayClose}>
+                Rejouer la fermeture
+              </Button>
+            </div>
+            <span className="text-caption text-inksoft">À 100 %, la fermeture se joue une fois par jour, puis le cercle reste fermé.</span>
+          </div>
+        </Section>
+      </main>
+      <TabBar />
+    </div>
+  )
+}

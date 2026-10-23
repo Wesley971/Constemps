@@ -145,7 +145,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                   disabled={generating}
                   error={overLimit ? `Le texte dépasse la limite de ${MAX_TEXT_LENGTH.toLocaleString('fr-FR')} caractères` : undefined}
                 />
-                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inkfaint'}`}>
+                <div className={`text-right font-body text-caption mt-1 ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
                   {sourceText.length.toLocaleString('fr-FR')} / {MAX_TEXT_LENGTH.toLocaleString('fr-FR')}
                 </div>
               </div>
@@ -164,12 +164,12 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                         } ${selected ? 'border-indigo-deep! bg-indigo-tint!' : ''}`}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`shrink-0 flex items-center ${selected ? 'text-indigo-deep' : 'text-inkfaint'}`}>
+                          <span className={`shrink-0 flex items-center ${selected ? 'text-indigo-deep' : 'text-inksoft'}`}>
                             <iconify-icon icon={choice.icon} width="18"></iconify-icon>
                           </span>
                           <span className="font-body text-body-md text-ink">{choice.label}</span>
                         </div>
-                        <p className="font-body text-caption text-inkfaint m-0">{choice.helpText}</p>
+                        <p className="font-body text-caption text-inksoft m-0">{choice.helpText}</p>
                       </Card>
                     )
                   })}
@@ -244,7 +244,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
               )}
 
               <div className="flex gap-2.5 justify-end flex-wrap">
-                <Button variant="ghost" disabled={addingSelected} onClick={() => setProposals(null)}>
+                <Button variant="secondary" disabled={addingSelected} onClick={() => setProposals(null)}>
                   Recommencer
                 </Button>
                 <Button disabled={selectedCount === 0 || addingSelected} onClick={handleAddSelected}>

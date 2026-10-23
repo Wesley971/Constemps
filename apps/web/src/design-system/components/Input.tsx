@@ -1,5 +1,7 @@
 import { useId, useState } from 'react'
 import type { ChangeEventHandler } from 'react'
+import { Label } from './Label'
+import { BrushLine } from './BrushLine'
 
 interface InputProps {
   label?: string
@@ -18,6 +20,9 @@ interface InputProps {
   className?: string
 }
 
+// Champ au pinceau (CON-57) : sans cadre, étiquette vermillon au-dessus, trait
+// au pinceau dessous. La ligne de message (aide ou erreur) est toujours réservée,
+// pour qu'une erreur qui apparaît ne décale pas le reste du formulaire.
 export function Input({
   label,
   placeholder = '',
@@ -36,61 +41,54 @@ export function Input({
 }: InputProps) {
   const generatedId = useId()
   const fieldId = id ?? generatedId
-  const borderColor = error ? 'border-danger' : 'border-line focus-within:border-indigo-deep'
+  const messageId = `${fieldId}-message`
 
   const isPassword = type === 'password'
   const [passwordVisible, setPasswordVisible] = useState(false)
   const effectiveType = isPassword && passwordVisible ? 'text' : type
 
   return (
-    <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
-      {label ? (
-        <label htmlFor={fieldId} className="font-body text-label text-ink">
-          {label}
-        </label>
-      ) : null}
-      {/* Le ring de focus vit uniquement sur ce wrapper (focus-within). L'input natif
-          neutralise le ring global hérité de :focus-visible (focus-visible:shadow-none,
-          spécificité plus forte) pour éviter le double contour. */}
-      <div
-        className={`flex items-center gap-2 rounded-sm px-3.5 py-2.75 border-[1.5px] transition-[border-color,box-shadow] duration-base ease-standard focus-within:shadow-focus-ring ${borderColor} ${
-          disabled ? 'bg-paper-sunken opacity-60' : 'bg-paper'
-        }`}
-      >
-        {icon ? (
-          <span className="text-inkfaint flex items-center">
-            <iconify-icon icon={icon} width="16"></iconify-icon>
-          </span>
-        ) : null}
-        <input
-          id={fieldId}
-          type={effectiveType}
-          placeholder={placeholder}
-          disabled={disabled}
-          value={value}
-          defaultValue={defaultValue}
-          onChange={onChange}
-          required={required}
-          minLength={minLength}
-          className="border-none outline-none focus-visible:shadow-none flex-1 bg-transparent font-body text-body-md text-ink w-full"
-        />
-        {isPassword ? (
-          <button
-            type="button"
-            onClick={() => setPasswordVisible((prev) => !prev)}
+    <div className={`group flex flex-col gap-2 w-full ${disabled ? 'opacity-60' : ''} ${className ?? ''}`}>
+      {label ? <Label htmlFor={fieldId}>{label}</Label> : null}
+      <div>
+        <div className="flex items-end gap-2 min-h-field">
+          {icon ? (
+            <span className="text-inksoft flex items-center h-field" aria-hidden="true">
+              <iconify-icon icon={icon} width="16"></iconify-icon>
+            </span>
+          ) : null}
+          <input
+            id={fieldId}
+            type={effectiveType}
+            placeholder={placeholder}
             disabled={disabled}
-            aria-label={passwordVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            className="shrink-0 flex items-center text-inkfaint hover:text-ink transition-colors duration-base ease-standard bg-transparent border-none p-0 cursor-pointer disabled:cursor-default"
-          >
-            <iconify-icon icon={passwordVisible ? 'ph:eye-slash-bold' : 'ph:eye-bold'} width="16"></iconify-icon>
-          </button>
-        ) : null}
+            value={value}
+            defaultValue={defaultValue}
+            onChange={onChange}
+            required={required}
+            minLength={minLength}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error || hint ? messageId : undefined}
+            className="flex-1 w-full h-field p-0 border-none bg-transparent font-body text-body-lg text-ink placeholder:text-inksoft"
+          />
+          {isPassword ? (
+            // Cible tactile de 44px, ramenée à la hauteur du champ par des marges négatives.
+            <button
+              type="button"
+              onClick={() => setPasswordVisible((prev) => !prev)}
+              disabled={disabled}
+              aria-label={passwordVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              className="shrink-0 -my-2 -mr-3 flex items-center justify-center w-hit h-hit text-inksoft hover:text-ink transition-colors duration-base ease-standard bg-transparent border-none p-0 cursor-pointer disabled:cursor-default"
+            >
+              <iconify-icon icon={passwordVisible ? 'ph:eye-slash-bold' : 'ph:eye-bold'} width="16"></iconify-icon>
+            </button>
+          ) : null}
+        </div>
+        <BrushLine error={Boolean(error)} />
       </div>
-      {error ? (
-        <span className="font-body text-caption text-danger">{error}</span>
-      ) : hint ? (
-        <span className="font-body text-caption text-inkfaint">{hint}</span>
-      ) : null}
+      <span id={messageId} className={`font-body text-caption min-h-4 ${error ? 'text-danger' : 'text-inksoft'}`}>
+        {error ?? hint ?? ''}
+      </span>
     </div>
   )
 }

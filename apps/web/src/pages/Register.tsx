@@ -58,7 +58,7 @@ function Register() {
             {loading ? 'Création...' : 'Créer mon compte'}
           </Button>
         </form>
-        <p className="font-body text-body-sm text-inkfaint mt-5">
+        <p className="font-body text-body-sm text-inksoft mt-5">
           Déjà un compte ? <Link to="/login">Se connecter</Link>
         </p>
       </Card>

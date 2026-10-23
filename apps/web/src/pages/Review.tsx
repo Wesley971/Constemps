@@ -164,7 +164,7 @@ function Review() {
         <Card className="p-10">
           <MilestoneBanner
             message={session.message}
-            action={<Button variant="ghost" onClick={handleContinueToday}>Continuer aujourd'hui</Button>}
+            action={<Button variant="secondary" onClick={handleContinueToday}>Continuer aujourd'hui</Button>}
           />
           <p className="text-center mt-6 mb-0">
             <Link to={`/decks/${id}`}>Retour au deck</Link>
@@ -222,13 +222,13 @@ function Review() {
               <Button variant="danger" disabled={submitting} onClick={() => handleClassicRating(card.id, 'AGAIN')}>
                 Encore
               </Button>
-              <Button variant="ghost" disabled={submitting} onClick={() => handleClassicRating(card.id, 'HARD')}>
+              <Button variant="secondary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'HARD')}>
                 Difficile
               </Button>
               <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'GOOD')}>
                 Bien
               </Button>
-              <Button variant="dark" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
+              <Button variant="primary" disabled={submitting} onClick={() => handleClassicRating(card.id, 'EASY')}>
                 Facile
               </Button>
             </>
@@ -264,13 +264,13 @@ function Review() {
                 <div className="flex flex-col gap-3 text-left">
                   {openResult.cePointsForts && (
                     <div className="border border-line rounded-sm p-4">
-                      <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">Points forts</p>
+                      <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-1.5">Points forts</p>
                       <p className="font-body text-body-sm text-ink m-0">{openResult.cePointsForts}</p>
                     </div>
                   )}
                   {openResult.cePointsAmeliorer && (
                     <div className="border border-line rounded-sm p-4">
-                      <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">À améliorer</p>
+                      <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-1.5">À améliorer</p>
                       <p className="font-body text-body-sm text-ink m-0">{openResult.cePointsAmeliorer}</p>
                     </div>
                   )}
@@ -278,7 +278,7 @@ function Review() {
               )}
 
               <div className="bg-paper-sunken rounded-sm p-4 text-left">
-                <p className="font-body text-micro uppercase tracking-micro text-inkfaint m-0 mb-1.5">Réponse de référence</p>
+                <p className="font-body text-micro uppercase tracking-micro text-inksoft m-0 mb-1.5">Réponse de référence</p>
                 <p className="font-body text-body-sm text-ink m-0">{card.back}</p>
               </div>
 

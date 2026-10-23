@@ -219,16 +219,16 @@ function DeckDetail() {
             Réviser
           </Button>
         )}
-        <LinkButton to={`/decks/${id}/stats`} variant="ghost" icon="ph:chart-bar-bold">
+        <LinkButton to={`/decks/${id}/stats`} variant="secondary" icon="ph:chart-bar-bold">
           Stats
         </LinkButton>
       </div>
 
       <div className="flex gap-2.5 mb-5 flex-wrap">
-        <Button variant="ghost" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)}>
+        <Button variant="secondary" icon={showCreateForm ? 'ph:x-bold' : 'ph:plus-bold'} onClick={() => setShowCreateForm((v) => !v)}>
           {showCreateForm ? 'Annuler' : 'Ajouter une card'}
         </Button>
-        <Button variant="ghost" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
+        <Button variant="secondary" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
           Générer des cards depuis un texte
         </Button>
       </div>
@@ -258,7 +258,7 @@ function DeckDetail() {
                   className="flex-1"
                 />
                 {newCardType === 'CLASSIC' && (
-                  <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
+                  <Button type="button" variant="secondary" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
                     {/* Les deux libellés sont superposés dans la même cellule de grille : le bouton
                         prend la largeur du plus long et ne bouge plus quand l'état change.
                         invisible retire le libellé masqué des lecteurs d'écran. */}
@@ -274,7 +274,7 @@ function DeckDetail() {
                 {newCardType === 'CLASSIC' && (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="secondary"
                     icon="ph:arrows-left-right-bold"
                     disabled={translating || !translationForFront}
                     onClick={() => translationForFront && handleTranslate(!translationForFront.sourceIsFrench)}
@@ -288,7 +288,7 @@ function DeckDetail() {
                 // Toujours monté, avec sa hauteur réservée par une espace insécable quand il
                 // est vide : une région aria-live doit exister avant que son contenu change
                 // pour être annoncée, et son apparition ne doit pas décaler le bouton de création.
-                <p aria-live="polite" className="font-body text-caption text-inkfaint mt-1.5">
+                <p aria-live="polite" className="font-body text-caption text-inksoft mt-1.5">
                   {translationHint ?? ' '}
                 </p>
               )}
@@ -319,7 +319,7 @@ function DeckDetail() {
                     <Button disabled={savingEdit} onClick={() => handleSaveEdit(card.id)}>
                       {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
                     </Button>
-                    <Button variant="ghost" onClick={cancelEdit}>
+                    <Button variant="secondary" onClick={cancelEdit}>
                       Annuler
                     </Button>
                   </div>

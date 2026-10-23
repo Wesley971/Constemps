@@ -4,7 +4,7 @@ const trackColors: Record<ProgressBarTone, string> = {
   accent: 'bg-indigo',
   success: 'bg-success',
   warning: 'bg-warning',
-  positive: 'bg-clay',
+  positive: 'bg-vermillon',
 }
 
 interface ProgressBarProps {
@@ -24,7 +24,7 @@ export function ProgressBar({ value, label, tone = 'accent', ticks = 10, classNa
       {label ? (
         <div className="flex justify-between">
           <span className="font-body text-label text-ink">{label}</span>
-          <span className="font-body text-body-sm text-inkfaint">{value}%</span>
+          <span className="font-body text-body-sm text-inksoft">{value}%</span>
         </div>
       ) : null}
       <div className="relative h-2 rounded-pill bg-paper-sunken overflow-hidden">

@@ -1,5 +1,7 @@
 import { useId } from 'react'
 import type { ChangeEventHandler } from 'react'
+import { Label } from './Label'
+import { BrushLine } from './BrushLine'
 
 interface TextareaProps {
   label?: string
@@ -14,34 +16,32 @@ interface TextareaProps {
   className?: string
 }
 
+// Même champ au pinceau qu'Input (CON-57), sur plusieurs lignes.
 export function Textarea({ label, placeholder = '', hint, error, rows = 4, disabled, id, value, onChange, className }: TextareaProps) {
   const generatedId = useId()
   const fieldId = id ?? generatedId
-  const borderColor = error ? 'border-danger' : 'border-line focus:border-indigo-deep'
+  const messageId = `${fieldId}-message`
 
   return (
-    <div className={`flex flex-col gap-1.5 w-full ${className ?? ''}`}>
-      {label ? (
-        <label htmlFor={fieldId} className="font-body text-label text-ink">
-          {label}
-        </label>
-      ) : null}
-      <textarea
-        id={fieldId}
-        rows={rows}
-        placeholder={placeholder}
-        disabled={disabled}
-        value={value}
-        onChange={onChange}
-        className={`border-[1.5px] rounded-sm px-3.5 py-2.75 font-body text-body-md text-ink resize-y outline-none transition-[border-color,box-shadow] duration-base ease-standard focus-visible:shadow-focus-ring ${borderColor} ${
-          disabled ? 'bg-paper-sunken opacity-60' : 'bg-paper'
-        }`}
-      />
-      {error ? (
-        <span className="font-body text-caption text-danger">{error}</span>
-      ) : hint ? (
-        <span className="font-body text-caption text-inkfaint">{hint}</span>
-      ) : null}
+    <div className={`group flex flex-col gap-2 w-full ${disabled ? 'opacity-60' : ''} ${className ?? ''}`}>
+      {label ? <Label htmlFor={fieldId}>{label}</Label> : null}
+      <div>
+        <textarea
+          id={fieldId}
+          rows={rows}
+          placeholder={placeholder}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error || hint ? messageId : undefined}
+          className="block w-full p-0 border-none bg-transparent font-body text-body-lg text-ink resize-y placeholder:text-inksoft"
+        />
+        <BrushLine error={Boolean(error)} />
+      </div>
+      <span id={messageId} className={`font-body text-caption min-h-4 ${error ? 'text-danger' : 'text-inksoft'}`}>
+        {error ?? hint ?? ''}
+      </span>
     </div>
   )
 }

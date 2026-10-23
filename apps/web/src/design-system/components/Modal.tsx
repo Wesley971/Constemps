@@ -116,7 +116,7 @@ export function ConfirmModal({ title, children, confirmLabel = 'Confirmer', canc
         </div>
         <div className="font-body text-body-md text-inksoft">{children}</div>
         <div className="flex gap-2.5 justify-end">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {cancelLabel}
           </Button>
           <Button variant={confirmVariant} onClick={onConfirm}>

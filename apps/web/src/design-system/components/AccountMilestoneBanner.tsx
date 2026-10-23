@@ -10,8 +10,8 @@ interface AccountMilestoneBannerProps {
 // a rien à montrer avant que le jalon soit atteint (voir CLAUDE.md).
 export function AccountMilestoneBanner({ message }: AccountMilestoneBannerProps) {
   return (
-    <div className="flex items-center gap-4 bg-clay-tint border border-clay/25 rounded-lg p-5">
-      <span className="shrink-0 text-clay-deep">
+    <div className="flex items-center gap-4 bg-vermillon-tint border border-vermillon/25 rounded-lg p-5">
+      <span className="shrink-0 text-vermillon">
         <iconify-icon icon="ph:seal-check-bold" width="26"></iconify-icon>
       </span>
       <p className="font-body text-body-md text-ink m-0">{message}</p>

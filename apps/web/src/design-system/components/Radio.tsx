@@ -45,13 +45,13 @@ export function Radio({ name, options, value, onChange, disabled, inline }: Radi
             <span className="flex flex-col gap-0.5">
               <span className="inline-flex items-center gap-1.5">
                 {opt.icon ? (
-                  <span className="shrink-0 flex items-center text-inkfaint">
+                  <span className="shrink-0 flex items-center text-inksoft">
                     <iconify-icon icon={opt.icon} width="16"></iconify-icon>
                   </span>
                 ) : null}
                 <span className="font-body text-body-md text-ink">{opt.label}</span>
               </span>
-              {opt.helpText ? <span className="font-body text-caption text-inkfaint">{opt.helpText}</span> : null}
+              {opt.helpText ? <span className="font-body text-caption text-inksoft">{opt.helpText}</span> : null}
             </span>
           </label>
         )

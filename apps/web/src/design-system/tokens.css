@@ -1,0 +1,215 @@
+/* Tokens du design system Constemps (CON-57, lot 1 CON-67) : source unique des
+   couleurs, polices, tailles, rayons et ombres. Tailwind v4 génère les classes
+   utilitaires à partir de ce bloc @theme (bg-canvas, text-ink, rounded-lg...).
+
+   Espacement : on garde l'échelle native de Tailwind v4 (--spacing = 4px), donc
+   p-1 = 4px, p-4 = 16px... Seuls les multiples entiers sont admis dans les
+   composants (pas de p-2.5 ni de valeur arbitraire [13px]) : c'est la grille
+   de 4px de CON-57. Les tailles récurrentes ont un nom ci-dessous.
+
+   « static » : Tailwind publie toutes ces variables dans :root, même celles
+   qu'aucune classe n'utilise encore. Sans cela, un token lu seulement par
+   var() (mode nuit, styles en ligne) serait absent et vaudrait vide. */
+
+@theme static {
+  /* Polices : Kaisei Tokumin (style mincho) pour les titres, noms, boutons
+     principaux, chiffres et étiquettes ; Zen Maru Gothic pour les petits
+     textes utilitaires. Chargées en local (sous-ensemble latin, @fontsource). */
+  --font-display: 'Kaisei Tokumin', Georgia, 'Times New Roman', serif;
+  --font-body: 'Zen Maru Gothic', system-ui, -apple-system, sans-serif;
+
+  /* Couleurs, mode jour. Le mode nuit redéfinit les mêmes variables plus bas. */
+  --color-canvas: #f5f1e8;
+  --color-paper: #fbf6ea;
+  --color-paper-sunken: rgba(234, 219, 190, 0.5);
+  --color-paper-ink: #1f2333;
+  --color-ink: #1f2333;
+  --color-inksoft: #4f5466;
+  --color-on-indigo: #fffdf8;
+  /* Crème des éléments posés sur un rideau indigo (bouton des fenêtres). */
+  --color-cream: #efe4cc;
+  --color-cream-ink: #1a2036;
+  --color-cream-veil: rgba(239, 228, 204, 0.16);
+  --color-line: rgba(31, 35, 51, 0.14);
+  --color-line-strong: rgba(31, 35, 51, 0.26);
+  --color-scrim: rgba(22, 29, 51, 0.42);
+
+  --color-indigo: #26365e;
+  --color-indigo-deep: #1a2340;
+  --color-indigo-tint: rgba(38, 54, 94, 0.1);
+  --color-indigo-veil: rgba(38, 54, 94, 0.12);
+  --color-tab-active: #26365e;
+  --color-tab-active-ink: #fffdf8;
+  --color-scroll-mount: #2e3f6b;
+
+  --color-vermillon: #b0502c;
+  --color-vermillon-tint: rgba(176, 80, 44, 0.12);
+
+  --color-wood: #e4d1ac;
+  --color-rope: #8a6a3a;
+  --color-seigaiha: #f2e3da;
+  --color-lantern-glow: rgba(233, 170, 90, 0.5);
+
+  /* Couleurs de deck (et de verdict) : Sauge, Sable, Terracotta, plus l'indigo. */
+  --color-success: #4b7a5b;
+  --color-success-deep: #3c6249;
+  --color-success-tint: #e3ece4;
+  --color-warning: #a97a2e;
+  --color-warning-deep: #8a6224;
+  --color-warning-tint: #f1e7d3;
+  --color-danger: #9c4438;
+  --color-danger-deep: #7c362c;
+  --color-danger-tint: #f0dfda;
+  --color-info: #26365e;
+  --color-info-deep: #1a2340;
+  --color-info-tint: rgba(38, 54, 94, 0.1);
+
+  /* Accent de saison. */
+  --color-season-spring: #b04a6e;
+  --color-season-summer: #3c7a66;
+  --color-season-autumn: #b0502c;
+  --color-season-winter: #466a90;
+
+  /* Tailles de texte, interlignes sur la grille de 4px. */
+  --text-display-xl: 34px;
+  --text-display-xl--line-height: 40px;
+  --text-display-xl--font-weight: 700;
+  --text-display-lg: 26px;
+  --text-display-lg--line-height: 32px;
+  --text-display-lg--font-weight: 700;
+  --text-display-md: 20px;
+  --text-display-md--line-height: 28px;
+  --text-display-md--font-weight: 700;
+  --text-display-sm: 17px;
+  --text-display-sm--line-height: 24px;
+  --text-display-sm--font-weight: 700;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 24px;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-label: 13px;
+  --text-label--line-height: 20px;
+  --text-label--font-weight: 700;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-micro: 11px;
+  --text-micro--line-height: 16px;
+  --text-micro--font-weight: 700;
+
+  /* Étiquettes en petites capitales espacées. */
+  --tracking-label: 0.18em;
+  --tracking-micro: 0.14em;
+  --tracking-tight: -0.011em;
+
+  /* Rayons, multiples de 4px. curtain = bas des boutons rideau. */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-curtain: 20px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* Tailles nommées de la grille. */
+  --spacing-gutter: 16px;
+  --spacing-hit: 44px;
+  --spacing-field: 28px;
+  --spacing-button: 52px;
+  --spacing-noren: 64px;
+  --spacing-noren-tall: 96px;
+  --spacing-tabbar: 64px;
+  --spacing-seigaiha: 284px;
+  --container-wrap: 1040px;
+
+  --shadow-1: 0 1px 2px rgba(31, 35, 51, 0.07);
+  --shadow-2: 0 6px 18px -10px rgba(31, 35, 51, 0.16);
+  --shadow-3: 0 18px 36px -14px rgba(31, 35, 51, 0.18);
+  --shadow-modal: 0 28px 56px -18px rgba(31, 35, 51, 0.24);
+  --shadow-focus-ring: 0 0 0 2px var(--color-vermillon);
+
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-brush: cubic-bezier(0.45, 0.05, 0.25, 1);
+
+  --animate-skeleton-pulse: skeleton-pulse 1.4s ease-in-out infinite;
+  --animate-drift: drift 16s linear infinite;
+}
+
+/* Mode nuit (CON-57) : posé ici pour que tous les tokens vivent au même endroit,
+   mais jamais activé avant le lot 7 (CON-73), qui ajoutera le réglage
+   Jour / Nuit / Auto et retirera color-scheme: light. */
+[data-theme='nuit'] {
+  --color-canvas: #161d33;
+  --color-paper: #efe4cc;
+  --color-paper-ink: #1a2036;
+  --color-ink: #efe4cc;
+  --color-inksoft: #aeb4c7;
+  --color-indigo: #26355f;
+  --color-tab-active: #efe4cc;
+  --color-tab-active-ink: #1a2036;
+  --color-vermillon: #e39a72;
+  --color-wood: #dccba8;
+  --color-rope: #a88654;
+  --color-lantern-glow: rgba(240, 186, 110, 0.7);
+}
+
+/* Valeurs sans espace de noms @theme en Tailwind v4 : utilitaires explicites. */
+@utility duration-fast {
+  transition-duration: 120ms;
+}
+@utility duration-base {
+  transition-duration: 200ms;
+}
+@utility duration-slow {
+  transition-duration: 380ms;
+}
+@utility z-modal {
+  z-index: 400;
+}
+@utility z-toast {
+  z-index: 500;
+}
+
+/* Angles animables du cercle au pinceau (BrushCircle) : sans @property, une
+   variable CSS ne s'interpole pas et l'animation sauterait directement à la fin. */
+@property --a {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --b {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-40px);
+  }
+}
+
+@keyframes brush-in {
+  from {
+    --a: -8deg;
+  }
+}
+
+@keyframes gap-in {
+  from {
+    --b: -4deg;
+  }
+}

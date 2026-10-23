@@ -19,9 +19,10 @@ export const CARD_TYPE_HELP: Record<CardType, string> = {
   OPEN_QUESTION: 'Ton IA évalue ta réponse rédigée et te donne un retour.',
 }
 
-// Sous-ensemble des teintes déjà définies dans tailwind.config.js, réutilisées comme
-// couleurs de personnalisation de deck. "clay" est volontairement exclu : réservé à
-// l'état "palier atteint" (MilestoneBanner / ProgressBar tone="positive").
+// Sous-ensemble des teintes déjà définies dans design-system/tokens.css, réutilisées
+// comme couleurs de personnalisation de deck. "vermillon" est volontairement exclu :
+// réservé aux accents (étiquettes, palier atteint : MilestoneBanner / ProgressBar
+// tone="positive").
 export const DECK_COLORS: DeckColor[] = ['indigo', 'success', 'warning', 'danger']
 
 export const DECK_COLOR_LABELS: Record<DeckColor, string> = {

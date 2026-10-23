@@ -81,7 +81,7 @@ export function DeckFormModal({ deck, saving, onClose, onSubmit }: DeckFormModal
                 aria-pressed={icon === null}
                 disabled={saving}
                 onClick={() => setIcon(null)}
-                className={`${swatchButtonBase} ${icon === null ? 'border-indigo-deep text-indigo-deep' : 'border-line text-inkfaint hover:bg-paper-sunken'}`}
+                className={`${swatchButtonBase} ${icon === null ? 'border-indigo-deep text-indigo-deep' : 'border-line text-inksoft hover:bg-paper-sunken'}`}
               >
                 <span className="w-4 h-4 rounded-full border-[1.5px] border-line" />
               </button>
@@ -102,7 +102,7 @@ export function DeckFormModal({ deck, saving, onClose, onSubmit }: DeckFormModal
           </div>
 
           <div className="flex gap-2.5 justify-end">
-            <Button type="button" variant="ghost" disabled={saving} onClick={onClose}>
+            <Button type="button" variant="secondary" disabled={saving} onClick={onClose}>
               Annuler
             </Button>
             <Button type="submit" disabled={!name.trim() || saving}>

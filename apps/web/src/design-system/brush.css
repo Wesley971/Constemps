@@ -1,0 +1,61 @@
+/* Cercle au pinceau (BrushCircle, CON-57). Le tracé est révélé par un masque
+   conique piloté par --a (angle parcouru) : départ fixe à 42deg pour ne jamais
+   rogner l'attaque du pinceau, fin en fondu sur 6deg. Une fois complet, une
+   seconde couche (--b) referme l'espace laissé entre la fin et le début du tracé.
+   Valeurs reprises telles quelles des planches validées (séries 14 et 15). */
+
+.brush-stroke {
+  -webkit-mask-image: conic-gradient(
+    from 42deg,
+    transparent 0deg,
+    transparent calc(354deg - var(--a)),
+    #000 calc(360deg - var(--a)),
+    #000 360deg
+  );
+  mask-image: conic-gradient(
+    from 42deg,
+    transparent 0deg,
+    transparent calc(354deg - var(--a)),
+    #000 calc(360deg - var(--a)),
+    #000 360deg
+  );
+}
+
+.brush-gap {
+  --b: 134deg;
+  transform: rotate(180deg);
+  -webkit-mask-image: conic-gradient(
+    from 330deg,
+    transparent 0deg,
+    transparent calc(350deg - var(--b)),
+    #000 calc(360deg - var(--b)),
+    #000 338deg,
+    transparent 360deg
+  );
+  mask-image: conic-gradient(
+    from 330deg,
+    transparent 0deg,
+    transparent calc(350deg - var(--b)),
+    #000 calc(360deg - var(--b)),
+    #000 338deg,
+    transparent 360deg
+  );
+}
+
+/* Trace pâle du cercle restant à parcourir. */
+.brush-ghost {
+  opacity: 0.13;
+}
+
+.brush-draw {
+  animation: brush-in 1.7s var(--ease-brush) backwards;
+}
+
+/* Fermeture : le tracé finit sa course, puis la seconde couche referme le cercle
+   (son délai, 1,45s après le tracé, est posé par BrushCircle). */
+.brush-close {
+  animation: brush-in 1.5s cubic-bezier(0.5, 0, 0.85, 0.7) backwards;
+}
+.brush-gap-close {
+  animation: gap-in 0.65s cubic-bezier(0.15, 0.55, 0.35, 1) backwards;
+}
