@@ -49,6 +49,9 @@
 
 .brush-draw {
   animation: brush-in 1.7s var(--ease-brush) backwards;
+  /* Une progression qui change sous les yeux (cercle du palier en révision) se
+     prolonge en douceur au lieu de sauter. */
+  transition: --a 1.2s cubic-bezier(0.3, 0.7, 0.2, 1);
 }
 
 /* Fermeture : le tracé finit sa course, puis la seconde couche referme le cercle

@@ -125,3 +125,53 @@
 .seal-stamp {
   animation: seal-stamp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
+
+/* Révision (CON-72, V7-revision) : la carte arrive comme de l'encre qui se
+   diffuse sur le papier, un halo indigo s'étend derrière elle. */
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    scale: 1.04;
+  }
+}
+.ink-in {
+  animation: ink-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+@keyframes ink-bloom {
+  0% {
+    scale: 0.25;
+    opacity: 0.9;
+  }
+  100% {
+    scale: 1.6;
+    opacity: 0;
+  }
+}
+.ink-bloom {
+  background: radial-gradient(circle, rgba(38, 54, 94, 0.32) 0%, rgba(38, 54, 94, 0.12) 45%, rgba(38, 54, 94, 0) 70%);
+  opacity: 0;
+  animation: ink-bloom 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Tache d'encre qui s'étend depuis le centre d'un bouton de notation au clic. */
+@keyframes ink-blot {
+  0% {
+    scale: 0;
+    rotate: 0deg;
+    opacity: 0.4;
+  }
+  100% {
+    scale: 9;
+    rotate: 40deg;
+    opacity: 0;
+  }
+}
+.ink-blot {
+  border-radius: 46% 54% 50% 50% / 55% 45% 55% 45%;
+  opacity: 0;
+  animation: ink-blot 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Voile de fin de palier qui apparaît en fondu. */
+.veil-in {
+  animation: scrim-in 0.4s ease backwards;
+}

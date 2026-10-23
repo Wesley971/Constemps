@@ -1,10 +1,11 @@
 import { useId } from 'react'
 
 // Fond de vagues seigaiha (CON-57) : bande en bas d'écran, qui apparaît en
-// fondu et dérive lentement. À poser dans un parent en position relative.
+// fondu et dérive lentement. rise (0 à 1) fait monter la marée avec la
+// progression du palier en révision (CON-72, V7-revision). À poser dans un parent en position relative.
 // Le rectangle dépasse de 20 % pour que la dérive de 40px (une période du
 // motif) ne découvre jamais de bord vide.
-export function Seigaiha() {
+export function Seigaiha({ rise }: { rise?: number } = {}) {
   // useId peut contenir des caractères spéciaux selon la version de React :
   // on ne garde que ceux qui sont sûrs dans une référence url(#...).
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
@@ -20,7 +21,11 @@ export function Seigaiha() {
   ]
 
   return (
-    <svg aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-seigaiha overflow-hidden">
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-seigaiha overflow-hidden"
+      style={rise === undefined ? undefined : { height: `calc(var(--spacing-seigaiha) + ${Math.round(Math.min(1, Math.max(0, rise)) * 190)}px)`, transition: 'height 1.4s cubic-bezier(0.3, 0.7, 0.2, 1)' }}
+    >
       <defs>
         <pattern id={patternId} width="40" height="20" patternUnits="userSpaceOnUse">
           <g className="fill-seigaiha stroke-indigo/30" strokeWidth="1.2">

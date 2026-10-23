@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import brushUrl from '../../assets/brush-circle.svg'
 
-type BrushCircleSize = 'sm' | 'deck' | 'md' | 'lg'
+type BrushCircleSize = 'sm' | 'deck' | 'review' | 'stamp' | 'md' | 'lg'
 type BrushCircleTone = 'indigo' | 'vermillon' | 'cream'
 
 interface BrushCircleProps {
@@ -27,6 +27,9 @@ const sizes: Record<BrushCircleSize, string> = {
   sm: 'size-8',
   // Grande plaquette de l'intérieur d'un deck (S15-deck).
   deck: 'size-11',
+  // Palier dans le rideau de la révision, et cercle du tampon « Journée close » (V7-revision).
+  review: 'size-16',
+  stamp: 'size-26',
   md: 'size-20',
   lg: 'size-23',
 }

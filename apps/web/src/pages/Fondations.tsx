@@ -11,6 +11,8 @@ import { Label } from '../design-system/components/Label'
 import { Lantern } from '../design-system/components/Lantern'
 import { Scroll } from '../design-system/components/Scroll'
 import { Seal } from '../design-system/components/Seal'
+import { RoundCard } from '../design-system/components/RoundCard'
+import { VerdictStamp } from '../design-system/components/VerdictStamp'
 import { BrushLink } from '../design-system/components/BrushLink'
 import { InkRule } from '../design-system/components/InkRule'
 import { DeckRope } from '../design-system/components/DeckRope'
@@ -217,6 +219,17 @@ export default function Fondations() {
           <div className="flex items-center gap-4">
             <Seal initials="WA" />
             <span className="font-display text-body-sm text-inksoft">Sceau du profil (CON-71)</span>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <RoundCard tag={<span className="px-3 py-1 rounded-pill bg-indigo-tint text-indigo text-caption font-bold">Appréciation personnelle</span>}>
+              <span className="font-display text-hero-card">to wander</span>
+            </RoundCard>
+            <div className="flex flex-wrap justify-center gap-3">
+              <VerdictStamp verdict="compris" />
+              <VerdictStamp verdict="partiellement" />
+              <VerdictStamp verdict="incompris" />
+              <VerdictStamp verdict={null} />
+            </div>
           </div>
           <Scroll label="Cette semaine">
             <Label>Cette semaine</Label>

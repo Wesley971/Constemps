@@ -26,6 +26,8 @@
   --color-ink: #1f2333;
   --color-inksoft: #4f5466;
   --color-on-indigo: #fffdf8;
+  /* Papier de la carte ronde de la révision (V7-revision). */
+  --color-paper-card: #fffdf8;
   /* Crème des éléments posés sur un rideau indigo (bouton des fenêtres). */
   --color-cream: #efe4cc;
   --color-cream-ink: #1a2036;
@@ -127,6 +129,10 @@
   --text-micro--font-weight: 700;
 
   /* Grand chiffre de l'accueil et texte des rouleaux (Kaisei). */
+  /* Recto court sur la carte ronde (V7-revision). */
+  --text-hero-card: 42px;
+  --text-hero-card--line-height: 48px;
+  --text-hero-card--font-weight: 700;
   --text-hero: 58px;
   --text-hero--line-height: 56px;
   --text-hero--font-weight: 700;
@@ -149,6 +155,10 @@
   --radius-lantern: 46% / 40%;
   /* Coins irréguliers du sceau (S14-profil) : effet de tampon, valeurs de la planche. */
   --radius-seal: 8px 10px 7px 11px;
+  /* Tampon rond de « Journée close » (V7-revision) : cercle légèrement irrégulier. */
+  --radius-blot: 48% 52% 50% 50% / 52% 47% 53% 48%;
+  /* Tampon du verdict de l'IA (S15-retour-ia). */
+  --radius-verdict: 3px 4px 3px 5px;
 
   /* Tailles nommées de la grille. */
   --spacing-gutter: 16px;
@@ -159,6 +169,8 @@
   --spacing-button: 52px;
   --spacing-noren: 64px;
   --spacing-noren-tall: 96px;
+  /* Rideau de la révision (V7-revision) : ses pans portent le retour, le cercle et le deck. */
+  --spacing-noren-review: 112px;
   --spacing-tabbar: 64px;
   --spacing-seigaiha: 284px;
   --container-wrap: 1040px;
@@ -171,6 +183,15 @@
   --shadow-lantern: 0 0 28px rgba(233, 170, 90, 0.4);
   /* Double liseré du sceau du profil (S14-profil) : vermillon puis papier. */
   --shadow-seal: inset 0 0 0 4px var(--color-vermillon), inset 0 0 0 6px var(--color-paper);
+  /* Carte ronde de la révision (V7-revision) : ombre portée et halo de papier. */
+  --shadow-round-card: 0 28px 50px -34px rgba(31, 35, 51, 0.6), 0 0 0 10px rgba(255, 253, 248, 0.5);
+  /* Double liseré des tampons de verdict (S15-retour-ia) : couleur puis papier. */
+  --shadow-stamp-success: inset 0 0 0 2px var(--color-success), inset 0 0 0 4px var(--color-paper);
+  --shadow-stamp-warning: inset 0 0 0 2px var(--color-warning-deep), inset 0 0 0 4px var(--color-paper);
+  --shadow-stamp-danger: inset 0 0 0 2px var(--color-danger), inset 0 0 0 4px var(--color-paper);
+  --shadow-stamp-indigo: inset 0 0 0 2px var(--color-indigo), inset 0 0 0 4px var(--color-paper);
+  --shadow-glass: 0 14px 30px -24px rgba(31, 35, 51, 0.5);
+  --shadow-stamp: inset 0 0 0 4px rgba(255, 253, 248, 0.25), 0 24px 40px -26px rgba(31, 35, 51, 0.6);
   --drop-shadow-ema: 0 6px 8px rgba(31, 35, 51, 0.12);
 
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
