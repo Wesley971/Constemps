@@ -24,6 +24,12 @@ model User {
   dashboardMessageAt          DateTime?
   dashboardMessageReviewCount Int?
 
+  // Langue vers laquelle traduire un recto saisi en français (voir
+  // TranslationService). Valeurs autorisées et défaut définis dans
+  // src/common/languages.ts ; le littéral "EN" ici doit rester aligné sur
+  // DEFAULT_LEARNING_LANGUAGE, Prisma n'acceptant qu'une valeur littérale.
+  learningLanguage String @default("EN") @db.VarChar(10)
+
   accountMilestones AccountMilestone[]
   refreshTokens     RefreshToken[]
 }
