@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Deck } from '@prisma/client';
 import { Rating } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
@@ -9,6 +10,8 @@ import {
   DAILY_GOAL_WINDOW_MS,
 } from '../common/daily-goal';
 import { startOfDay } from '../common/date';
+
+type DeckWithCardDues = Deck & { cards: { id: string; due: Date }[] };
 
 // ReviewLog.rating est une colonne Int côté Prisma : on compare à une
 // constante typée number (plutôt qu'un cast `as number` sur l'enum, que
@@ -37,7 +40,26 @@ export class DecksService {
       orderBy: { createdAt: 'desc' },
       include: { cards: { select: { id: true, due: true } } },
     });
+    return this.withToday(decks);
+  }
 
+  // Un deck avec les mêmes champs du jour que la liste (CON-69) : la plaquette
+  // de l'intérieur d'un deck compte exactement comme l'accueil et Mes decks.
+  async findOneWithToday(userId: string, id: string) {
+    const deck = await this.prisma.deck.findUnique({
+      where: { id },
+      include: { cards: { select: { id: true, due: true } } },
+    });
+    if (!deck || deck.userId !== userId) {
+      throw new NotFoundException('Deck introuvable');
+    }
+    const [withToday] = await this.withToday([deck]);
+    return withToday;
+  }
+
+  // Calcul unique du palier du jour, des révisions du jour et des cartes dues,
+  // partagé par la liste et le détail d'un deck.
+  private async withToday(decks: DeckWithCardDues[]) {
     if (decks.length === 0) {
       return [];
     }

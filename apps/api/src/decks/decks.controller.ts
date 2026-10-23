@@ -31,7 +31,7 @@ export class DecksController {
 
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.decksService.findOne(user.id, id);
+    return this.decksService.findOneWithToday(user.id, id);
   }
 
   @Patch(':id')
