@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -17,6 +18,7 @@ import { AuthService, IssuedTokens } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { Public } from './public.decorator';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './current-user.decorator';
@@ -128,6 +130,21 @@ export class AuthController {
   ) {
     const currentRawRefreshToken = extractRefreshTokenFromCookie(req);
     return this.authService.updateProfile(user.id, dto, currentRawRefreshToken);
+  }
+
+  // Même limite que login : la confirmation par mot de passe ne doit pas
+  // pouvoir être forcée depuis une session volée.
+  @Throttle(AUTH_THROTTLE)
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  async deleteAccount(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: DeleteAccountDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.deleteAccount(user.id, dto);
+    this.clearAuthCookies(res);
+    return { success: true };
   }
 
   private setAuthCookies(res: Response, tokens: IssuedTokens) {

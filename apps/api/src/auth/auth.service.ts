@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { hashToken } from './token-hash';
 
 const BCRYPT_SALT_ROUNDS = 10;
@@ -162,6 +163,23 @@ export class AuthService {
     }
 
     return updated;
+  }
+
+  // CON-64 : toutes les données liées (decks, cards, reviews, refresh tokens,
+  // jalons) partent par les clés étrangères en ON DELETE CASCADE, en une seule
+  // requête atomique côté MySQL.
+  async deleteAccount(userId: string, dto: DeleteAccountDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    const passwordMatches = await bcrypt.compare(dto.password, user.password);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Mot de passe incorrect');
+    }
+
+    await this.prisma.user.delete({ where: { id: userId } });
   }
 
   private async issueTokens(

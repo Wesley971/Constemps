@@ -27,6 +27,10 @@ function Profile() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [savingPassword, setSavingPassword] = useState(false)
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deletingAccount, setDeletingAccount] = useState(false)
+
   useEffect(() => {
     async function init() {
       try {
@@ -97,6 +101,33 @@ function Profile() {
       })
     } finally {
       setSavingPassword(false)
+    }
+  }
+
+  function closeDeleteConfirm() {
+    if (deletingAccount) return
+    setDeleteConfirmOpen(false)
+    setDeletePassword('')
+  }
+
+  async function confirmAccountDeletion() {
+    if (deletingAccount) return
+    if (!deletePassword) {
+      notify({ tone: 'danger', title: 'Mot de passe requis', message: 'Saisis ton mot de passe pour confirmer la suppression.' })
+      return
+    }
+
+    setDeletingAccount(true)
+    try {
+      await authApi.deleteAccount(deletePassword)
+      navigate('/login', { replace: true, state: { notice: 'Ton compte a été supprimé.' } })
+    } catch (err) {
+      notify({
+        tone: 'danger',
+        title: 'Suppression impossible',
+        message: err instanceof ApiError ? err.message : 'Une erreur est survenue',
+      })
+      setDeletingAccount(false)
     }
   }
 
@@ -174,6 +205,38 @@ function Profile() {
           </Button>
         </form>
       </Card>
+
+      <Card className="p-6 mb-6">
+        <h2 className="font-display text-display-sm text-ink m-0 mb-1">Supprimer mon compte</h2>
+        <p className="font-body text-body-sm text-inksoft mt-0 mb-5">
+          Tes decks, tes cards et tout ton historique de révision seront supprimés définitivement.
+        </p>
+        <Button variant="danger" onClick={() => setDeleteConfirmOpen(true)}>
+          Supprimer mon compte
+        </Button>
+      </Card>
+
+      {deleteConfirmOpen && (
+        <ConfirmModal
+          title="Supprimer ton compte ?"
+          confirmLabel={deletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
+          confirmVariant="danger"
+          onConfirm={confirmAccountDeletion}
+          onClose={closeDeleteConfirm}
+        >
+          <p className="mt-0 mb-4">
+            Ton compte, tes decks, tes cards et tout ton historique seront supprimés. Cette action est irréversible.
+          </p>
+          <Input
+            label="Mot de passe"
+            id="deletePassword"
+            type="password"
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
+            required
+          />
+        </ConfirmModal>
+      )}
 
       {emailConfirmOpen && (
         <ConfirmModal

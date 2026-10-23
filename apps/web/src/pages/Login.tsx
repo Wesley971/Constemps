@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi, ApiError } from '../services/api'
 import { Card } from '../design-system/components/Card'
 import { Input } from '../design-system/components/Input'
@@ -10,6 +10,9 @@ import logoLockup from '../assets/logo-lockup.svg'
 
 function Login() {
   const navigate = useNavigate()
+  // Message transmis par une autre page lors de la redirection (ex : après la
+  // suppression du compte, CON-64).
+  const notice = (useLocation().state as { notice?: string } | null)?.notice
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +37,11 @@ function Login() {
       <img src={logoLockup} alt="Constemps" className="block h-10 w-auto mx-auto mb-6" />
       <Card className="p-8 text-center">
         <h1 className="font-display text-display-md text-ink tracking-tight m-0 mb-6">Connexion</h1>
+        {notice && (
+          <div className="mb-4 text-left">
+            <Notification tone="success" title={notice} />
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-left">
             <Input label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

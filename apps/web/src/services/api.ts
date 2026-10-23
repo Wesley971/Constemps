@@ -75,6 +75,8 @@ export const authApi = {
   me: () => request<User>('/auth/me'),
   updateProfile: (data: { email?: string; currentPassword?: string; newPassword?: string }) =>
     request<User>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAccount: (password: string) =>
+    request<{ success: boolean }>('/auth/account', { method: 'DELETE', body: JSON.stringify({ password }) }),
 }
 
 export const decksApi = {
