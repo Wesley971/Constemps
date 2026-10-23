@@ -19,6 +19,16 @@ import { hashToken } from './token-hash';
 const BCRYPT_SALT_ROUNDS = 10;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Champs du profil renvoyés au front (CON-71), mêmes pour GET /auth/me et
+// PATCH /auth/profile : un retour plus maigre après une modification ferait
+// perdre à l'écran l'ancienneté et la langue apprise. Jamais le mot de passe.
+const PROFILE_SELECT = {
+  id: true,
+  email: true,
+  createdAt: true,
+  learningLanguage: true,
+} satisfies Prisma.UserSelect;
+
 export interface IssuedTokens {
   accessToken: string;
   refreshToken: string;
@@ -138,13 +148,13 @@ export class AuthService {
     }
 
     if (Object.keys(data).length === 0) {
-      return { id: user.id, email: user.email };
+      return this.getProfile(userId);
     }
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data,
-      select: { id: true, email: true },
+      select: PROFILE_SELECT,
     });
 
     if (wantsPasswordChange) {
@@ -163,6 +173,17 @@ export class AuthService {
     }
 
     return updated;
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: PROFILE_SELECT,
+    });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return user;
   }
 
   // CON-64 : toutes les données liées (decks, cards, reviews, refresh tokens,
