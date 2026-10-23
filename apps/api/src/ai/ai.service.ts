@@ -52,6 +52,28 @@ export interface DeckStatsSummaryInput {
   previousMessage?: string | null;
 }
 
+// Direction demandée à Gemini (CON-55) : "auto" lui fait détecter la langue et
+// appliquer lui-même la règle ; les deux autres imposent le verdict "ce texte
+// est-il du français ?" (bouton "Inverser" du front).
+export type TranslationDirection =
+  | { kind: 'auto'; learningLanguage: string }
+  | { kind: 'fromNative'; targetLanguage: string }
+  | { kind: 'toNative'; learningLanguage: string };
+
+export interface AiTranslationResult {
+  sourceLanguage: string;
+  targetLanguage: string;
+  translation: string;
+}
+
+// Codes ISO 639-1 renvoyés par Gemini, normalisés en majuscules comme ceux de
+// common/languages.ts ; toute autre forme est traitée comme une réponse mal formée.
+function normalizeLanguageCode(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const code = value.trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
 // Registre canonique du choix de modèle et de son historique : CLAUDE.md, section "Stack confirmée" (CON-40).
 const GEMINI_MODEL = 'gemini-flash-lite-latest';
 const VALID_VERDICTS: AiVerdict[] = ['compris', 'partiellement', 'incompris'];
@@ -245,15 +267,38 @@ Réponds strictement au format JSON, sans aucun texte avant ou après, exactemen
 { "message": "..." }`;
 }
 
-function buildTranslationPrompt(text: string, targetLang: string): string {
-  return `Traduis le texte suivant vers la langue dont le code est "${targetLang}".
+function buildTranslationInstruction(direction: TranslationDirection): string {
+  switch (direction.kind) {
+    // Sur un mot court ou ambigu, Gemini peut sinon retenir une langue tierce
+    // improbable (ex. "coin" vu comme du roumain) : la cible reste alors le
+    // français, la règle est respectée et aucun contrôle ne bloque une
+    // traduction pourtant inutile. On privilégie donc les deux langues que
+    // l'utilisateur manipule réellement.
+    case 'auto':
+      return `Détecte d'abord la langue du texte (s'il mélange plusieurs langues, retiens la langue majoritaire). En cas d'ambiguïté (mot court, mot existant dans plusieurs langues), privilégie le français, puis la langue dont le code est "${direction.learningLanguage}", avant toute autre langue : ne retiens une autre langue que si le texte lui appartient clairement. Si c'est le français, traduis-le vers la langue dont le code est "${direction.learningLanguage}". Si c'est n'importe quelle autre langue, traduis-le vers le français.`;
+    case 'fromNative':
+      return `Considère que ce texte est en français, même s'il pourrait appartenir à une autre langue, et traduis-le vers la langue dont le code est "${direction.targetLanguage}". sourceLanguage vaut donc "FR".`;
+    case 'toNative':
+      return `Considère que ce texte n'est pas en français, même s'il pourrait l'être. En cas d'ambiguïté, considère qu'il est dans la langue dont le code est "${direction.learningLanguage}" : ne retiens une autre langue que si le texte lui appartient clairement. Traduis-le ensuite vers le français. sourceLanguage ne doit donc jamais valoir "FR".`;
+  }
+}
+
+function buildTranslationPrompt(
+  text: string,
+  direction: TranslationDirection,
+): string {
+  return `${buildTranslationInstruction(direction)}
 
 Texte à traduire : ${text}
 
-Réponds uniquement avec la traduction directe, sans aucun commentaire, explication ou texte additionnel autour.
+Traduis le sens du texte tel qu'il s'emploie dans sa langue source, même si le même mot existe aussi dans la langue cible avec un autre sens.
+
+La traduction est directe, sans aucun commentaire, explication ou texte additionnel autour.
+
+Les codes de langue sont des codes ISO 639-1 en majuscules (par exemple "FR", "EN", "ES").
 
 Réponds strictement au format JSON, sans aucun texte avant ou après, exactement sous cette forme :
-{ "translation": "..." }`;
+{ "sourceLanguage": "...", "targetLanguage": "...", "translation": "..." }`;
 }
 
 function normalizeToWordSet(text: string): Set<string> {
@@ -310,7 +355,13 @@ export class AiService {
     }
   }
 
-  async translate(text: string, targetLang: string): Promise<string> {
+  // Renvoie ce que Gemini annonce avoir fait, sans juger si c'est la bonne
+  // direction : la cohérence avec la règle métier est vérifiée par
+  // TranslationService, seul à connaître la cible attendue.
+  async translate(
+    text: string,
+    direction: TranslationDirection,
+  ): Promise<AiTranslationResult> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException(
@@ -322,7 +373,7 @@ export class AiService {
     try {
       const response = await this.getClient(apiKey).models.generateContent({
         model: GEMINI_MODEL,
-        contents: buildTranslationPrompt(text, targetLang),
+        contents: buildTranslationPrompt(text, direction),
         config: { responseMimeType: 'application/json' },
       });
       responseText = response.text;
@@ -334,15 +385,15 @@ export class AiService {
       throw new BadGatewayException('La traduction a échoué');
     }
 
-    const translation = this.parseTranslation(responseText);
-    if (!translation) {
+    const result = this.parseTranslation(responseText);
+    if (!result) {
       this.logger.error(
         `Réponse Gemini mal formée pour la traduction : ${responseText}`,
       );
       throw new BadGatewayException('La traduction a échoué');
     }
 
-    return translation;
+    return result;
   }
 
   async generateCards(
@@ -514,18 +565,28 @@ export class AiService {
     }
   }
 
-  private parseTranslation(text: string | undefined): string | null {
+  private parseTranslation(
+    text: string | undefined,
+  ): AiTranslationResult | null {
     if (!text) return null;
 
     try {
-      const parsed = JSON.parse(text) as { translation?: unknown };
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      const sourceLanguage = normalizeLanguageCode(parsed.sourceLanguage);
+      const targetLanguage = normalizeLanguageCode(parsed.targetLanguage);
       if (
-        typeof parsed.translation === 'string' &&
-        parsed.translation.trim().length > 0
+        !sourceLanguage ||
+        !targetLanguage ||
+        typeof parsed.translation !== 'string' ||
+        parsed.translation.trim().length === 0
       ) {
-        return parsed.translation;
+        return null;
       }
-      return null;
+      return {
+        sourceLanguage,
+        targetLanguage,
+        translation: parsed.translation.trim(),
+      };
     } catch {
       return null;
     }

@@ -1,20 +1,24 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { AiService } from '../ai/ai.service';
 import { AI_THROTTLE } from '../common/ai-throttle';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../auth/current-user.decorator';
 import { TranslateDto } from './dto/translate.dto';
+import { TranslationService } from './translation.service';
 
 @Controller('translation')
 export class TranslationController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(private readonly translationService: TranslationService) {}
 
   @Throttle(AI_THROTTLE)
   @Post()
-  async translate(@Body() dto: TranslateDto) {
-    const translation = await this.aiService.translate(
+  translate(@CurrentUser() user: AuthenticatedUser, @Body() dto: TranslateDto) {
+    return this.translationService.translate(
+      user.id,
       dto.text,
-      dto.targetLang,
+      dto.forceSourceIsFrench,
     );
-    return { translation };
   }
 }

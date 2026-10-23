@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, cardsApi, decksApi, translationApi, ApiError } from '../services/api'
 import type { Deck } from '../types/deck'
 import type { Card as CardData, CardType } from '../types/card'
+import type { TranslationResult } from '../types/translation'
 import { Card } from '../design-system/components/Card'
 import { Badge } from '../design-system/components/Badge'
 import { Button, LinkButton } from '../design-system/components/Button'
@@ -27,6 +28,26 @@ const CARD_TYPE_OPTIONS = [
   { value: 'OPEN_QUESTION', label: CARD_TYPE_LABELS.OPEN_QUESTION, icon: CARD_TYPE_ICONS.OPEN_QUESTION, helpText: CARD_TYPE_HELP.OPEN_QUESTION },
 ]
 
+// Libellés tirés du navigateur plutôt que d'une liste locale : la liste des
+// langues gérées vit uniquement côté back (CON-55), et la langue source
+// détectée peut être n'importe laquelle (espagnol, italien...).
+const languageNames = new Intl.DisplayNames(['fr'], { type: 'language' })
+
+function languageLabel(code: string): string {
+  try {
+    return languageNames.of(code.toLowerCase()) ?? code
+  } catch {
+    return code
+  }
+}
+
+// Dernière traduction appliquée au verso, gardée avec le recto qui l'a produite :
+// le bouton "Inverser" et la ligne d'aide n'ont de sens que tant que ce recto
+// est inchangé, aucune persistance au-delà de la card en cours.
+interface AppliedTranslation extends TranslationResult {
+  front: string
+}
+
 function DeckDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -42,6 +63,11 @@ function DeckDetail() {
   const [newCardBack, setNewCardBack] = useState('')
   const [creating, setCreating] = useState(false)
   const [translating, setTranslating] = useState(false)
+  const [appliedTranslation, setAppliedTranslation] = useState<AppliedTranslation | null>(null)
+  // Recto courant lisible après un await, pour ignorer une traduction revenue
+  // alors que l'utilisateur a déjà modifié le recto.
+  const latestFrontRef = useRef(newCardFront)
+  latestFrontRef.current = newCardFront
 
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const [editFront, setEditFront] = useState('')
@@ -94,6 +120,7 @@ function DeckDetail() {
       setCards((prev) => [card, ...prev])
       setNewCardFront('')
       setNewCardBack('')
+      setAppliedTranslation(null)
       setShowCreateForm(false)
     } catch (err) {
       notify({ tone: 'danger', title: 'Création impossible', message: err instanceof ApiError ? err.message : 'Impossible de créer la card' })
@@ -102,19 +129,33 @@ function DeckDetail() {
     }
   }
 
-  async function handleTranslate() {
-    if (!newCardFront.trim()) return
+  // forceSourceIsFrench absent : détection automatique côté back. Présent : bouton
+  // "Inverser", qui impose le verdict opposé à celui de la traduction affichée.
+  async function handleTranslate(forceSourceIsFrench?: boolean) {
+    const front = newCardFront.trim()
+    if (!front) return
 
     setTranslating(true)
     try {
-      const { translation } = await translationApi.translate(newCardFront.trim(), 'FR')
-      setNewCardBack(translation)
+      const result = await translationApi.translate(front, forceSourceIsFrench)
+      if (latestFrontRef.current.trim() !== front) return
+      setNewCardBack(result.translation)
+      setAppliedTranslation({ ...result, front })
     } catch (err) {
       notify({ tone: 'danger', title: 'Traduction indisponible', message: err instanceof ApiError ? err.message : 'Réessaie plus tard.' })
     } finally {
       setTranslating(false)
     }
   }
+
+  // Dérivés plutôt que remis à zéro à la main : modifier le recto masque le bouton
+  // "Inverser" et la ligne d'aide, modifier le verso masque la ligne d'aide, qui ne
+  // décrirait plus le contenu affiché.
+  const translationForFront = appliedTranslation?.front === newCardFront.trim() ? appliedTranslation : null
+  const translationHint =
+    translationForFront && newCardBack === translationForFront.translation
+      ? `Traduction ${languageLabel(translationForFront.sourceLang)} → ${languageLabel(translationForFront.targetLang)}`
+      : null
 
   function startEdit(card: CardData) {
     setEditingCardId(card.id)
@@ -217,11 +258,34 @@ function DeckDetail() {
                   className="flex-1"
                 />
                 {newCardType === 'CLASSIC' && (
-                  <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={handleTranslate}>
+                  <Button type="button" variant="ghost" disabled={translating || !newCardFront.trim()} onClick={() => handleTranslate()}>
                     {translating ? 'Traduction...' : 'Traduire'}
                   </Button>
                 )}
+                {/* Toujours monté, masqué par visibility:hidden tant qu'il ne s'applique pas :
+                    son apparition ne doit ni rétrécir le champ Verso ni décaler "Traduire".
+                    invisible le retire aussi du clavier et des lecteurs d'écran. */}
+                {newCardType === 'CLASSIC' && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    icon="ph:arrows-left-right-bold"
+                    disabled={translating || !translationForFront}
+                    onClick={() => translationForFront && handleTranslate(!translationForFront.sourceIsFrench)}
+                    className={translationForFront ? '' : 'invisible'}
+                  >
+                    Inverser
+                  </Button>
+                )}
               </div>
+              {newCardType === 'CLASSIC' && (
+                // Toujours monté, avec sa hauteur réservée par une espace insécable quand il
+                // est vide : une région aria-live doit exister avant que son contenu change
+                // pour être annoncée, et son apparition ne doit pas décaler le bouton de création.
+                <p aria-live="polite" className="font-body text-caption text-inkfaint mt-1.5">
+                  {translationHint ?? ' '}
+                </p>
+              )}
             </div>
 
             <Button type="submit" disabled={creating}>

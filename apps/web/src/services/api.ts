@@ -4,6 +4,7 @@ import type { Card, CardType, GeneratedCard } from '../types/card'
 import type { ManualRating, ReviewSession, SubmitReviewResult } from '../types/review'
 import type { HistoryDay, ProgressHighlight, StatsOverview } from '../types/stats'
 import type { DashboardSummary } from '../types/dashboard'
+import type { TranslationResult } from '../types/translation'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -109,11 +110,13 @@ export const reviewsApi = {
     request<SubmitReviewResult>('/reviews', { method: 'POST', body: JSON.stringify({ cardId, userAnswer }) }),
 }
 
+// La langue cible est décidée côté back (CON-55) : le front n'envoie que le
+// texte, plus forceSourceIsFrench quand l'utilisateur demande d'inverser.
 export const translationApi = {
-  translate: (text: string, targetLang: string) =>
-    request<{ translation: string }>('/translation', {
+  translate: (text: string, forceSourceIsFrench?: boolean) =>
+    request<TranslationResult>('/translation', {
       method: 'POST',
-      body: JSON.stringify({ text, targetLang }),
+      body: JSON.stringify({ text, forceSourceIsFrench }),
     }),
 }
 
