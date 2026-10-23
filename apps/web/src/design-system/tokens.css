@@ -147,6 +147,8 @@
   --radius-lg: 24px;
   --radius-pill: 999px;
   --radius-lantern: 46% / 40%;
+  /* Coins irréguliers du sceau (S14-profil) : effet de tampon, valeurs de la planche. */
+  --radius-seal: 8px 10px 7px 11px;
 
   /* Tailles nommées de la grille. */
   --spacing-gutter: 16px;
@@ -167,6 +169,8 @@
   --shadow-modal: 0 28px 56px -18px rgba(31, 35, 51, 0.24);
   --shadow-focus-ring: 0 0 0 2px var(--color-vermillon);
   --shadow-lantern: 0 0 28px rgba(233, 170, 90, 0.4);
+  /* Double liseré du sceau du profil (S14-profil) : vermillon puis papier. */
+  --shadow-seal: inset 0 0 0 4px var(--color-vermillon), inset 0 0 0 6px var(--color-paper);
   --drop-shadow-ema: 0 6px 8px rgba(31, 35, 51, 0.12);
 
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);

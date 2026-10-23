@@ -109,3 +109,19 @@
   background-size: 24px 24px;
   background-position: -1px 11px;
 }
+
+/* Sceau du profil (S14-profil) : posé d'un coup, comme un tampon. Seule l'échelle
+   et l'opacité bougent, l'inclinaison reste portée par la classe rotate. */
+@keyframes seal-stamp {
+  0% {
+    scale: 1.6;
+    opacity: 0;
+  }
+  55% {
+    scale: 0.95;
+    opacity: 1;
+  }
+}
+.seal-stamp {
+  animation: seal-stamp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}

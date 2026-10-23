@@ -15,6 +15,9 @@ interface BrushCircleProps {
   // Identifiant stable du cercle : sert à ne jouer la fermeture qu'une fois par
   // jour. Sans identifiant, un cercle complet s'affiche fermé, sans animation.
   closeKey?: string
+  // Fermeture jouée à chaque affichage, sans mémoire du jour (cercle de l'écran
+  // de connexion, CON-71). Prime sur closeKey.
+  playClose?: boolean
   // Délai avant le tracé, pour échelonner plusieurs cercles à l'ouverture.
   delayMs?: number
   children?: ReactNode
@@ -93,23 +96,23 @@ function Stroke({ className, style }: { className: string; style?: CSSProperties
   )
 }
 
-export function BrushCircle({ value, label, size = 'md', tone = 'indigo', closeKey, delayMs = 0, children }: BrushCircleProps) {
+export function BrushCircle({ value, label, size = 'md', tone = 'indigo', closeKey, playClose, delayMs = 0, children }: BrushCircleProps) {
   const complete = value >= 100
 
   // Décision prise une seule fois à l'initialisation (et non dans l'effet) : en
   // développement, StrictMode rejoue les effets, et l'écriture faite au premier
   // passage empêcherait sinon l'animation au second.
-  const [animateClose, setAnimateClose] = useState(() => complete && closeKey !== undefined && !closePlayedToday(closeKey))
+  const [animateClose, setAnimateClose] = useState(() => complete && (playClose || (closeKey !== undefined && !closePlayedToday(closeKey))))
 
   useEffect(() => {
-    if (!complete || closeKey === undefined) return
+    if (!complete || playClose || closeKey === undefined) return
     if (animateClose) {
       rememberClosePlayed(closeKey)
     } else if (!closePlayedToday(closeKey)) {
       // Le cercle vient de se compléter sous les yeux de l'utilisateur.
       setAnimateClose(true)
     }
-  }, [complete, closeKey, animateClose])
+  }, [complete, closeKey, playClose, animateClose])
 
   const delay = { animationDelay: `${delayMs}ms` }
 

@@ -201,15 +201,27 @@ interface CurtainConfirmProps {
 export function CurtainConfirm({ title, children, confirmLabel, cancelLabel = 'Annuler', danger, busy, onConfirm, onClose }: CurtainConfirmProps) {
   return (
     <Curtain title={title} onClose={onClose} dismissOnScrim showClose={false}>
-      <div className="flex flex-col gap-4 text-body-md text-ink">{children}</div>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="curtain-ghost" disabled={busy} onClick={onClose}>
-          {cancelLabel}
-        </Button>
-        <Button variant={danger ? 'curtain-danger' : 'curtain'} disabled={busy} onClick={onConfirm}>
-          {confirmLabel}
-        </Button>
-      </div>
+      {/* Formulaire pour qu'Entrée dans un champ (mot de passe de la suppression du
+          compte) valide la confirmation (CON-71). noValidate : la page garde la main
+          sur le message d'un champ vide. Annuler reste un simple bouton. */}
+      <form
+        noValidate
+        className="flex flex-col gap-5"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!busy) onConfirm()
+        }}
+      >
+        <div className="flex flex-col gap-4 text-body-md text-ink">{children}</div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button type="button" variant="curtain-ghost" disabled={busy} onClick={onClose}>
+            {cancelLabel}
+          </Button>
+          <Button type="submit" variant={danger ? 'curtain-danger' : 'curtain'} disabled={busy}>
+            {confirmLabel}
+          </Button>
+        </div>
+      </form>
     </Curtain>
   )
 }

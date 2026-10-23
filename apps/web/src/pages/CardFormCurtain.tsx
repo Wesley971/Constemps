@@ -10,6 +10,7 @@ import { Input } from '../design-system/components/Input'
 import { Label } from '../design-system/components/Label'
 import type { ToastState } from '../design-system/useToast'
 import { CARD_TYPE_HELP, CARD_TYPE_LABELS } from '../design-system/constants'
+import { languageLabel } from '../lib/profile'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
   CLASSIC: { front: 'Recto', back: 'Verso' },
@@ -21,19 +22,6 @@ const TYPE_OPTIONS = (['CLASSIC', 'OPEN_QUESTION'] as const).map((type) => ({
   label: CARD_TYPE_LABELS[type],
   help: CARD_TYPE_HELP[type],
 }))
-
-// Libellés tirés du navigateur plutôt que d'une liste locale : la liste des
-// langues gérées vit uniquement côté back (CON-55), et la langue source
-// détectée peut être n'importe laquelle (espagnol, italien...).
-const languageNames = new Intl.DisplayNames(['fr'], { type: 'language' })
-
-function languageLabel(code: string): string {
-  try {
-    return languageNames.of(code.toLowerCase()) ?? code
-  } catch {
-    return code
-  }
-}
 
 // Dernière traduction appliquée au verso, gardée avec le recto qui l'a produite :
 // le bouton "Inverser" et la ligne d'aide n'ont de sens que tant que ce recto

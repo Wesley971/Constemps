@@ -10,6 +10,7 @@ import { Textarea } from '../design-system/components/Textarea'
 import { Label } from '../design-system/components/Label'
 import { Lantern } from '../design-system/components/Lantern'
 import { Scroll } from '../design-system/components/Scroll'
+import { Seal } from '../design-system/components/Seal'
 import { BrushLink } from '../design-system/components/BrushLink'
 import { InkRule } from '../design-system/components/InkRule'
 import { DeckRope } from '../design-system/components/DeckRope'
@@ -212,6 +213,10 @@ export default function Fondations() {
               <span className="font-display text-hero text-indigo">11</span>
               <BrushLink to="/dashboard">Reprendre</BrushLink>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Seal initials="WA" />
+            <span className="font-display text-body-sm text-inksoft">Sceau du profil (CON-71)</span>
           </div>
           <Scroll label="Cette semaine">
             <Label>Cette semaine</Label>

@@ -17,18 +17,16 @@ const Fondations = import.meta.env.DEV ? lazy(() => import('./pages/Fondations')
 
 // Marge des écrans pas encore refondus (CON-57) : reprend celle que portait le
 // body avant la refonte, le temps que chaque lot fasse sortir ses écrans d'ici.
-// Les écrans connectés reçoivent déjà les onglets (CON-68), pas la connexion.
-function LegacyLayout({ withTabs }: { withTabs: boolean }) {
+// Seule la révision y vit encore depuis CON-71, avec les onglets (CON-68).
+function LegacyLayout() {
   return (
     <div className="min-h-dvh flex flex-col">
       <div className="flex-1 p-8 max-[720px]:p-4">
         <Outlet />
       </div>
-      {withTabs ? (
-        <div className="w-full max-w-120 mx-auto">
-          <TabBar />
-        </div>
-      ) : null}
+      <div className="w-full max-w-120 mx-auto">
+        <TabBar />
+      </div>
     </div>
   )
 }
@@ -42,13 +40,11 @@ function App() {
         <Route path="/decks" element={<Decks />} />
         <Route path="/decks/:id" element={<DeckDetail />} />
         <Route path="/decks/:id/stats" element={<Stats />} />
-        <Route element={<LegacyLayout withTabs={false} />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-        <Route element={<LegacyLayout withTabs />}>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route element={<LegacyLayout />}>
           <Route path="/decks/:id/review" element={<Review />} />
-          <Route path="/profile" element={<Profile />} />
         </Route>
         {Fondations ? (
           <Route

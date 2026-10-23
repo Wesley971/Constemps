@@ -1,75 +1,46 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, ApiError } from '../services/api'
-import { Card } from '../design-system/components/Card'
-import { Input } from '../design-system/components/Input'
-import { Button } from '../design-system/components/Button'
-import { Notification } from '../design-system/components/Notification'
-import logoLockup from '../assets/logo-lockup.svg'
+import { useToast } from '../design-system/useToast'
+import { AuthScreen } from './AuthScreen'
 
 function Login() {
   const navigate = useNavigate()
-  // Message transmis par une autre page lors de la redirection (ex : après la
-  // suppression du compte, CON-64).
-  const notice = (useLocation().state as { notice?: string } | null)?.notice
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const location = useLocation()
+  const { toast, notify } = useToast()
+  // Message transmis par une autre page lors de la redirection (après la
+  // suppression du compte, CON-64). Lu une seule fois, à l'initialisation : en
+  // développement, StrictMode rejoue l'effet ci-dessous, qui a déjà effacé l'état.
+  const [notice] = useState(() => (location.state as { notice?: string } | null)?.notice ?? null)
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    setError(null)
-    setLoading(true)
+  useEffect(() => {
+    if (!notice) return
+    notify({ tone: 'success', title: notice })
+    // Efface l'état d'historique : un rechargement de /login ne doit plus
+    // réafficher le message (CON-71).
+    navigate(location.pathname, { replace: true, state: null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notice])
+
+  async function handleLogin(email: string, password: string) {
     try {
       await authApi.login(email, password)
       navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Une erreur est survenue')
-    } finally {
-      setLoading(false)
+      notify({ tone: 'danger', title: 'Connexion impossible', message: err instanceof ApiError ? err.message : 'Une erreur est survenue' })
     }
   }
 
   return (
-    <div className="max-w-100 mt-20 mx-auto">
-      <img src={logoLockup} alt="Constemps" className="block h-10 w-auto mx-auto mb-6" />
-      <Card className="p-8 text-center">
-        <h1 className="font-display text-display-md text-ink tracking-tight m-0 mb-6">Connexion</h1>
-        {notice && (
-          <div className="mb-4 text-left">
-            <Notification tone="success" title={notice} />
-          </div>
-        )}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4 text-left">
-            <Input label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="mb-4 text-left">
-            <Input
-              label="Mot de passe"
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && (
-            <div className="mb-4 text-left">
-              <Notification tone="danger" title="Connexion impossible" message={error} />
-            </div>
-          )}
-          <Button type="submit" disabled={loading} className="w-full justify-center">
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </Button>
-        </form>
-        <p className="font-body text-body-sm text-inksoft mt-5">
-          Pas encore de compte ? <Link to="/register">Créer un compte</Link>
-        </p>
-      </Card>
-    </div>
+    <AuthScreen
+      submitLabel="Se connecter"
+      pendingLabel="Connexion..."
+      switchPrompt={'Pas encore de compte ?'}
+      switchLabel="Créer un compte"
+      switchTo="/register"
+      toast={toast}
+      onSubmit={handleLogin}
+    />
   )
 }
 

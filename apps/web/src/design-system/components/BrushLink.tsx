@@ -13,6 +13,9 @@ interface BrushLinkProps {
   delayMs?: number
   // Action indisponible (deck sans carte) : rendu en bouton désactivé, atténué.
   disabled?: boolean
+  // Sans chevron : action qui ne mène pas plus loin dans l'app (« Se déconnecter »,
+  // « Créer un compte », CON-71).
+  chevron?: boolean
 }
 
 const textSizes: Record<BrushLinkSize, string> = {
@@ -27,16 +30,18 @@ const chevronSizes: Record<BrushLinkSize, string> = {
 
 // Action principale sans bouton (CON-57) : texte Kaisei, chevron au pinceau,
 // souligné d'un trait de pinceau. Cible tactile d'au moins 44px.
-export function BrushLink({ children, to, onClick, size = 'lg', delayMs = 0, disabled }: BrushLinkProps) {
+export function BrushLink({ children, to, onClick, size = 'lg', delayMs = 0, disabled, chevron = true }: BrushLinkProps) {
   const className =
     'self-start inline-flex flex-col justify-center min-h-hit px-0 py-2 text-indigo no-underline hover:no-underline hover:text-indigo-deep bg-transparent border-none cursor-pointer'
   const content = (
     <>
       <span className={`inline-flex items-center gap-1 font-display ${textSizes[size]}`}>
         {children}
-        <svg viewBox="0 0 24 24" aria-hidden="true" className={`${chevronSizes[size]} -scale-x-100`} fill="currentColor">
-          <path d="M15.6 3.9C13 6.4 10.4 9 7.7 11.4c-.6.5-.6 1.1 0 1.6 2.7 2.4 5.3 4.9 7.6 7.4.5.5 1.1 0 .8-.6-1.9-2.5-4-4.9-6.2-7.4 2.3-2.4 4.7-4.9 6.6-7.5.4-.6-.3-1.4-.9-1z" />
-        </svg>
+        {chevron ? (
+          <svg viewBox="0 0 24 24" aria-hidden="true" className={`${chevronSizes[size]} -scale-x-100`} fill="currentColor">
+            <path d="M15.6 3.9C13 6.4 10.4 9 7.7 11.4c-.6.5-.6 1.1 0 1.6 2.7 2.4 5.3 4.9 7.6 7.4.5.5 1.1 0 .8-.6-1.9-2.5-4-4.9-6.2-7.4 2.3-2.4 4.7-4.9 6.6-7.5.4-.6-.3-1.4-.9-1z" />
+          </svg>
+        ) : null}
       </span>
       <BrushStroke className="w-full h-2" delayMs={delayMs} muted={size === 'md'} />
     </>

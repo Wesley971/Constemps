@@ -1,47 +1,92 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Fragment, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authApi, ApiError } from '../services/api'
 import type { User } from '../types/user'
-import { Card } from '../design-system/components/Card'
-import { Input } from '../design-system/components/Input'
-import { Button } from '../design-system/components/Button'
+import { AppScreen } from '../design-system/components/AppScreen'
+import { BrushLink } from '../design-system/components/BrushLink'
 import { CurtainConfirm } from '../design-system/components/Curtain'
-import { ToastViewport } from '../design-system/components/ToastViewport'
+import { InkRule } from '../design-system/components/InkRule'
+import { Input } from '../design-system/components/Input'
+import { Label } from '../design-system/components/Label'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { Scroll } from '../design-system/components/Scroll'
+import { Seal } from '../design-system/components/Seal'
+import { ToastViewport } from '../design-system/components/ToastViewport'
 import { useToast } from '../design-system/useToast'
+import { initialsFromEmail, languageLabel, memberSinceLabel } from '../lib/profile'
+import { EmailCurtain, PasswordCurtain } from './ProfileCurtains'
 
+type OpenCurtain = 'email' | 'password' | 'delete' | null
+
+interface AccountRowProps {
+  label: string
+  value: string
+  // Absent : valeur affichée seulement (langue apprise, CON-71).
+  onEdit?: () => void
+  editLabel?: string
+}
+
+// Ligne du rouleau (S14-profil) : étiquette vermillon, valeur sur une ligne
+// tronquée, « Modifier » à droite avec sa cible de 44px.
+function AccountRow({ label, value, onEdit, editLabel }: AccountRowProps) {
+  return (
+    <div className="w-full flex items-center justify-between gap-3 min-h-hit py-1 text-left">
+      <div className="min-w-0 flex flex-col">
+        <Label>{label}</Label>
+        <span className="text-body-md truncate">{value}</span>
+      </div>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={editLabel}
+          className="shrink-0 min-h-hit px-0 bg-transparent border-none font-body text-label font-bold text-indigo cursor-pointer hover:text-indigo-deep"
+        >
+          Modifier
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+// Coupures permises après le @ et avant chaque point : un e-mail long passe à la
+// ligne entre ses parties plutôt qu'au milieu d'un mot (break-words en dernier recours).
+function EmailBreaks({ email }: { email: string }) {
+  const parts = email.split(/(?<=@)|(?=\.)/)
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {i > 0 ? <wbr /> : null}
+          {part}
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+// Profil refondu (CON-71, S14-profil) : sceau à initiales, e-mail en titre tant
+// qu'il n'y a pas de prénom (CON-76), compte dans le rouleau, déconnexion et
+// suppression en bas. La section Apparence arrive avec le lot 7 (CON-73).
 function Profile() {
   const navigate = useNavigate()
   const { toast, notify } = useToast()
 
-  const [checkingAuth, setCheckingAuth] = useState(true)
   const [user, setUser] = useState<User | null>(null)
-
-  const [emailInput, setEmailInput] = useState('')
-  const [emailConfirmOpen, setEmailConfirmOpen] = useState(false)
-  const [savingEmail, setSavingEmail] = useState(false)
-
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [savingPassword, setSavingPassword] = useState(false)
-
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [curtain, setCurtain] = useState<OpenCurtain>(null)
   const [deletePassword, setDeletePassword] = useState('')
   const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
     async function init() {
       try {
-        const me = await authApi.me()
-        setUser(me)
-        setEmailInput(me.email)
+        setUser(await authApi.me())
       } catch {
         navigate('/login')
-        return
-      } finally {
-        setCheckingAuth(false)
       }
     }
 
@@ -49,64 +94,9 @@ function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
-  function handleEmailSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (!user || emailInput.trim() === user.email) return
-    setEmailConfirmOpen(true)
-  }
-
-  async function confirmEmailChange() {
-    setEmailConfirmOpen(false)
-    setSavingEmail(true)
-    try {
-      const updated = await authApi.updateProfile({ email: emailInput.trim() })
-      setUser(updated)
-      setEmailInput(updated.email)
-      notify({ tone: 'success', title: 'Adresse e-mail mise à jour', message: `Ton adresse est maintenant ${updated.email}.` })
-    } catch (err) {
-      notify({
-        tone: 'danger',
-        title: 'Modification impossible',
-        message: err instanceof ApiError ? err.message : 'Une erreur est survenue',
-      })
-    } finally {
-      setSavingEmail(false)
-    }
-  }
-
-  async function handlePasswordSubmit(event: FormEvent) {
-    event.preventDefault()
-
-    if (newPassword !== confirmNewPassword) {
-      notify({
-        tone: 'danger',
-        title: 'Les mots de passe ne correspondent pas',
-        message: 'Le nouveau mot de passe et sa confirmation doivent être identiques.',
-      })
-      return
-    }
-
-    setSavingPassword(true)
-    try {
-      await authApi.updateProfile({ currentPassword, newPassword })
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmNewPassword('')
-      notify({ tone: 'success', title: 'Mot de passe mis à jour', message: 'Ton nouveau mot de passe est actif dès maintenant.' })
-    } catch (err) {
-      notify({
-        tone: 'danger',
-        title: 'Modification impossible',
-        message: err instanceof ApiError ? err.message : 'Une erreur est survenue',
-      })
-    } finally {
-      setSavingPassword(false)
-    }
-  }
-
   function closeDeleteConfirm() {
     if (deletingAccount) return
-    setDeleteConfirmOpen(false)
+    setCurtain(null)
     setDeletePassword('')
   }
 
@@ -140,104 +130,63 @@ function Profile() {
     }
   }
 
-  if (checkingAuth) {
+  if (!user) {
     return <PageSkeleton />
   }
 
   return (
-    <div className="max-w-140 mx-auto">
+    <AppScreen>
       <ToastViewport toast={toast} />
 
-      <p className="mt-1 mb-5">
-        <Link to="/dashboard">Retour au dashboard</Link>
-      </p>
+      <div className="flex items-center gap-4 px-1">
+        <Seal initials={initialsFromEmail(user.email)} />
+        <div className="min-w-0 flex flex-col gap-1">
+          <h1 className="m-0 font-display text-display-md break-words">
+            <EmailBreaks email={user.email} />
+          </h1>
+          <span className="font-display text-body-sm text-inksoft">Avec Constemps {memberSinceLabel(user.createdAt)}</span>
+        </div>
+      </div>
 
-      <h1 className="font-display text-display-lg text-ink tracking-tight m-0 mb-8">Mon profil</h1>
+      <Scroll label="Mon compte">
+        <AccountRow label="E-mail" value={user.email} onEdit={() => setCurtain('email')} editLabel="Modifier l’adresse e-mail" />
+        <InkRule />
+        <AccountRow label="Mot de passe" value="••••••••••" onEdit={() => setCurtain('password')} editLabel="Modifier le mot de passe" />
+        <InkRule />
+        <AccountRow label="Langue apprise" value={capitalize(languageLabel(user.learningLanguage))} />
+      </Scroll>
 
-      <Card className="p-6 mb-6">
-        <h2 className="font-display text-display-sm text-ink m-0 mb-1">Adresse e-mail</h2>
-        <p className="font-body text-body-sm text-inksoft mt-0 mb-5">Connecté avec {user?.email}</p>
-        <form onSubmit={handleEmailSubmit}>
-          <div className="mb-4">
-            <Input
-              label="Nouvelle adresse e-mail"
-              id="email"
-              type="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" disabled={savingEmail || !user || emailInput.trim() === user.email}>
-            {savingEmail ? 'Enregistrement...' : 'Changer d\'adresse e-mail'}
-          </Button>
-        </form>
-      </Card>
-
-      <Card className="p-6 mb-6">
-        <h2 className="font-display text-display-sm text-ink m-0 mb-5">Mot de passe</h2>
-        <form onSubmit={handlePasswordSubmit}>
-          <div className="mb-4">
-            <Input
-              label="Mot de passe actuel"
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <Input
-              label="Nouveau mot de passe"
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <Input
-              label="Confirmer le nouveau mot de passe"
-              id="confirmNewPassword"
-              type="password"
-              value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
-          <Button type="submit" disabled={savingPassword || !currentPassword || !newPassword || !confirmNewPassword}>
-            {savingPassword ? 'Enregistrement...' : 'Changer de mot de passe'}
-          </Button>
-        </form>
-      </Card>
-
-      <Card className="p-6 mb-6">
-        <h2 className="font-display text-display-sm text-ink m-0 mb-1">Supprimer mon compte</h2>
-        <p className="font-body text-body-sm text-inksoft mt-0 mb-5">
-          Tes decks, tes cards et tout ton historique de révision seront supprimés définitivement.
-        </p>
-        <Button variant="danger" onClick={() => setDeleteConfirmOpen(true)}>
+      {/* Seule déconnexion de l'app depuis CON-69 : ne jamais la retirer. */}
+      <div className="flex items-center justify-between gap-4 px-1">
+        <BrushLink size="md" chevron={false} onClick={handleLogout}>
+          Se déconnecter
+        </BrushLink>
+        <button
+          type="button"
+          onClick={() => setCurtain('delete')}
+          className="min-h-hit px-0 bg-transparent border-none font-body text-label font-bold text-vermillon cursor-pointer hover:underline"
+        >
           Supprimer mon compte
-        </Button>
-      </Card>
+        </button>
+      </div>
 
-      {/* Seule déconnexion de l'app depuis CON-69 (l'en-tête de Mes decks a disparu),
-          reprise au lot 5 avec la refonte du profil. */}
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="min-h-hit px-0 bg-transparent border-none font-body text-body-md font-bold text-indigo underline cursor-pointer hover:text-indigo-deep"
-      >
-        Se déconnecter
-      </button>
+      {curtain === 'email' && (
+        <EmailCurtain
+          user={user}
+          notify={notify}
+          onClose={() => setCurtain(null)}
+          onSaved={(updated) => {
+            setUser(updated)
+            setCurtain(null)
+          }}
+        />
+      )}
 
-      {deleteConfirmOpen && (
+      {curtain === 'password' && <PasswordCurtain notify={notify} onClose={() => setCurtain(null)} />}
+
+      {curtain === 'delete' && (
         <CurtainConfirm
-          title="Supprimer ton compte ?"
+          title={'Supprimer ton compte ?'}
           confirmLabel={deletingAccount ? 'Suppression...' : 'Supprimer'}
           danger
           busy={deletingAccount}
@@ -245,30 +194,10 @@ function Profile() {
           onClose={closeDeleteConfirm}
         >
           <p className="m-0">Ton compte, tes decks, tes cartes et tout ton historique seront supprimés. Cette action est irréversible.</p>
-          <Input
-            label="Mot de passe"
-            id="deletePassword"
-            type="password"
-            value={deletePassword}
-            onChange={(e) => setDeletePassword(e.target.value)}
-            required
-          />
+          <Input label="Mot de passe" type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} required />
         </CurtainConfirm>
       )}
-
-      {emailConfirmOpen && (
-        <CurtainConfirm
-          title="Changer d’adresse e-mail ?"
-          confirmLabel="Confirmer"
-          onConfirm={confirmEmailChange}
-          onClose={() => setEmailConfirmOpen(false)}
-        >
-          <p className="m-0">
-            Ton adresse de connexion passera de « {user?.email} » à « {emailInput.trim()} ».
-          </p>
-        </CurtainConfirm>
-      )}
-    </div>
+    </AppScreen>
   )
 }
 
