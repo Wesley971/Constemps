@@ -85,3 +85,36 @@ export function computeAdaptiveDailyGoal({
     Math.round(Math.max(paceAverage, dueCardsFloor)),
   );
 }
+
+export interface SessionSnapshot {
+  sessionDailyGoal: number | null;
+  sessionExtendedGoal: number | null;
+  sessionSnapshotAt: Date | null;
+}
+
+// Palier figé d'une session de révision active (CON-49), ou null s'il faut le
+// recalculer : aucun snapshot, snapshot d'un autre jour calendaire, ou session
+// déjà conclue (palier ou palier étendu atteint). Règle unique partagée par
+// ReviewsService.getDailyCapState (qui réécrit le snapshot quand elle renvoie
+// null) et DecksService.findAll (lecture seule, CON-68) : l'accueil et l'écran
+// de révision affichent ainsi toujours le même palier.
+export function activeSessionGoals(
+  snapshot: SessionSnapshot | null,
+  reviewedToday: number,
+  todayStart: Date,
+): { dailyGoal: number; extendedGoal: number } | null {
+  if (
+    snapshot?.sessionDailyGoal == null ||
+    snapshot.sessionExtendedGoal == null ||
+    snapshot.sessionSnapshotAt == null ||
+    snapshot.sessionSnapshotAt < todayStart ||
+    reviewedToday >= snapshot.sessionExtendedGoal ||
+    reviewedToday >= snapshot.sessionDailyGoal
+  ) {
+    return null;
+  }
+  return {
+    dailyGoal: snapshot.sessionDailyGoal,
+    extendedGoal: snapshot.sessionExtendedGoal,
+  };
+}

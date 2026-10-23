@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import {
+  activeSessionGoals,
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_MS,
 } from '../common/daily-goal';
@@ -98,16 +99,24 @@ export class DecksService {
 
     return decks.map(({ cards, ...deck }) => {
       const dueCardsCount = dueCardsCountByDeck.get(deck.id) ?? 0;
-      const dailyGoal = computeAdaptiveDailyGoal({
-        firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
-        successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
-        dueCardsCount,
-      });
       const reviewedToday = reviewedTodayByDeck.get(deck.id) ?? 0;
+      // Même palier que l'écran de révision (CON-68) : le palier figé de la
+      // session en cours s'il est encore valable, sinon le calcul adaptatif.
+      // Lecture seule : seule la révision réécrit le snapshot.
+      const dailyGoal =
+        activeSessionGoals(deck, reviewedToday, todayStart)?.dailyGoal ??
+        computeAdaptiveDailyGoal({
+          firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
+          successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
+          dueCardsCount,
+        });
 
       return {
         ...deck,
         cardCount: cards.length,
+        dailyGoal,
+        reviewedToday,
+        dueCardsCount,
         dailyGoalReached: reviewedToday >= dailyGoal,
       };
     });

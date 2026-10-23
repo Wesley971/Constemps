@@ -12,6 +12,7 @@ import { DecksService } from '../decks/decks.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
 import { startOfDay } from '../common/date';
 import {
+  activeSessionGoals,
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_DAYS,
   DAILY_GOAL_WINDOW_MS,
@@ -126,14 +127,8 @@ export class ReviewsService {
     let dailyGoal: number;
     let extendedGoal: number;
 
-    if (
-      deck?.sessionDailyGoal == null ||
-      deck.sessionExtendedGoal == null ||
-      deck.sessionSnapshotAt == null ||
-      deck.sessionSnapshotAt < todayStart ||
-      reviewedToday >= deck.sessionExtendedGoal ||
-      reviewedToday >= deck.sessionDailyGoal
-    ) {
+    const activeGoals = activeSessionGoals(deck, reviewedToday, todayStart);
+    if (!activeGoals) {
       const dueCardsCount = await this.prisma.card.count({
         where: { deckId, due: { lte: new Date() } },
       });
@@ -150,8 +145,7 @@ export class ReviewsService {
         },
       });
     } else {
-      dailyGoal = deck.sessionDailyGoal;
-      extendedGoal = deck.sessionExtendedGoal;
+      ({ dailyGoal, extendedGoal } = activeGoals);
     }
 
     return { dailyGoal, extendedGoal, reviewedToday };
