@@ -6,6 +6,11 @@ import {
 } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import type { CardType } from '@prisma/client';
+import {
+  EXAMPLE_MAX_LENGTH,
+  EXAMPLE_PATTERN,
+  normalizeExample,
+} from '../cards/dto/example';
 
 export type AiVerdict = 'compris' | 'partiellement' | 'incompris';
 
@@ -21,6 +26,8 @@ export interface GeneratedCard {
   type: CardType;
   front: string;
   back: string;
+  // Phrase d'exemple (CON-77), null si Gemini n'en propose pas de valable.
+  example: string | null;
 }
 
 export interface DashboardActivitySummaryInput {
@@ -106,6 +113,16 @@ Réponds strictement au format JSON, sans aucun texte avant ou après, exactemen
 { "verdict": "partiellement", "cePointsForts": "...", "cePointsAmeliorer": "...", "piste": "...", "resumeCourt": "..." }`;
 }
 
+// Exemple proposé par Gemini (CON-77) : mêmes normalisation et limite que la
+// saisie. Absent, vide, d'un autre type ou trop long : null, sans faire échouer
+// la génération (le recto et le verso restent seuls obligatoires).
+function parseGeneratedExample(value: unknown): string | null {
+  const normalized = normalizeExample(value);
+  return typeof normalized === 'string' && EXAMPLE_PATTERN.test(normalized)
+    ? normalized
+    : null;
+}
+
 function computeMaxGeneratedCards(textLength: number): number {
   if (textLength > 30000) return 25;
   if (textLength > 15000) return 20;
@@ -126,12 +143,12 @@ function buildTypeInstructions(forceType: CardType | undefined): string {
 
 function buildExampleJson(forceType: CardType | undefined): string {
   if (forceType === 'CLASSIC') {
-    return `[{ "type": "CLASSIC", "front": "...", "back": "..." }]`;
+    return `[{ "type": "CLASSIC", "front": "...", "back": "...", "example": "..." }]`;
   }
   if (forceType === 'OPEN_QUESTION') {
-    return `[{ "type": "OPEN_QUESTION", "front": "...", "back": "..." }]`;
+    return `[{ "type": "OPEN_QUESTION", "front": "...", "back": "...", "example": "..." }]`;
   }
-  return `[{ "type": "CLASSIC", "front": "...", "back": "..." }, { "type": "OPEN_QUESTION", "front": "...", "back": "..." }]`;
+  return `[{ "type": "CLASSIC", "front": "...", "back": "...", "example": "..." }, { "type": "OPEN_QUESTION", "front": "...", "back": "...", "example": "" }]`;
 }
 
 function buildGenerateCardsPrompt(
@@ -147,7 +164,7 @@ ${text}
 """
 
 RÈGLE ABSOLUE - Reformulation obligatoire :
-Il est strictement interdit de recopier une phrase du texte source telle quelle, que ce soit dans le "front" ou dans le "back", pour CLASSIC comme pour OPEN_QUESTION. Reformule systématiquement avec des mots différents de ceux du texte. Avant de finaliser chaque fiche, vérifie toi-même : "Est-ce qu'une phrase entière de cette fiche pourrait être retrouvée mot pour mot dans le texte source ?" Si oui, reformule-la avant de la garder.
+Il est strictement interdit de recopier une phrase du texte source telle quelle, que ce soit dans le "front" ou dans le "back", pour CLASSIC comme pour OPEN_QUESTION (cette règle ne s'applique pas au champ "example", voir plus bas). Reformule systématiquement avec des mots différents de ceux du texte. Avant de finaliser chaque fiche, vérifie toi-même : "Est-ce qu'une phrase entière de cette fiche pourrait être retrouvée mot pour mot dans le texte source ?" Si oui, reformule-la avant de la garder.
 
 RÈGLE - Une fiche = un seul concept, aussi court que possible :
 Chaque fiche doit porter sur un unique concept clé, exprimé de façon aussi courte et claire que possible. Il n'y a pas de limite de caractères imposée, mais si tu sens que tu as besoin d'une phrase longue ou de plusieurs idées enchaînées pour répondre, c'est le signe que ce concept doit être scindé en plusieurs fiches distinctes plutôt que compressé en une seule.
@@ -165,6 +182,9 @@ MAUVAISE fiche (copiée du texte, trop longue, teste le rappel) :
 
 BONNE fiche (reformulée, un seul concept, courte, teste la compréhension) :
 { "type": "OPEN_QUESTION", "front": "Pourquoi une plante a-t-elle besoin de lumière pour fabriquer du glucose ?", "back": "La lumière apporte l'énergie que la plante convertit et stocke sous forme chimique dans le glucose ; sans cette énergie, la réaction ne peut pas se produire." }
+
+RÈGLE - Phrase d'exemple ("example") :
+Chaque fiche peut porter une phrase d'exemple, montrée à l'utilisateur seulement après sa réponse, qui emploie le terme de la fiche ou illustre son idée. En priorité, reprends telle quelle une phrase du texte source qui convient : c'est la seule exception à la règle de reformulation, et elle ne vaut que pour "example". Si le texte n'en contient aucune qui convienne, propose une phrase courte et naturelle, ou laisse "example" vide (""). Une seule phrase, ${EXAMPLE_MAX_LENGTH} caractères au plus.
 
 ${buildTypeInstructions(forceType)}
 
@@ -604,7 +624,7 @@ export class AiService {
       const cards: GeneratedCard[] = [];
       for (const item of parsed) {
         if (typeof item !== 'object' || item === null) return null;
-        const { type, front, back } = item as Record<string, unknown>;
+        const { type, front, back, example } = item as Record<string, unknown>;
         if (
           (type !== 'CLASSIC' && type !== 'OPEN_QUESTION') ||
           typeof front !== 'string' ||
@@ -614,7 +634,12 @@ export class AiService {
         ) {
           return null;
         }
-        cards.push({ type, front: front.trim(), back: back.trim() });
+        cards.push({
+          type,
+          front: front.trim(),
+          back: back.trim(),
+          example: parseGeneratedExample(example),
+        });
       }
       return cards;
     } catch {

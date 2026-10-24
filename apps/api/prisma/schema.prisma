@@ -97,6 +97,10 @@ model Card {
   type       CardType
   front      String      @db.Text // recto, ou question
   back       String      @db.Text // verso, ou réponse de référence
+  // Phrase d'exemple facultative (CON-77), langue libre, 200 caractères au plus
+  // (mêmes règles dans les DTO et dans apps/web/src/lib/card.ts). Affichée
+  // en révision avec le verso, jamais au recto.
+  example    String?     @db.VarChar(200)
   // état FSRS
   stability  Float       @default(0)
   difficulty Float       @default(0)

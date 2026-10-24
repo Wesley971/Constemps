@@ -22,6 +22,7 @@ export class CardsService {
         type: dto.type,
         front: dto.front,
         back: dto.back,
+        example: dto.example ?? null,
       },
     });
   }
@@ -60,7 +61,12 @@ export class CardsService {
     await this.findOne(userId, id);
     return this.prisma.card.update({
       where: { id },
-      data: { front: dto.front, back: dto.back },
+      // Exemple absent de la requête : gardé tel quel ; null l'efface (CON-77).
+      data: {
+        front: dto.front,
+        back: dto.back,
+        ...(dto.example !== undefined && { example: dto.example }),
+      },
     });
   }
 
