@@ -34,10 +34,13 @@ export class DecksService {
   // signalé sur CON-36. Reflète uniquement le palier normal (goal_reached),
   // jamais le palier étendu : voir computeAdaptiveDailyGoal (common/daily-goal.ts),
   // formule partagée avec ReviewsService.computeDailyGoal.
+  //
+  // Ordre d'affichage partout (accueil, Mes decks, « Reprendre ») : favoris
+  // d'abord (CON-74), puis chaque groupe du plus récent au plus ancien.
   async findAll(userId: string) {
     const decks = await this.prisma.deck.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isFavorite: 'desc' }, { createdAt: 'desc' }],
       include: { cards: { select: { id: true, due: true } } },
     });
     return this.withToday(decks);
@@ -157,6 +160,16 @@ export class DecksService {
     return this.prisma.deck.update({
       where: { id },
       data: { name: dto.name, color: dto.color, icon: dto.icon },
+    });
+  }
+
+  // Seul le favori change (CON-74) : nom, couleur et icône restent intacts.
+  async setFavorite(userId: string, id: string, isFavorite: boolean) {
+    await this.findOne(userId, id);
+    return this.prisma.deck.update({
+      where: { id },
+      data: { isFavorite },
+      select: { id: true, isFavorite: true },
     });
   }
 

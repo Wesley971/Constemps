@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/current-user.decorator';
 import { DecksService } from './decks.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
+import { SetFavoriteDto } from './dto/set-favorite.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 
 @Controller('decks')
@@ -41,6 +42,15 @@ export class DecksController {
     @Body() dto: UpdateDeckDto,
   ) {
     return this.decksService.update(user.id, id, dto);
+  }
+
+  @Patch(':id/favorite')
+  setFavorite(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: SetFavoriteDto,
+  ) {
+    return this.decksService.setFavorite(user.id, id, dto.isFavorite);
   }
 
   @Delete(':id')

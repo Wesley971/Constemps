@@ -68,6 +68,10 @@ model Deck {
   cards     Card[]
   createdAt DateTime @default(now())
 
+  // Favori (CON-74) : les decks favoris sont listés d'abord, puis les autres,
+  // chaque groupe du plus récent au plus ancien (voir DecksService.findAll).
+  isFavorite Boolean @default(false)
+
   statsMessage            String?   @db.Text
   statsMessageAt          DateTime?
   statsMessageReviewCount Int?
