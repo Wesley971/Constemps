@@ -31,7 +31,7 @@ type CardCurtainState = { mode: 'create' } | { mode: 'edit'; card: CardData } | 
 function DeckDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
 
   const [deck, setDeck] = useState<Deck | null>(null)
   const [cards, setCards] = useState<CardData[]>([])
@@ -174,7 +174,7 @@ function DeckDetail() {
 
   return (
     <AppScreen>
-      <ToastViewport toast={toast} />
+      <ToastViewport toast={toast} onDismiss={dismiss} />
 
       <div className="flex items-center justify-between gap-2">
         <BackLink to="/decks">Mes decks</BackLink>

@@ -35,6 +35,43 @@
   clip-path: polygon(50% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
 }
 
+/* Plaquette des notifications (CON-78, S19-A) : bois horizontal, pointe douce de
+   16 px en haut, quelle que soit sa hauteur. */
+.plaque-shape {
+  clip-path: polygon(50% 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
+}
+/* Posée en haut de l'écran (révision) : même plaquette retournée, pointe vers le
+   contenu, comme une enseigne suspendue. */
+.plaque-shape-down {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), 50% 100%, 0 calc(100% - 16px));
+}
+
+/* Arrivée d'une notification : la plaquette monte, puis son sceau se tamponne
+   (seal-stamp, avec un délai). */
+@keyframes plaque-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+.plaque-rise {
+  animation: plaque-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+/* En haut de l'écran, elle descend du bord, comme un rideau. */
+@keyframes plaque-drop {
+  from {
+    opacity: 0;
+    translate: 0 -16px;
+  }
+}
+.plaque-drop {
+  animation: plaque-drop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.plaque-rise .seal-stamp,
+.plaque-drop .seal-stamp {
+  animation-delay: 0.3s;
+}
+
 /* Papier du rouleau qui se déroule à l'ouverture. */
 @keyframes unroll {
   from {

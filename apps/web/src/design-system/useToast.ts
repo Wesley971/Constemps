@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { NotificationTone } from './components/Notification'
 
 export interface ToastState {
@@ -7,19 +7,21 @@ export interface ToastState {
   message?: string
 }
 
-const TOAST_DURATION_MS = 4000
+// Notification affichée : un identifiant par appel, pour que deux notifications
+// identiques de suite rejouent l'animation et relancent la minuterie.
+export interface ActiveToast extends ToastState {
+  id: number
+}
+
+// Fermeture automatique, gérée par ToastViewport (en pause pendant le focus).
+export const TOAST_DURATION_MS = 4000
 
 export function useToast() {
-  const [toast, setToast] = useState<ToastState | null>(null)
+  const [toast, setToast] = useState<ActiveToast | null>(null)
+  const nextId = useRef(0)
 
-  const notify = useCallback((next: ToastState) => setToast(next), [])
+  const notify = useCallback((next: ToastState) => setToast({ ...next, id: ++nextId.current }), [])
   const dismiss = useCallback(() => setToast(null), [])
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   return { toast, notify, dismiss }
 }

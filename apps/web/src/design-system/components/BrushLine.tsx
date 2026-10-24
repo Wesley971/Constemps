@@ -7,7 +7,7 @@ interface BrushLineProps {
 // Au repos : 60 % et non 35 % comme sur les planches, pour atteindre le contraste
 // de 3:1 exigé pour délimiter un champ (WCAG 1.4.11) ; 35 % ne donnait que 1,9:1.
 export function BrushLine({ error }: BrushLineProps) {
-  const tone = error ? 'text-danger opacity-90' : 'text-indigo opacity-60 group-focus-within:opacity-90'
+  const tone = error ? 'text-vermillon opacity-90' : 'text-indigo opacity-60 group-focus-within:opacity-90'
   return (
     <svg
       viewBox="0 0 300 6"

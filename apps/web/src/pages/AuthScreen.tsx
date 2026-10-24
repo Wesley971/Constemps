@@ -6,7 +6,7 @@ import { BrushLink } from '../design-system/components/BrushLink'
 import { Button } from '../design-system/components/Button'
 import { Input } from '../design-system/components/Input'
 import { ToastViewport } from '../design-system/components/ToastViewport'
-import type { ToastState } from '../design-system/useToast'
+import type { ActiveToast } from '../design-system/useToast'
 
 interface AuthScreenProps {
   submitLabel: string
@@ -17,7 +17,8 @@ interface AuthScreenProps {
   switchPrompt: string
   switchLabel: string
   switchTo: string
-  toast: ToastState | null
+  toast: ActiveToast | null
+  onDismissToast: () => void
   onSubmit: (email: string, password: string) => Promise<void>
 }
 
@@ -33,6 +34,7 @@ export function AuthScreen({
   switchLabel,
   switchTo,
   toast,
+  onDismissToast,
   onSubmit,
 }: AuthScreenProps) {
   const [email, setEmail] = useState('')
@@ -52,7 +54,7 @@ export function AuthScreen({
 
   return (
     <AppScreen tallNoren withTabs={false}>
-      <ToastViewport toast={toast} />
+      <ToastViewport toast={toast} onDismiss={onDismissToast} placement="bottom" />
 
       <div className="flex flex-col gap-8 px-3 pt-4">
         <div className="flex flex-col items-center gap-2">

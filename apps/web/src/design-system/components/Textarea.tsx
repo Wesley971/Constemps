@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef } from 'react'
 import type { ChangeEventHandler } from 'react'
 import { Label } from './Label'
 import { BrushLine } from './BrushLine'
+import { FieldMessage } from './FieldMessage'
 
 interface TextareaProps {
   label?: string
@@ -69,9 +70,7 @@ export function Textarea({ label, placeholder = '', hint, error, rows = 4, disab
         />
         <BrushLine error={Boolean(error)} />
       </div>
-      <span id={messageId} className={`font-body text-caption min-h-4 ${error ? 'text-danger' : 'text-inksoft'}`}>
-        {error ?? hint ?? ''}
-      </span>
+      <FieldMessage id={messageId} hint={hint} error={error} />
     </div>
   )
 }

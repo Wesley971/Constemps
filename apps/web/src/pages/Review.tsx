@@ -50,7 +50,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 function Review() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
 
   const [loading, setLoading] = useState(true)
   const [deckName, setDeckName] = useState('')
@@ -383,7 +383,7 @@ function Review() {
     <>
       <div inert={Boolean(veil)}>
         <AppScreen withTabs={false} norenPanels={panels} rise={ratio}>
-          <ToastViewport toast={toast} />
+          <ToastViewport toast={toast} onDismiss={dismiss} placement="top" />
           {renderContent()}
         </AppScreen>
       </div>

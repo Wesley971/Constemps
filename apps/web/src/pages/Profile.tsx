@@ -79,7 +79,7 @@ function capitalize(text: string): string {
 // rouleau, apparence en blasons (CON-73), déconnexion et suppression en bas.
 function Profile() {
   const navigate = useNavigate()
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
 
   const [user, setUser] = useState<User | null>(null)
   const [curtain, setCurtain] = useState<OpenCurtain>(null)
@@ -141,7 +141,7 @@ function Profile() {
 
   return (
     <AppScreen>
-      <ToastViewport toast={toast} />
+      <ToastViewport toast={toast} onDismiss={dismiss} />
 
       <div className="flex items-center gap-4 px-1">
         <Seal initials={user.firstName ? initialsFromFirstName(user.firstName) : initialsFromEmail(user.email)} />

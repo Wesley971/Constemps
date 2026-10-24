@@ -122,7 +122,7 @@ function Stats() {
     <AppScreen>
       <BackLink to={`/decks/${id}`}>{deck?.name ?? 'Retour au deck'}</BackLink>
 
-      {error ? <Notification tone="danger" title="Chargement impossible" message={error} /> : null}
+      {error ? <Notification role="alert" tone="danger" title="Chargement impossible" message={error} /> : null}
 
       {overview ? (
         <>

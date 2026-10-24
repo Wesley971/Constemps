@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import type { ChangeEventHandler } from 'react'
 import { Label } from './Label'
 import { BrushLine } from './BrushLine'
+import { FieldMessage } from './FieldMessage'
 
 interface InputProps {
   label?: string
@@ -86,9 +87,7 @@ export function Input({
         </div>
         <BrushLine error={Boolean(error)} />
       </div>
-      <span id={messageId} className={`font-body text-caption min-h-4 ${error ? 'text-danger' : 'text-inksoft'}`}>
-        {error ?? hint ?? ''}
-      </span>
+      <FieldMessage id={messageId} hint={hint} error={error} />
     </div>
   )
 }

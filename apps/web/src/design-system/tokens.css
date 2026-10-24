@@ -215,6 +215,9 @@
   --shadow-lantern: 0 0 28px rgba(233, 170, 90, 0.4);
   /* Double liseré du sceau du profil (S14-profil) : vermillon puis papier. */
   --shadow-seal: inset 0 0 0 4px var(--color-vermillon), inset 0 0 0 6px var(--color-paper);
+  /* Double liseré du sceau des notifications (CON-78, S19-A) : couleur du sceau
+     (currentColor, vermillon ou indigo) puis papier. */
+  --shadow-seal-sm: inset 0 0 0 2px currentColor, inset 0 0 0 3px var(--color-paper);
   /* Carte ronde de la révision (V7-revision) : ombre portée et halo de papier. */
   --shadow-round-card: 0 28px 50px -34px var(--color-round-card-shade), 0 0 0 10px var(--color-round-card-halo);
   /* Double liseré des tampons de verdict (S15-retour-ia) : couleur puis papier. */
@@ -225,6 +228,8 @@
   --shadow-glass: 0 14px 30px -24px rgba(31, 35, 51, 0.5);
   --shadow-stamp: inset 0 0 0 4px rgba(255, 253, 248, 0.25), 0 24px 40px -26px rgba(31, 35, 51, 0.6);
   --drop-shadow-ema: 0 6px 8px rgba(31, 35, 51, 0.12);
+  /* Plaquette des notifications (CON-78, S19-A), plus détachée du fond. */
+  --drop-shadow-plaque: 0 8px 12px rgba(31, 35, 51, 0.22);
 
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
   --ease-brush: cubic-bezier(0.45, 0.05, 0.25, 1);

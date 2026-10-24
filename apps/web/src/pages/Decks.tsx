@@ -25,7 +25,7 @@ function Decks() {
   const [error, setError] = useState<string | null>(null)
   const [creatingDeck, setCreatingDeck] = useState(false)
   const [savingDeck, setSavingDeck] = useState(false)
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
 
   // Message laissé par l'écran précédent (deck supprimé, deck introuvable).
   useEffect(() => {
@@ -80,14 +80,14 @@ function Decks() {
 
   return (
     <AppScreen>
-      <ToastViewport toast={toast} />
+      <ToastViewport toast={toast} onDismiss={dismiss} />
 
       <header className="flex flex-col gap-1">
         <h1 className="m-0 font-display text-display-lg">Mes decks</h1>
         {decks ? <p className="m-0 text-body-sm text-inksoft">{decksSummaryLabel(day)}</p> : null}
       </header>
 
-      {error ? <Notification tone="danger" title="Chargement impossible" message={error} /> : null}
+      {error ? <Notification role="alert" tone="danger" title="Chargement impossible" message={error} /> : null}
 
       {/* Sans decks chargés, pas de corde : un échec ne doit pas passer pour « aucun deck ». */}
       {decks ? (

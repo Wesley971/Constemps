@@ -128,7 +128,7 @@ function Dashboard() {
         </div>
       </header>
 
-      {error ? <Notification tone="danger" title="Chargement incomplet" message={error} /> : null}
+      {error ? <Notification role="alert" tone="danger" title="Chargement incomplet" message={error} /> : null}
 
       {/* Sans decks chargés, ni lanterne ni corde : un échec de chargement ne doit
           pas se faire passer pour « aucun deck ». */}

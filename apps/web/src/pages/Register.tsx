@@ -6,7 +6,7 @@ import { AuthScreen } from './AuthScreen'
 // Même écran que la connexion (CON-71).
 function Register() {
   const navigate = useNavigate()
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
 
   async function handleRegister(email: string, password: string) {
     try {
@@ -27,6 +27,7 @@ function Register() {
       switchLabel="Se connecter"
       switchTo="/login"
       toast={toast}
+      onDismissToast={dismiss}
       onSubmit={handleRegister}
     />
   )

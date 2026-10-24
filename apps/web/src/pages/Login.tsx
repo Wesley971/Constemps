@@ -7,7 +7,7 @@ import { AuthScreen } from './AuthScreen'
 function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { toast, notify } = useToast()
+  const { toast, notify, dismiss } = useToast()
   // Message transmis par une autre page lors de la redirection (après la
   // suppression du compte, CON-64). Lu une seule fois, à l'initialisation : en
   // développement, StrictMode rejoue l'effet ci-dessous, qui a déjà effacé l'état.
@@ -39,6 +39,7 @@ function Login() {
       switchLabel="Créer un compte"
       switchTo="/register"
       toast={toast}
+      onDismissToast={dismiss}
       onSubmit={handleLogin}
     />
   )

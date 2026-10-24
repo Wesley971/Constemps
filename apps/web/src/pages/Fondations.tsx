@@ -23,6 +23,9 @@ import { Curtain, CurtainConfirm } from '../design-system/components/Curtain'
 import { ChoiceCards } from '../design-system/components/ChoiceCards'
 import { Checkbox } from '../design-system/components/Checkbox'
 import { AppearancePicker } from '../design-system/components/AppearancePicker'
+import { Notification } from '../design-system/components/Notification'
+import { ToastViewport } from '../design-system/components/ToastViewport'
+import { useToast } from '../design-system/useToast'
 
 // Démonstration des fondations du design system (CON-57). Route servie
 // seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
@@ -95,6 +98,7 @@ export default function Fondations() {
   const [curtain, setCurtain] = useState<'form' | 'confirm' | null>(null)
   const [choice, setChoice] = useState<'a' | 'b'>('a')
   const [checked, setChecked] = useState(true)
+  const { toast, notify, dismiss } = useToast()
 
   function replayClose() {
     try {
@@ -207,6 +211,26 @@ export default function Fondations() {
               {showError ? 'Retirer l’erreur' : 'Afficher une erreur'}
             </Button>
           </form>
+        </Section>
+
+        <Section title="Notifications">
+          <div className="flex flex-col gap-4">
+            <Notification tone="success" title="Carte supprimée" />
+            <Notification tone="danger" title="Création impossible" message="Le serveur ne répond pas, réessaie dans un instant." />
+            <Notification tone="info" title="Palier du jour mis à jour" message="Il s’applique dès la prochaine révision." />
+            <Notification role="alert" tone="danger" title="Chargement impossible" message="Erreur fixe dans une page, sans animation." />
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="secondary" onClick={() => notify({ tone: 'success', title: 'Carte supprimée' })}>
+                Succès
+              </Button>
+              <Button variant="secondary" onClick={() => notify({ tone: 'danger', title: 'Création impossible', message: 'Le serveur ne répond pas, réessaie dans un instant.' })}>
+                Erreur
+              </Button>
+              <Button variant="secondary" onClick={() => notify({ tone: 'info', title: 'Palier du jour mis à jour', message: 'Il s’applique dès la prochaine révision.' })}>
+                Info
+              </Button>
+            </div>
+          </div>
         </Section>
 
         <Section title="Lanterne, rouleau, corde">
@@ -360,6 +384,7 @@ export default function Fondations() {
           </div>
         </Section>
       </main>
+      <ToastViewport toast={toast} onDismiss={dismiss} />
       <TabBar />
     </div>
   )
