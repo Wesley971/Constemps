@@ -15,11 +15,16 @@
     box-sizing: border-box;
   }
 
-  /* Thème clair jusqu'au lot 7 (CON-73) : désactive le filtre d'inversion
-     automatique de Chrome/Firefox en dark mode, qui inverse sinon le rendu
-     pixel de toute la page sans toucher au DOM/CSS calculé (CON-51). */
+  /* Schéma déclaré selon le thème actif (CON-73). En jour, « light » désactive
+     toujours le filtre d'inversion automatique de Chrome/Firefox en dark mode
+     (CON-51) ; en nuit, « dark » accorde les contrôles natifs (barres de
+     défilement, autofill) au fond. Le script en ligne de index.html le pose
+     aussi en style, avant le chargement de cette feuille. */
   :root {
     color-scheme: light;
+  }
+  :root[data-theme='nuit'] {
+    color-scheme: dark;
   }
 
   body {

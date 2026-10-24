@@ -14,6 +14,7 @@ const tones: Record<AiVerdict, string> = {
 export function VerdictStamp({ verdict }: { verdict: AiVerdict | null }) {
   return (
     <p
+      data-surface="paper"
       className={`seal-stamp m-0 -rotate-3 px-4 py-1 rounded-verdict font-display text-display-sm text-on-accent ${verdict ? tones[verdict] : 'bg-indigo shadow-stamp-indigo'}`}
     >
       {verdict ? VERDICT_LABELS[verdict] : 'Verdict indisponible'}

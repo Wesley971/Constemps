@@ -49,10 +49,10 @@ const variants: Record<ButtonVariant, string> = {
   danger: `${shapes.curtain} bg-danger text-on-indigo hover:bg-danger-deep hover:text-on-indigo`,
   curtain: `${shapes.curtain} bg-cream text-cream-ink hover:text-cream-ink`,
   'curtain-danger': `${shapes.curtain} bg-cream text-danger-on-cream hover:text-danger-on-cream`,
-  'curtain-ghost': 'h-button px-6 rounded-b-curtain font-body text-body-md font-bold bg-cream-veil text-on-indigo hover:text-on-indigo',
+  'curtain-ghost': 'h-button px-6 rounded-b-curtain font-body text-body-md font-bold bg-cream-veil text-on-noren hover:text-on-noren',
   compact: `${shapes.compact} bg-indigo text-on-indigo hover:bg-indigo-deep hover:text-on-indigo`,
   secondary: `${shapes.compact} bg-indigo-tint text-indigo hover:bg-indigo-veil hover:text-indigo`,
-  'curtain-secondary': `${shapes.compact} bg-cream-veil text-on-indigo hover:text-on-indigo`,
+  'curtain-secondary': `${shapes.compact} bg-cream-veil text-on-noren hover:text-on-noren`,
 }
 
 function ButtonIcon({ icon }: { icon?: string }) {

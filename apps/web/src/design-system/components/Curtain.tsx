@@ -159,12 +159,12 @@ export function Curtain({ title, onClose, children, dismissOnScrim = false, show
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="curtain-drop relative w-full max-w-120 mx-auto outline-none"
+        className="curtain-drop relative w-full max-w-120 mx-auto outline-none noren-edge"
       >
         <div
           ref={panelRef}
           data-curtain-panel=""
-          className="max-h-dvh flex flex-col pb-12 bg-indigo rounded-b-curtain"
+          className="max-h-dvh flex flex-col pb-12 bg-noren rounded-b-curtain"
           style={clip ? ({ clipPath: clip } as CSSProperties) : undefined}
         >
           <div data-surface="curtain" className="min-h-0 flex flex-col gap-5 pt-8 px-6 pb-6">

@@ -22,6 +22,7 @@ import { BackLink } from '../design-system/components/BackLink'
 import { Curtain, CurtainConfirm } from '../design-system/components/Curtain'
 import { ChoiceCards } from '../design-system/components/ChoiceCards'
 import { Checkbox } from '../design-system/components/Checkbox'
+import { AppearancePicker } from '../design-system/components/AppearancePicker'
 
 // Démonstration des fondations du design system (CON-57). Route servie
 // seulement en développement (voir App.tsx), gardée jusqu'à la fin de CON-57
@@ -35,7 +36,13 @@ const COLOR_TOKENS = [
   'inksoft',
   'indigo',
   'indigo-deep',
+  'noren',
+  'on-noren',
+  'glass',
   'scroll-mount',
+  'scroll-rail',
+  'scroll-cap',
+  'lantern-cap',
   'vermillon',
   'wood',
   'rope',
@@ -108,14 +115,12 @@ export default function Fondations() {
           <p className="m-0 text-inksoft">Un peu, chaque jour.</p>
         </header>
 
-        <Section title="Couleurs, jour">
-          <Swatches />
+        <Section title="Apparence">
+          <AppearancePicker />
         </Section>
 
-        <Section title="Couleurs, nuit (non activé avant le lot 7)">
-          <div data-theme="nuit" className="bg-canvas text-ink rounded-md p-4">
-            <Swatches />
-          </div>
+        <Section title="Couleurs du thème actif">
+          <Swatches />
         </Section>
 
         <Section title="Typographie">
@@ -176,7 +181,7 @@ export default function Fondations() {
             <Button variant="danger" className="w-full">
               Supprimer définitivement
             </Button>
-            <div className="bg-indigo rounded-b-lg p-4 flex flex-col gap-4">
+            <div className="bg-noren rounded-b-lg p-4 flex flex-col gap-4">
               <Button variant="curtain" className="w-full">
                 Ajouter la carte
               </Button>
@@ -334,7 +339,7 @@ export default function Fondations() {
                 <span className="text-caption text-inksoft">sur 18</span>
               </span>
             </BrushCircle>
-            <span className="bg-indigo rounded-sm p-2 inline-flex">
+            <span className="bg-noren rounded-sm p-2 inline-flex">
               <BrushCircle value={80} size="md" tone="cream" label="80 %" />
             </span>
           </div>

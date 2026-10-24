@@ -33,14 +33,14 @@ export function RatingButtons({ disabled, onRate, inked }: RatingButtonsProps) {
               aria-keyshortcuts={key}
               onClick={() => onRate(rating)}
               className={`relative overflow-hidden h-button rounded-pill border font-body text-body-sm font-bold cursor-pointer disabled:cursor-default ${
-                strong ? 'bg-indigo border-indigo text-on-indigo' : 'bg-paper-card/80 border-paper-card/75 backdrop-blur-md text-ink'
+                strong ? 'bg-indigo border-indigo text-on-indigo' : 'bg-glass/80 border-glass/75 backdrop-blur-md text-ink'
               }`}
             >
               {inked?.rating === rating ? (
                 <span
                   key={inked.at}
                   aria-hidden="true"
-                  className={`ink-blot absolute left-1/2 top-1/2 size-4 -ml-2 -mt-2 pointer-events-none ${strong ? 'bg-cream' : 'bg-indigo'}`}
+                  className={`ink-blot absolute left-1/2 top-1/2 size-4 -ml-2 -mt-2 pointer-events-none ${strong ? 'bg-cream nuit:bg-cream-ink' : 'bg-indigo'}`}
                 />
               ) : null}
               {RATING_LABELS[value]}
@@ -113,7 +113,7 @@ export function ClosedVeil({ message, onContinue, continuing }: ClosedVeilProps)
       aria-labelledby={titleId}
       className="veil-in fixed inset-0 z-modal flex flex-col items-center justify-center gap-6 px-9 bg-canvas/80 backdrop-blur-sm text-center"
     >
-      <span aria-hidden="true" className="seal-stamp size-38 flex items-center justify-center -rotate-8 rounded-blot bg-vermillon shadow-stamp">
+      <span aria-hidden="true" data-surface="paper" className="seal-stamp size-38 flex items-center justify-center -rotate-8 rounded-blot bg-vermillon shadow-stamp">
         <BrushCircle value={100} label="Cercle fermé" size="stamp" tone="cream" playClose delayMs={950} />
       </span>
       <div className="flex flex-col gap-2 max-w-80">

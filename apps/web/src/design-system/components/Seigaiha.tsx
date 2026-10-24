@@ -28,7 +28,7 @@ export function Seigaiha({ rise }: { rise?: number } = {}) {
     >
       <defs>
         <pattern id={patternId} width="40" height="20" patternUnits="userSpaceOnUse">
-          <g className="fill-seigaiha stroke-indigo/30" strokeWidth="1.2">
+          <g className="fill-seigaiha stroke-seigaiha-line" strokeWidth="1.2">
             {scaleOrigins.map(([x, y]) => (
               <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
                 <circle r="20" />

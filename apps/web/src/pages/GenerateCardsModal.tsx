@@ -125,7 +125,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
               placeholder="Colle ici un article, un cours, une fiche… l’IA en tirera des cartes."
               aria-describedby={counterId}
               aria-invalid={overLimit ? true : undefined}
-              className="genko block w-full py-3 px-4 border-none rounded-xs bg-on-indigo font-body text-body-sm leading-6 text-paper-ink resize-y placeholder:text-wood-ink-soft"
+              className="genko block w-full py-3 px-4 border-none rounded-xs bg-paper-card font-body text-body-sm leading-6 text-paper-ink resize-y placeholder:text-wood-ink-soft"
             />
             <span id={counterId} className={`self-end text-caption tabular-nums ${overLimit ? 'text-danger' : 'text-inksoft'}`}>
               {overLimit ? 'Trop long : ' : ''}

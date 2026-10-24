@@ -17,7 +17,7 @@ export function RoundCard({ tag, children, small, inkKey }: RoundCardProps) {
   return (
     <div key={inkKey} className={`relative shrink-0 ${small ? 'size-50' : 'size-75'}`}>
       <div aria-hidden="true" className="ink-bloom absolute inset-0 rounded-full" />
-      <section className={`ink-in relative ${size} rounded-full bg-paper-card shadow-round-card flex flex-col items-center justify-center text-center`}>
+      <section data-surface="paper" className={`ink-in relative ${size} rounded-full bg-paper-card shadow-round-card flex flex-col items-center justify-center text-center`}>
         {tag}
         {children}
       </section>

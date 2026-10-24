@@ -48,7 +48,27 @@
   --color-indigo-veil: rgba(38, 54, 94, 0.12);
   --color-tab-active: #26365e;
   --color-tab-active-ink: #fffdf8;
+  /* Libellé des onglets inactifs. */
+  --color-tab-ink: #26365e;
+
+  /* Surfaces indigo (CON-73) : « indigo » est l'accent (liens, étiquettes, cercles
+     au pinceau) et passe en crème la nuit ; ces tokens restent des étoffes et des
+     montures sombres dans les deux thèmes. En jour, ils valent l'indigo d'avant. */
+  --color-noren: #26365e;
+  --color-on-noren: #fffdf8;
   --color-scroll-mount: #2e3f6b;
+  --color-scroll-rail: #26365e;
+  --color-scroll-cap: #1a2340;
+  --color-lantern-cap: #26365e;
+  /* Pastilles de verre de la révision (notation, bouton du verso). */
+  --color-glass: #fffdf8;
+  /* Halo d'encre qui accompagne l'arrivée de la carte ronde. */
+  --color-ink-bloom: #26365e;
+  /* Ombre et anneau de papier de la carte ronde (shadow-round-card). Couleurs à
+     part : Tailwind recopie la valeur d'une ombre dans sa classe, seules les
+     var() qu'elle contient suivent le thème. */
+  --color-round-card-shade: rgba(31, 35, 51, 0.6);
+  --color-round-card-halo: rgba(255, 253, 248, 0.5);
 
   --color-vermillon: #b0502c;
   --color-vermillon-tint: rgba(176, 80, 44, 0.12);
@@ -66,7 +86,10 @@
   --color-lantern-mid: #f7e3c4;
   --color-lantern-edge: #e9c79c;
   --color-seigaiha: #f2e3da;
-  --color-lantern-glow: rgba(233, 170, 90, 0.5);
+  --color-seigaiha-line: rgba(38, 54, 94, 0.3);
+  /* Halo qui pulse à la journée close (S14-close), de la première à la seconde valeur. */
+  --color-lantern-glow: rgba(233, 170, 90, 0.35);
+  --color-lantern-glow-strong: rgba(233, 170, 90, 0.65);
 
   /* Couleurs de deck (et de verdict) : Sauge, Sable, Terracotta, plus l'indigo. */
   --color-success: #4b7a5b;
@@ -184,7 +207,7 @@
   /* Double liseré du sceau du profil (S14-profil) : vermillon puis papier. */
   --shadow-seal: inset 0 0 0 4px var(--color-vermillon), inset 0 0 0 6px var(--color-paper);
   /* Carte ronde de la révision (V7-revision) : ombre portée et halo de papier. */
-  --shadow-round-card: 0 28px 50px -34px rgba(31, 35, 51, 0.6), 0 0 0 10px rgba(255, 253, 248, 0.5);
+  --shadow-round-card: 0 28px 50px -34px var(--color-round-card-shade), 0 0 0 10px var(--color-round-card-halo);
   /* Double liseré des tampons de verdict (S15-retour-ia) : couleur puis papier. */
   --shadow-stamp-success: inset 0 0 0 2px var(--color-success), inset 0 0 0 4px var(--color-paper);
   --shadow-stamp-warning: inset 0 0 0 2px var(--color-warning-deep), inset 0 0 0 4px var(--color-paper);
@@ -202,22 +225,113 @@
   --animate-sway: sway 6s ease-in-out infinite;
 }
 
-/* Mode nuit (CON-57) : posé ici pour que tous les tokens vivent au même endroit,
-   mais jamais activé avant le lot 7 (CON-73), qui ajoutera le réglage
-   Jour / Nuit / Auto et retirera color-scheme: light. */
+/* Liseré des rideaux (en-tête, pans de la révision, fenêtres) : aucun en jour,
+   un fil crème en nuit pour les détacher du fond (utilitaire noren-edge). */
+:root {
+  --noren-edge: none;
+  /* Ampleur du halo qui pulse à la journée close (S14-close). */
+  --lantern-glow-blur: 22px;
+  --lantern-glow-blur-strong: 40px;
+}
+
+/* Mode nuit (CON-73, S14-nuit) : posé sur <html> par le script en ligne de
+   index.html puis par lib/appearance.ts. Le fond devient bleu nuit, l'accent
+   (« indigo ») devient crème, les étoffes restent indigo. Les objets clairs
+   (rouleau, bois, lanterne, carte, notification, sceau) gardent l'encre du jour
+   par [data-surface='paper'] plus bas.
+   Contrastes sur #161d33 : texte 13,23:1, petit texte 8,07:1, vermillon 7,26:1,
+   danger 8,30:1, saisons 7,15 à 7,70:1 ; texte crème sur l'étoffe 9,47:1. */
 [data-theme='nuit'] {
   --color-canvas: #161d33;
   --color-paper: #efe4cc;
   --color-paper-ink: #1a2036;
+  --color-paper-card: #efe4cc;
+  --color-paper-sunken: rgba(239, 228, 204, 0.08);
   --color-ink: #efe4cc;
   --color-inksoft: #aeb4c7;
-  --color-indigo: #26355f;
+  --color-on-indigo: #1a2036;
+  --color-on-accent: #1a2036;
+  --color-line: rgba(239, 228, 204, 0.14);
+  --color-line-strong: rgba(239, 228, 204, 0.26);
+  --color-scrim: rgba(6, 9, 20, 0.62);
+
+  --color-indigo: #efe4cc;
+  --color-indigo-deep: #ffffff;
+  --color-indigo-tint: rgba(239, 228, 204, 0.1);
+  --color-indigo-veil: rgba(239, 228, 204, 0.08);
   --color-tab-active: #efe4cc;
   --color-tab-active-ink: #1a2036;
+  --color-tab-ink: #aeb4c7;
+
+  --color-noren: #26355f;
+  --color-on-noren: #efe4cc;
+  --color-scroll-mount: #26355f;
+  --color-scroll-rail: #34447a;
+  --color-scroll-cap: #4a5c92;
+  --color-lantern-cap: #3a4c7e;
+  --color-glass: #26355f;
+  --color-ink-bloom: #efe4cc;
+
   --color-vermillon: #e39a72;
+  --color-vermillon-tint: rgba(227, 154, 114, 0.14);
+  --color-danger: #f0a493;
+
   --color-wood: #dccba8;
+  --color-wood-veil: rgba(239, 228, 204, 0.06);
   --color-rope: #a88654;
-  --color-lantern-glow: rgba(240, 186, 110, 0.7);
+  --color-seigaiha: #161d33;
+  --color-seigaiha-line: rgba(239, 228, 204, 0.14);
+  /* Lanterne de la journée close, plus lumineuse (S14-nuit-close). */
+  --color-lantern-glow: rgba(240, 170, 90, 0.5);
+  --color-lantern-glow-strong: rgba(240, 170, 90, 0.85);
+  --lantern-glow-blur: 34px;
+  --lantern-glow-blur-strong: 64px;
+
+  --color-season-spring: #e88fb0;
+  --color-season-summer: #6fbfa6;
+  --color-season-summer-ink: #6fbfa6;
+  --color-season-autumn: #e39a72;
+  --color-season-winter: #8eb3dc;
+
+  /* Halo de la carte ronde : le papier à 50 % ferait un anneau gris sur le fond nuit. */
+  --color-round-card-shade: rgba(0, 0, 0, 0.7);
+  --color-round-card-halo: rgba(239, 228, 204, 0.12);
+
+  /* Liseré à 3,22:1 sur le fond nuit (3:1 au moins pour un contour). */
+  --noren-edge: drop-shadow(0 1px 0 rgba(239, 228, 204, 0.4));
+}
+
+/* Objets clairs posés sur le fond (CON-73) : ils gardent l'encre du jour dans
+   les deux thèmes, comme sur les planches nuit. Copie des valeurs du jour du bloc
+   @theme : toute couleur du jour modifiée là-haut doit l'être ici aussi. Sans
+   effet en jour. Le papier lui-même (paper, wood, paper-card) suit le thème. */
+[data-surface='paper'] {
+  --color-ink: #1f2333;
+  --color-inksoft: #4f5466;
+  --color-on-indigo: #fffdf8;
+  --color-on-accent: #fffdf8;
+  --color-line: rgba(31, 35, 51, 0.14);
+  --color-line-strong: rgba(31, 35, 51, 0.26);
+  --color-paper-sunken: rgba(234, 219, 190, 0.5);
+  --color-indigo: #26365e;
+  --color-indigo-deep: #1a2340;
+  --color-indigo-tint: rgba(38, 54, 94, 0.1);
+  --color-indigo-veil: rgba(38, 54, 94, 0.12);
+  --color-vermillon: #b0502c;
+  --color-vermillon-tint: rgba(176, 80, 44, 0.12);
+  --color-danger: #9c4438;
+}
+/* Le papier nuit (#efe4cc) est plus foncé que celui du jour : le vermillon des
+   planches n'y donne que 4,13:1, celui-ci 4,77:1 (étiquettes du rouleau). */
+[data-theme='nuit'] [data-surface='paper'] {
+  --color-vermillon: #a24826;
+}
+/* Couleur de texte par défaut de la surface, en couche base : une classe de
+   couleur posée sur le même élément (text-wood-ink...) garde la main. */
+@layer base {
+  [data-surface='paper'] {
+    color: var(--color-ink);
+  }
 }
 
 /* Contenu d'un rideau (CON-70) : mêmes composants (champs, étiquettes, cases, icônes),
@@ -235,8 +349,16 @@
   --color-line: rgba(239, 228, 204, 0.35);
   --color-danger: #f0a493;
   --color-on-accent: #1a2036;
+  /* Épinglé (CON-73) : le contenu d'un rideau est le même en jour et en nuit. */
+  --color-on-indigo: #fffdf8;
   color: var(--color-ink);
 }
+
+/* Utilitaires propres au thème. */
+@utility noren-edge {
+  filter: var(--noren-edge);
+}
+@custom-variant nuit (&:where([data-theme='nuit'], [data-theme='nuit'] *));
 
 /* Valeurs sans espace de noms @theme en Tailwind v4 : utilitaires explicites. */
 @utility duration-fast {

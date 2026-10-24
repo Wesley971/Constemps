@@ -17,9 +17,9 @@ const panelPadding = ['pb-4', 'pb-2', 'pb-5']
 export function Noren({ tall, panels }: NorenProps) {
   if (panels) {
     return (
-      <div className="relative grid grid-cols-3 gap-1 shrink-0 h-noren-review">
+      <div className="relative grid grid-cols-3 gap-1 shrink-0 h-noren-review noren-edge">
         {panels.map((panel, i) => (
-          <div key={i} className={`min-w-0 flex flex-col items-center justify-end px-2 bg-indigo text-on-indigo rounded-b-lg ${panelPadding[i]}`}>
+          <div key={i} className={`min-w-0 flex flex-col items-center justify-end px-2 bg-noren text-on-noren rounded-b-lg ${panelPadding[i]}`}>
             {panel}
           </div>
         ))}
@@ -28,10 +28,10 @@ export function Noren({ tall, panels }: NorenProps) {
   }
 
   return (
-    <div aria-hidden="true" className={`relative grid grid-cols-3 gap-1 shrink-0 ${tall ? 'h-noren-tall' : 'h-noren'}`}>
-      <div className="bg-indigo rounded-b-lg" />
-      <div className="bg-indigo rounded-b-lg" />
-      <div className="bg-indigo rounded-b-lg" />
+    <div aria-hidden="true" className={`relative grid grid-cols-3 gap-1 shrink-0 noren-edge ${tall ? 'h-noren-tall' : 'h-noren'}`}>
+      <div className="bg-noren rounded-b-lg" />
+      <div className="bg-noren rounded-b-lg" />
+      <div className="bg-noren rounded-b-lg" />
     </div>
   )
 }

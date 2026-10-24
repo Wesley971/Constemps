@@ -5,6 +5,7 @@ export function Seal({ initials }: { initials: string }) {
   return (
     <span
       aria-hidden="true"
+      data-surface="paper"
       className="seal-stamp size-18 shrink-0 flex items-center justify-center -rotate-4 rounded-seal bg-vermillon shadow-seal text-on-accent font-display text-display-lg"
     >
       {initials}

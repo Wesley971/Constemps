@@ -8,6 +8,7 @@ import DeckDetail from './pages/DeckDetail'
 import Review from './pages/Review'
 import Stats from './pages/Stats'
 import Profile from './pages/Profile'
+import { useAppearance } from './design-system/useAppearance'
 
 // Page de démonstration du design system (CON-57), servie seulement en
 // développement : en build, import.meta.env.DEV vaut false, la branche est
@@ -15,6 +16,9 @@ import Profile from './pages/Profile'
 const Fondations = import.meta.env.DEV ? lazy(() => import('./pages/Fondations')) : null
 
 function App() {
+  // Apparence suivie sur tous les écrans (Auto qui change avec le système).
+  useAppearance()
+
   return (
     <BrowserRouter>
       <Routes>

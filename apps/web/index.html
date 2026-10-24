@@ -5,6 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Constemps</title>
+    <meta name="theme-color" content="#f5f1e8" />
+    <!-- Apparence Jour / Nuit / Auto (CON-73), appliquée avant tout rendu pour
+         éviter un éclair clair à l'ouverture en mode nuit. Même clé, mêmes
+         valeurs et même résolution que src/lib/appearance.ts, qui prend le
+         relais ensuite. Couleurs : --color-canvas des deux thèmes (tokens.css).
+         Une future Content-Security-Policy devra autoriser ce script (hash). -->
+    <script>
+      ;(function () {
+        var pref = 'auto'
+        try {
+          var stored = window.localStorage.getItem('constemps.appearance')
+          if (stored === 'jour' || stored === 'nuit' || stored === 'auto') pref = stored
+        } catch (e) {}
+        var nuit = pref === 'nuit' || (pref === 'auto' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        var root = document.documentElement
+        var canvas = nuit ? '#161d33' : '#f5f1e8'
+        root.setAttribute('data-theme', nuit ? 'nuit' : 'jour')
+        root.style.colorScheme = nuit ? 'dark' : 'light'
+        root.style.backgroundColor = canvas
+        var meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', canvas)
+      })()
+    </script>
     <script
       src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
       integrity="sha384-GPb5RlngihS9H0z1D137JsvzmeZ7tCpWEF4t5YDoTZyMsPP8S7h7vFDh4XhheU83"

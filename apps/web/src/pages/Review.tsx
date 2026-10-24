@@ -258,7 +258,7 @@ function Review() {
       key="back"
       to="/dashboard"
       aria-label="Retour à l’accueil"
-      className="size-hit flex items-center justify-center rounded-full bg-cream-veil text-on-indigo hover:text-on-indigo"
+      className="size-hit flex items-center justify-center rounded-full bg-cream-veil text-on-noren hover:text-on-noren"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
         <path d="M15.6 3.9C13 6.4 10.4 9 7.7 11.4c-.6.5-.6 1.1 0 1.6 2.7 2.4 5.3 4.9 7.6 7.4.5.5 1.1 0 .8-.6-1.9-2.5-4-4.9-6.2-7.4 2.3-2.4 4.7-4.9 6.6-7.5.4-.6-.3-1.4-.9-1z" />
@@ -319,7 +319,7 @@ function Review() {
               <div
                 ref={versoRef}
                 tabIndex={-1}
-                className={`ink-in w-full flex items-center justify-center gap-3 px-6 py-3 border border-paper-card/70 bg-paper-card/70 backdrop-blur-md shadow-glass outline-none ${
+                className={`ink-in w-full flex items-center justify-center gap-3 px-6 py-3 border border-glass/70 bg-glass/70 backdrop-blur-md shadow-glass outline-none ${
                   activeCard.back.length > 40 ? 'rounded-lg' : 'rounded-pill'
                 }`}
               >
@@ -332,7 +332,7 @@ function Review() {
                 type="button"
                 aria-keyshortcuts="Space"
                 onClick={reveal}
-                className="w-full h-14 rounded-pill border-2 border-dashed border-indigo/45 bg-paper-card/55 backdrop-blur-md font-body text-body-md font-bold text-indigo cursor-pointer"
+                className="w-full h-14 rounded-pill border-2 border-dashed border-indigo/45 bg-glass/55 backdrop-blur-md font-body text-body-md font-bold text-indigo cursor-pointer"
               >
                 Voir le verso
               </button>

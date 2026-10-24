@@ -30,6 +30,7 @@ export function EmaPlaque({ to, name, status, progress, total, color, closeKey, 
       className="block drop-shadow-ema no-underline hover:no-underline focus-visible:outline-offset-4"
     >
       <span
+        data-surface="paper"
         className={`ema-shape w-26 pt-6 px-2 flex flex-col items-center bg-wood text-wood-ink text-center ${total ? 'h-37 pb-2 gap-1' : 'h-32 pb-0 gap-2'} ${color ? DECK_COLOR_BAND[color] : ''}`}
       >
         <BrushCircle value={progress} size="sm" label={status} closeKey={closeKey} delayMs={delayMs} />
@@ -59,8 +60,8 @@ export function DeckPlaque({ remaining, status, label, progress, color, closeKey
   return (
     <div className="flex flex-col items-center shrink-0 origin-top animate-sway drop-shadow-ema">
       <span aria-hidden="true" className="size-2 rounded-full bg-rope" />
-      <span aria-hidden="true" className={`w-thread h-3 ${deckThreadClass(color)}`} />
-      <span className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}>
+      <span aria-hidden="true" data-surface="paper" className={`w-thread h-3 ${deckThreadClass(color)}`} />
+      <span data-surface="paper" className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}>
         <BrushCircle value={progress} size="deck" label={label} closeKey={closeKey}>
           {remaining > 0 ? <span className="font-display text-display-sm">{remaining}</span> : null}
         </BrushCircle>

@@ -19,7 +19,7 @@ export function TabBar() {
           to={tab.to}
           className={({ isActive }) =>
             `flex items-center justify-center pb-2 rounded-t-lg font-body text-body-sm font-bold no-underline hover:no-underline transition-colors duration-base ease-standard ${
-              isActive ? 'bg-tab-active text-tab-active-ink hover:text-tab-active-ink' : 'bg-indigo-veil text-indigo hover:bg-indigo-tint hover:text-indigo'
+              isActive ? 'bg-tab-active text-tab-active-ink hover:text-tab-active-ink' : 'bg-indigo-veil text-tab-ink hover:bg-indigo-tint hover:text-tab-ink'
             }`
           }
         >

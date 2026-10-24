@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, ApiError } from '../services/api'
 import type { User } from '../types/user'
+import { AppearancePicker } from '../design-system/components/AppearancePicker'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { BrushLink } from '../design-system/components/BrushLink'
 import { CurtainConfirm } from '../design-system/components/Curtain'
@@ -70,8 +71,8 @@ function capitalize(text: string): string {
 }
 
 // Profil refondu (CON-71, S14-profil) : sceau à initiales, e-mail en titre tant
-// qu'il n'y a pas de prénom (CON-76), compte dans le rouleau, déconnexion et
-// suppression en bas. La section Apparence arrive avec le lot 7 (CON-73).
+// qu'il n'y a pas de prénom (CON-76), compte dans le rouleau, apparence en
+// blasons (CON-73), déconnexion et suppression en bas.
 function Profile() {
   const navigate = useNavigate()
   const { toast, notify } = useToast()
@@ -155,6 +156,8 @@ function Profile() {
         <InkRule />
         <AccountRow label="Langue apprise" value={capitalize(languageLabel(user.learningLanguage))} />
       </Scroll>
+
+      <AppearancePicker />
 
       {/* Seule déconnexion de l'app depuis CON-69 : ne jamais la retirer. */}
       <div className="flex items-center justify-between gap-4 px-1">

@@ -139,6 +139,7 @@ function Dashboard() {
             label={lanternLabel(day)}
             tone={day.state === 'closed' ? 'vermillon' : 'indigo'}
             closeKey={day.state === 'closed' ? LANTERN_CLOSE_KEY : undefined}
+            lit={day.state === 'closed'}
           >
             {day.state === 'active' || day.state === 'closed' ? (
               <LanternCount done={day.done} target={day.target} accent={day.state === 'closed'} />

@@ -7,6 +7,29 @@
   background: repeating-linear-gradient(180deg, transparent 0 11px, rgba(138, 106, 58, 0.22) 11px 12px);
 }
 
+/* Journée close (S14-close, S14-nuit-close) : le halo de la lanterne pulse.
+   Ampleur et couleurs par thème (tokens.css). Sans animation
+   (prefers-reduced-motion), le jour garde le halo fixe de la lanterne. */
+@keyframes lantern-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 var(--lantern-glow-blur) var(--color-lantern-glow);
+  }
+  50% {
+    box-shadow: 0 0 var(--lantern-glow-blur-strong) var(--color-lantern-glow-strong);
+  }
+}
+.lantern-lit {
+  animation: lantern-glow 3.6s ease-in-out infinite;
+}
+/* En nuit, papier plus clair aussi, et halo fixe plus fort sans animation. */
+[data-theme='nuit'] .lantern-lit {
+  --color-lantern-core: #fff8e6;
+  --color-lantern-mid: #fbe6c2;
+  --color-lantern-edge: #edc58f;
+  box-shadow: 0 0 var(--lantern-glow-blur) var(--color-lantern-glow);
+}
+
 /* Plaquette ema : pentagone, pointe en haut. */
 .ema-shape {
   clip-path: polygon(50% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
@@ -149,7 +172,12 @@
   }
 }
 .ink-bloom {
-  background: radial-gradient(circle, rgba(38, 54, 94, 0.32) 0%, rgba(38, 54, 94, 0.12) 45%, rgba(38, 54, 94, 0) 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-ink-bloom) 32%, transparent) 0%,
+    color-mix(in srgb, var(--color-ink-bloom) 12%, transparent) 45%,
+    transparent 70%
+  );
   opacity: 0;
   animation: ink-bloom 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }

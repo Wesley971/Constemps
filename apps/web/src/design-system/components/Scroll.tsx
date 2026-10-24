@@ -16,16 +16,16 @@ export function Scroll({ children, label }: ScrollProps) {
         <path d="M6 17 L65 3 L124 17" className="stroke-rope" strokeWidth="1.6" strokeLinecap="round" />
         <circle cx="65" cy="3" r="2.6" className="fill-indigo" />
       </svg>
-      <div aria-hidden="true" className="relative w-80 h-2 rounded-sm bg-indigo">
-        <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-3 rounded-xs bg-indigo-deep" />
-        <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-3 rounded-xs bg-indigo-deep" />
+      <div aria-hidden="true" className="relative w-80 h-2 rounded-sm bg-scroll-rail">
+        <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-3 rounded-xs bg-scroll-cap" />
+        <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-3 rounded-xs bg-scroll-cap" />
       </div>
       <div className="scroll-unroll w-76 px-2 flex bg-scroll-mount">
-        <div className="flex-1 min-w-0 flex flex-col items-center gap-2 px-4 pt-4 pb-4 bg-paper text-paper-ink text-center">{children}</div>
+        <div className="flex-1 min-w-0 flex flex-col items-center gap-2 px-4 pt-4 pb-4 bg-paper text-paper-ink text-center" data-surface="paper">{children}</div>
       </div>
-      <div aria-hidden="true" className="relative w-82 h-3 rounded-sm bg-indigo">
-        <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-3 h-4 rounded-xs bg-indigo-deep" />
-        <span className="absolute -right-2 top-1/2 -translate-y-1/2 w-3 h-4 rounded-xs bg-indigo-deep" />
+      <div aria-hidden="true" className="relative w-82 h-3 rounded-sm bg-scroll-rail">
+        <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-3 h-4 rounded-xs bg-scroll-cap" />
+        <span className="absolute -right-2 top-1/2 -translate-y-1/2 w-3 h-4 rounded-xs bg-scroll-cap" />
       </div>
     </section>
   )
