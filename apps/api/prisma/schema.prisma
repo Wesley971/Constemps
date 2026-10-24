@@ -30,6 +30,11 @@ model User {
   // DEFAULT_LEARNING_LANGUAGE, Prisma n'acceptant qu'une valeur littérale.
   learningLanguage String @default("EN") @db.VarChar(10)
 
+  // Prénom facultatif (CON-76), affiché en titre du profil et dans le sceau ;
+  // null = repli sur l'e-mail. Règles dans UpdateProfileDto. Jamais transmis à
+  // Gemini.
+  firstName String? @db.VarChar(40)
+
   accountMilestones AccountMilestone[]
   refreshTokens     RefreshToken[]
 }

@@ -27,6 +27,7 @@ const PROFILE_SELECT = {
   email: true,
   createdAt: true,
   learningLanguage: true,
+  firstName: true,
 } satisfies Prisma.UserSelect;
 
 export interface IssuedTokens {
@@ -96,8 +97,10 @@ export class AuthService {
     const wantsEmailChange = dto.email !== undefined;
     const wantsPasswordChange =
       dto.currentPassword !== undefined || dto.newPassword !== undefined;
+    // null compte comme une modification : il efface le prénom (CON-76).
+    const wantsFirstNameChange = dto.firstName !== undefined;
 
-    if (!wantsEmailChange && !wantsPasswordChange) {
+    if (!wantsEmailChange && !wantsPasswordChange && !wantsFirstNameChange) {
       throw new BadRequestException('Aucune modification fournie');
     }
 
@@ -124,7 +127,15 @@ export class AuthService {
       throw new UnauthorizedException('Identifiants invalides');
     }
 
-    const data: { email?: string; password?: string } = {};
+    const data: {
+      email?: string;
+      password?: string;
+      firstName?: string | null;
+    } = {};
+
+    if (wantsFirstNameChange && dto.firstName !== user.firstName) {
+      data.firstName = dto.firstName;
+    }
 
     if (wantsEmailChange && dto.email !== user.email) {
       const existing = await this.prisma.user.findUnique({
