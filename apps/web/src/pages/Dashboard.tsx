@@ -117,7 +117,9 @@ function Dashboard() {
 
   return (
     <AppScreen>
-      <header className="flex items-center justify-between gap-4">
+      {/* Grand écran (CON-75) : le rail porte déjà le nom et la date ; l'en-tête
+          reste lu par les lecteurs d'écran (titre de la page). */}
+      <header className="flex items-center justify-between gap-4 lg:sr-only">
         <h1 className="m-0 font-display text-display-lg">Constemps</h1>
         <div className="flex flex-col items-end">
           <span className="text-caption text-inksoft">{formatToday(today)}</span>
@@ -130,80 +132,84 @@ function Dashboard() {
 
       {error ? <Notification role="alert" tone="danger" title="Chargement incomplet" message={error} /> : null}
 
-      {/* Sans decks chargés, ni lanterne ni corde : un échec de chargement ne doit
-          pas se faire passer pour « aucun deck ». */}
-      {decks ? (
-        <section aria-label="Aujourd'hui" className="flex items-start gap-6">
-          <Lantern
-            value={lanternValue}
-            label={lanternLabel(day)}
-            tone={day.state === 'closed' ? 'vermillon' : 'indigo'}
-            closeKey={day.state === 'closed' ? LANTERN_CLOSE_KEY : undefined}
-            lit={day.state === 'closed'}
-          >
-            {day.state === 'active' || day.state === 'closed' ? (
-              <LanternCount done={day.done} target={day.target} accent={day.state === 'closed'} />
-            ) : null}
-          </Lantern>
-  
-          <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4">
-            <Label>Aujourd'hui</Label>
-            {day.state === 'active' ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <span className="font-display text-hero text-indigo">{day.remaining}</span>
-                  <span className="font-display text-body-lg leading-5">
-                    {plural(day.remaining, 'carte', 'cartes')}
-                    <br />
-                    {plural(day.remaining, 't’attend', 't’attendent')}
-                  </span>
-                </div>
-                {day.resumeDeck ? (
-                  <BrushLink to={`/decks/${day.resumeDeck.id}/review`} delayMs={1600}>
-                    Reprendre
-                  </BrushLink>
-                ) : null}
-              </>
-            ) : null}
-            {day.state === 'closed' ? (
-              <>
-                <span className="font-display text-display-xl leading-9 text-indigo">
-                  Journée
-                  <br />
-                  close
-                </span>
-                {day.continueDeck ? (
-                  <BrushLink to={`/decks/${day.continueDeck.id}/review`} size="md" delayMs={1600}>
-                    Continuer aujourd’hui
-                  </BrushLink>
-                ) : null}
-              </>
-            ) : null}
-            {day.state === 'clear' ? <span className="font-display text-display-md text-indigo">Tout est à jour</span> : null}
-            {day.state === 'empty' ? (
-              <BrushLink onClick={() => setCreatingDeck(true)} size="md" delayMs={1600}>
-                Crée ton premier deck
-              </BrushLink>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+      {/* Grand écran (S20-C-rail) : lanterne et rouleau côte à côte. */}
+      <div className="contents lg:flex lg:items-start lg:justify-between lg:gap-10">
+        {/* Sans decks chargés, ni lanterne ni corde : un échec de chargement ne doit
+            pas se faire passer pour « aucun deck ». */}
+        {decks ? (
+          <section aria-label="Aujourd'hui" className="flex items-start gap-6">
+            <Lantern
+              wide
+              value={lanternValue}
+              label={lanternLabel(day)}
+              tone={day.state === 'closed' ? 'vermillon' : 'indigo'}
+              closeKey={day.state === 'closed' ? LANTERN_CLOSE_KEY : undefined}
+              lit={day.state === 'closed'}
+            >
+              {day.state === 'active' || day.state === 'closed' ? (
+                <LanternCount done={day.done} target={day.target} accent={day.state === 'closed'} />
+              ) : null}
+            </Lantern>
 
-      {summary ? (
-        <Scroll label="Cette semaine">
-          <div className="flex flex-col items-center">
-            <Label>Cette semaine</Label>
-            <BrushStroke tone="vermillon" className="w-24 h-2" delayMs={1200} />
-          </div>
-          <p className="m-0 font-display text-scroll text-balance">{frenchSpacing(summary.message)}</p>
-          {summary.milestone ? (
-            <>
-              <InkRule />
-              <p className="m-0 font-display text-body-lg text-balance">{frenchSpacing(summary.milestone.message)}</p>
-            </>
-          ) : null}
-        </Scroll>
-      ) : null}
+            <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4">
+              <Label>Aujourd'hui</Label>
+              {day.state === 'active' ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-hero text-indigo">{day.remaining}</span>
+                    <span className="font-display text-body-lg leading-5">
+                      {plural(day.remaining, 'carte', 'cartes')}
+                      <br />
+                      {plural(day.remaining, 't’attend', 't’attendent')}
+                    </span>
+                  </div>
+                  {day.resumeDeck ? (
+                    <BrushLink to={`/decks/${day.resumeDeck.id}/review`} delayMs={1600}>
+                      Reprendre
+                    </BrushLink>
+                  ) : null}
+                </>
+              ) : null}
+              {day.state === 'closed' ? (
+                <>
+                  <span className="font-display text-display-xl leading-9 text-indigo">
+                    Journée
+                    <br />
+                    close
+                  </span>
+                  {day.continueDeck ? (
+                    <BrushLink to={`/decks/${day.continueDeck.id}/review`} size="md" delayMs={1600}>
+                      Continuer aujourd’hui
+                    </BrushLink>
+                  ) : null}
+                </>
+              ) : null}
+              {day.state === 'clear' ? <span className="font-display text-display-md text-indigo">Tout est à jour</span> : null}
+              {day.state === 'empty' ? (
+                <BrushLink onClick={() => setCreatingDeck(true)} size="md" delayMs={1600}>
+                  Crée ton premier deck
+                </BrushLink>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {summary ? (
+          <Scroll label="Cette semaine" wide>
+            <div className="flex flex-col items-center">
+              <Label>Cette semaine</Label>
+              <BrushStroke tone="vermillon" className="w-24 h-2" delayMs={1200} />
+            </div>
+            <p className="m-0 font-display text-scroll text-balance">{frenchSpacing(summary.message)}</p>
+            {summary.milestone ? (
+              <>
+                <InkRule />
+                <p className="m-0 font-display text-body-lg text-balance">{frenchSpacing(summary.milestone.message)}</p>
+              </>
+            ) : null}
+          </Scroll>
+        ) : null}
+      </div>
 
       {decks ? (
         <section aria-labelledby="mes-decks" className="flex flex-col gap-2">
