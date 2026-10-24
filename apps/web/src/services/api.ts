@@ -87,6 +87,8 @@ export const decksApi = {
   update: (id: string, name: string, color: DeckColor | null = null, icon: DeckIcon | null = null) =>
     request<Deck>(`/decks/${id}`, { method: 'PATCH', body: JSON.stringify({ name, color, icon }) }),
   remove: (id: string) => request<{ success: boolean }>(`/decks/${id}`, { method: 'DELETE' }),
+  setFavorite: (id: string, isFavorite: boolean) =>
+    request<{ id: string; isFavorite: boolean }>(`/decks/${id}/favorite`, { method: 'PATCH', body: JSON.stringify({ isFavorite }) }),
 }
 
 export const cardsApi = {

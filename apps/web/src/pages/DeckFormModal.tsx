@@ -6,7 +6,7 @@ import { BrushStroke } from '../design-system/components/BrushStroke'
 import { Curtain } from '../design-system/components/Curtain'
 import { Input } from '../design-system/components/Input'
 import { Label } from '../design-system/components/Label'
-import { DECK_COLORS, DECK_COLOR_BAND, DECK_COLOR_LABELS, DECK_COLOR_SWATCH, deckThreadClass } from '../design-system/constants'
+import { DECK_COLORS, DECK_COLOR_BAND, DECK_COLOR_LABELS, DECK_COLOR_SWATCH } from '../design-system/constants'
 
 interface DeckFormModalProps {
   deck?: Deck | null
@@ -42,7 +42,8 @@ export function DeckFormModal({ deck, saving, onClose, onSubmit }: DeckFormModal
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex items-end gap-4">
           <div aria-hidden="true" className="flex flex-col items-center shrink-0 origin-top animate-sway">
-            <span className={`w-thread h-3 ${deckThreadClass(color)}`} />
+            {/* Couleurs de jour : le contenu d'un rideau est le même en jour et en nuit. */}
+            <span className={`w-thread h-3 ${color ? DECK_COLOR_SWATCH[color] : 'bg-vermillon'}`} />
             <span
               className={`ema-shape w-23 h-26 pt-6 px-2 pb-2 flex flex-col items-center justify-center bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}
             >

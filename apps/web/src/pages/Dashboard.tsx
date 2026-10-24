@@ -14,7 +14,7 @@ import { DeckRope } from '../design-system/components/DeckRope'
 import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
-import { deckThreadClass } from '../design-system/constants'
+import { deckKnotClass, deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
 import { deckTodayLabel, formatToday, plural, seasonOf, SEASON_LABELS, summarizeDay } from '../lib/today'
 import type { DaySummary, Season } from '../lib/today'
@@ -216,6 +216,7 @@ function Dashboard() {
               ...day.decks.map((d, i) => ({
                 key: d.deck.id,
                 threadClass: deckThreadClass(d.deck.color),
+                knotClass: d.deck.isFavorite ? deckKnotClass(d.deck.color) : undefined,
                 node: (
                   <EmaPlaque
                     to={`/decks/${d.deck.id}`}
@@ -227,6 +228,7 @@ function Dashboard() {
                     // un deck simplement à jour s'affiche fermé, sans animation.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}
                     delayMs={600 + i * 150}
+                    favorite={d.deck.isFavorite}
                   />
                 ),
               })),

@@ -11,7 +11,7 @@ import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
 import type { ToastState } from '../design-system/useToast'
 import { decksSummaryLabel, deckTodayLabel, plural, summarizeDay } from '../lib/today'
-import { deckThreadClass } from '../design-system/constants'
+import { deckKnotClass, deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
 
 // Mes decks (CON-69, S14-decks) : toutes les plaquettes sur des cordes empilées,
@@ -100,6 +100,7 @@ function Decks() {
               return {
                 key: d.deck.id,
                 threadClass: deckThreadClass(d.deck.color),
+                knotClass: d.deck.isFavorite ? deckKnotClass(d.deck.color) : undefined,
                 node: (
                   <EmaPlaque
                     to={`/decks/${d.deck.id}`}
@@ -111,6 +112,7 @@ function Decks() {
                     // Même clé que l'accueil : la fermeture ne se joue qu'une fois par jour.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}
                     delayMs={300 + i * 150}
+                    favorite={d.deck.isFavorite}
                   />
                 ),
               }

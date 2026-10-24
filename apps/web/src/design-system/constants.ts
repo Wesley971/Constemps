@@ -33,9 +33,31 @@ export const DECK_COLOR_SWATCH: Record<DeckColor, string> = {
   danger: 'bg-deck-terracotta',
 }
 
-// Fil de la plaquette : couleur du deck, vermillon sans couleur.
+// Fil de la plaquette (cordes, grande plaquette du deck) : couleur du deck,
+// vermillon sans couleur. La nuit, version éclaircie (CON-74), la même que le
+// nœud du favori, pour qu'ils restent accordés ; le vermillon suit le thème seul.
+// Hors des surfaces paper et rideau, qui redéfinissent le vermillon.
+const DECK_COLOR_THREAD: Record<DeckColor, string> = {
+  indigo: 'bg-deck-indigo nuit:bg-deck-indigo-nuit',
+  success: 'bg-deck-sage nuit:bg-deck-sage-nuit',
+  warning: 'bg-deck-sand',
+  danger: 'bg-deck-terracotta nuit:bg-deck-terracotta-nuit',
+}
+
 export function deckThreadClass(color: DeckColor | null | undefined): string {
-  return color ? DECK_COLOR_SWATCH[color] : 'bg-vermillon'
+  return color ? DECK_COLOR_THREAD[color] : 'bg-vermillon'
+}
+
+// Nœud du favori (CON-74) : même couleur que le fil, en couleur de texte (SVG).
+const DECK_COLOR_KNOT: Record<DeckColor, string> = {
+  indigo: 'text-deck-indigo nuit:text-deck-indigo-nuit',
+  success: 'text-deck-sage nuit:text-deck-sage-nuit',
+  warning: 'text-deck-sand',
+  danger: 'text-deck-terracotta nuit:text-deck-terracotta-nuit',
+}
+
+export function deckKnotClass(color: DeckColor | null | undefined): string {
+  return color ? DECK_COLOR_KNOT[color] : 'text-vermillon'
 }
 
 // Liseré en haut de la plaquette (classes de design-system/scenery.css).

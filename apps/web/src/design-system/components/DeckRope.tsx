@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { FavoriteKnot } from './FavoriteKnot'
 
 export interface RopeItem {
   key: string
@@ -8,6 +9,9 @@ export interface RopeItem {
   still?: boolean
   // Couleur du fil (couleur du deck, CON-70) ; vermillon par défaut.
   threadClass?: string
+  // Deck favori (CON-74) : nœud noué sur le fil, dans la couleur du fil (classe
+  // text-*, voir deckKnotClass). Absent hors favori.
+  knotClass?: string
 }
 
 interface DeckRopeProps {
@@ -19,11 +23,13 @@ interface DeckRopeProps {
 
 const PER_PAGE = 3
 // Géométrie reprise de S15-accueil-ajuste, sur la grille de 4px : plaquette de
-// 104px (w-26), à 16px des bords (gouttière) ; haut du bois à 24px sur les
+// 104px (w-26), à 16px des bords (gouttière) ; haut du bois à 36px sur les
 // côtés, 40px au centre (la plaquette du milieu pend plus bas) ; bande de 172px.
+// Côtés à 36px (24 sur la planche) depuis CON-74 : le fil le plus court y fait
+// 20px dès 320px de large, la place du nœud du favori, noué ou non.
 const PLAQUE_WIDTH = 104
 const GUTTER = 16
-const BODY_TOP_SIDE = 24
+const BODY_TOP_SIDE = 36
 const BODY_TOP_MIDDLE = 40
 // Corde : courbe quadratique de (-4, 6) à (W + 4, 6), point de contrôle (W/2, 34).
 // Le point de contrôle étant au milieu, x varie linéairement avec t : t = (x + 4) / (W + 8).
@@ -31,6 +37,15 @@ function ropeY(x: number, width: number): number {
   const t = (x + 4) / (width + 8)
   return 6 + 56 * t * (1 - t)
 }
+
+// Nœud du favori sur le fil (FavoriteKnot en size-4, 16px) : encre de 2,5 à
+// 14,5px dans sa boîte et 6,5px de demi-largeur (tracé de FavoriteKnot). Centré
+// entre le bas de la corde (son demi-trait, au plus haut sur la largeur du nœud)
+// et la pointe de la plaquette, il garde au moins 3px de vide de chaque côté sur
+// le fil le plus court (20px). Il ne change jamais la hauteur.
+const KNOT_INK_TOP = 2.5
+const KNOT_INK_HEIGHT = 12
+const KNOT_HALF_WIDTH = 6.5
 
 function chunk<T>(list: T[], size: number): T[][] {
   const pages: T[][] = []
@@ -100,8 +115,11 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
         </svg>
         {page.map((item, slot) => {
           const left = slots(width)[slot]
-          const top = ropeY(left + PLAQUE_WIDTH / 2, width)
+          const center = left + PLAQUE_WIDTH / 2
+          const top = ropeY(center, width)
           const bodyTop = slot === 1 ? BODY_TOP_MIDDLE : BODY_TOP_SIDE
+          const thread = bodyTop - top
+          const ropeEdge = Math.max(ropeY(center - KNOT_HALF_WIDTH, width), ropeY(center + KNOT_HALF_WIDTH, width)) + 1 - top
           return (
             <div
               key={item.key}
@@ -110,7 +128,22 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
               // Positions calculées (corde courbe) : seules valeurs hors grille, imposées par la géométrie.
               style={{ left, top, animationDelay: `${-2 * (pageIndex * PER_PAGE + slot)}s` }}
             >
-              <span aria-hidden="true" data-surface="paper" className={`w-thread ${item.threadClass ?? 'bg-vermillon'} ${item.still ? 'opacity-50' : ''}`} style={{ height: bodyTop - top }} />
+              {/* Fil d'un deck : couleur de deckThreadClass, éclaircie la nuit. Fil
+                  par défaut (« Nouveau deck ») : vermillon du papier, inchangé. */}
+              <span
+                aria-hidden="true"
+                data-surface={item.threadClass ? undefined : 'paper'}
+                className={`w-thread ${item.threadClass ?? 'bg-vermillon'} ${item.still ? 'opacity-50' : ''}`}
+                style={{ height: thread }}
+              />
+              {item.knotClass ? (
+                <FavoriteKnot
+                  filled
+                  className={`absolute left-1/2 -translate-x-1/2 size-4 ${item.knotClass}`}
+                  // Centré dans le vide entre la corde et la plaquette.
+                  style={{ top: ropeEdge + (thread - ropeEdge - KNOT_INK_HEIGHT) / 2 - KNOT_INK_TOP }}
+                />
+              ) : null}
               {item.node}
             </div>
           )

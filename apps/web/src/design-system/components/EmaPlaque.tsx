@@ -18,15 +18,18 @@ interface EmaPlaqueProps {
   color?: DeckColor | null
   closeKey?: string
   delayMs?: number
+  // Deck favori (CON-74) : dit dans le libellé. Le nœud est noué sur le fil par
+  // DeckRope ; le bouton est sur la page du deck (pas de bouton dans un lien).
+  favorite?: boolean
 }
 
 // Plaquette ema en bois (CON-57) : pentagone, cercle de progression, nom en
 // Kaisei, état du jour. Le fil et le balancement sont portés par DeckRope.
-export function EmaPlaque({ to, name, status, progress, total, color, closeKey, delayMs }: EmaPlaqueProps) {
+export function EmaPlaque({ to, name, status, progress, total, color, closeKey, delayMs, favorite }: EmaPlaqueProps) {
   return (
     <Link
       to={to}
-      aria-label={total ? `${name}, ${status}, ${total}` : `${name}, ${status}`}
+      aria-label={[name, favorite ? 'favori' : null, status, total].filter(Boolean).join(', ')}
       className="block drop-shadow-ema no-underline hover:no-underline focus-visible:outline-offset-4"
     >
       <span
@@ -60,7 +63,7 @@ export function DeckPlaque({ remaining, status, label, progress, color, closeKey
   return (
     <div className="flex flex-col items-center shrink-0 origin-top animate-sway drop-shadow-ema">
       <span aria-hidden="true" className="size-2 rounded-full bg-rope" />
-      <span aria-hidden="true" data-surface="paper" className={`w-thread h-3 ${deckThreadClass(color)}`} />
+      <span aria-hidden="true" className={`w-thread h-3 ${deckThreadClass(color)}`} />
       <span data-surface="paper" className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}>
         <BrushCircle value={progress} size="deck" label={label} closeKey={closeKey}>
           {remaining > 0 ? <span className="font-display text-display-sm">{remaining}</span> : null}

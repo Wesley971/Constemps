@@ -122,6 +122,17 @@
 .ema-band-danger {
   --ema-band: var(--color-deck-terracotta);
 }
+/* Nuit (CON-74) : même couleur éclaircie que la cordelette et le nœud du favori.
+   Pas dans un rideau, dont le contenu reste le même en jour et en nuit. */
+[data-theme='nuit'] .ema-band-indigo:not([data-surface='curtain'] *) {
+  --ema-band: var(--color-deck-indigo-nuit);
+}
+[data-theme='nuit'] .ema-band-success:not([data-surface='curtain'] *) {
+  --ema-band: var(--color-deck-sage-nuit);
+}
+[data-theme='nuit'] .ema-band-danger:not([data-surface='curtain'] *) {
+  --ema-band: var(--color-deck-terracotta-nuit);
+}
 
 /* Papier quadrillé du texte source (genkō yōshi, S18-generer) : carreaux de 24px,
    alignés sur l'interligne du texte. */
@@ -147,6 +158,21 @@
 }
 .seal-stamp {
   animation: seal-stamp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Nœud du favori (CON-74) : à la mise en favori, les boucles se resserrent sur le
+   fil, comme un nœud qu'on tire. */
+@keyframes knot-tighten {
+  0% {
+    scale: 1.35 0.85;
+  }
+  55% {
+    scale: 0.9 1.08;
+  }
+}
+.knot-tighten {
+  transform-origin: 50% 37.5%;
+  animation: knot-tighten 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
 /* Révision (CON-72, V7-revision) : la carte arrive comme de l'encre qui se

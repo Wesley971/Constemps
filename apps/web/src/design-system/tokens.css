@@ -114,6 +114,15 @@
   --color-deck-sage: #4b7a5b;
   --color-deck-sand: #a97a2e;
   --color-deck-terracotta: #9c4438;
+  /* Nuit (CON-74) : cordelette, nœud du favori et liseré des plaquettes, accordés.
+     Même teinte et même saturation, seule la luminosité monte, jusqu'au contraste
+     du sable sur le fond nuit (4,42 et 4,43:1 sur #161d33, sable 4,38:1, gardé tel
+     quel). Liseré décoratif, vers 2,4:1 sur le bois de nuit. Un deck sans couleur
+     prend le vermillon de nuit (7,26:1). Jamais dans un rideau (même rendu jour et
+     nuit). */
+  --color-deck-indigo-nuit: #7082b7;
+  --color-deck-sage-nuit: #588f6b;
+  --color-deck-terracotta-nuit: #c5695d;
 
   /* Accent de saison. */
   --color-season-spring: #b04a6e;

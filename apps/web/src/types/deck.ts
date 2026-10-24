@@ -17,6 +17,8 @@ export interface Deck {
   icon: DeckIcon | null
   userId: string
   createdAt: string
+  // Favori (CON-74) : listé avant les autres decks, partout.
+  isFavorite: boolean
   cardCount?: number
   dailyGoalReached?: boolean
   // Renvoyés par GET /decks (CON-68) : palier du jour (même règle que la

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, cardsApi, decksApi, ApiError } from '../services/api'
 import type { Deck, DeckColor } from '../types/deck'
@@ -9,12 +9,13 @@ import { BrushLink } from '../design-system/components/BrushLink'
 import { Button } from '../design-system/components/Button'
 import { CurtainConfirm } from '../design-system/components/Curtain'
 import { DeckPlaque } from '../design-system/components/EmaPlaque'
+import { FavoriteKnot } from '../design-system/components/FavoriteKnot'
 import { IconButton } from '../design-system/components/IconButton'
 import { InkRule } from '../design-system/components/InkRule'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
-import { CARD_TYPE_LABELS } from '../design-system/constants'
+import { CARD_TYPE_LABELS, deckKnotClass } from '../design-system/constants'
 import { deckCountsLabel, deckToday, deckTodayLabel } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
 import { CardFormCurtain } from './CardFormCurtain'
@@ -39,6 +40,9 @@ function DeckDetail() {
   const [editingDeck, setEditingDeck] = useState(false)
   const [savingDeck, setSavingDeck] = useState(false)
   const [deletingDeck, setDeletingDeck] = useState(false)
+  // Favori (CON-74) : garde contre un double envoi, nœud serré seulement au clic.
+  const favoriteBusy = useRef(false)
+  const [tightenFavorite, setTightenFavorite] = useState(false)
 
   const [cardCurtain, setCardCurtain] = useState<CardCurtainState>(null)
 
@@ -106,6 +110,27 @@ function DeckDetail() {
     }
   }
 
+  // Favori (CON-74) : affiché tout de suite, annulé avec une notification si
+  // l'API refuse. Un seul envoi à la fois ; le nœud ne se serre qu'à la mise
+  // en favori, jamais à l'ouverture de la page.
+  async function toggleFavorite() {
+    if (!deck || favoriteBusy.current) return
+    favoriteBusy.current = true
+    const previous = deck.isFavorite
+    const next = !previous
+    setTightenFavorite(next)
+    setDeck((prev) => (prev ? { ...prev, isFavorite: next } : prev))
+    try {
+      await decksApi.setFavorite(deck.id, next)
+    } catch (err) {
+      setDeck((prev) => (prev ? { ...prev, isFavorite: previous } : prev))
+      setTightenFavorite(false)
+      notify({ tone: 'danger', title: 'Favori non enregistré', message: err instanceof ApiError ? err.message : 'Réessaie dans un instant.' })
+    } finally {
+      favoriteBusy.current = false
+    }
+  }
+
   async function confirmDeleteDeck() {
     if (!deck) return
     setDeletingDeck(false)
@@ -154,6 +179,21 @@ function DeckDetail() {
       <div className="flex items-center justify-between gap-2">
         <BackLink to="/decks">Mes decks</BackLink>
         <div className="flex">
+          {/* Favori (CON-74) : vrai bouton bascule, libellé fixe et aria-pressed. */}
+          <button
+            type="button"
+            aria-pressed={deck.isFavorite}
+            aria-label="Favori"
+            title={deck.isFavorite ? 'Retirer des favoris' : 'Mettre en favori'}
+            onClick={toggleFavorite}
+            className="size-hit shrink-0 inline-flex items-center justify-center p-0 border-none rounded-sm bg-transparent text-inksoft cursor-pointer transition-colors duration-base ease-standard hover:text-indigo hover:bg-indigo-tint"
+          >
+            {deck.isFavorite ? (
+              <FavoriteKnot filled tighten={tightenFavorite} className={`size-6 ${deckKnotClass(deck.color)}`} />
+            ) : (
+              <FavoriteKnot className="size-6" />
+            )}
+          </button>
           <IconButton icon="edit" label="Modifier le deck" onClick={() => setEditingDeck(true)} />
           <IconButton icon="delete" label="Supprimer le deck" onClick={() => setDeletingDeck(true)} />
         </div>
