@@ -84,3 +84,11 @@ export const VERDICT_LABELS: Record<string, string> = {
   partiellement: 'Partiellement compris',
   incompris: 'Incompris',
 }
+
+// Onglets de la navigation principale : barre du bas sur mobile (TabBar), rail
+// sur grand écran (Rail, CON-75).
+export const TABS = [
+  { to: '/dashboard', label: 'Accueil' },
+  { to: '/decks', label: 'Decks' },
+  { to: '/profile', label: 'Profil' },
+]

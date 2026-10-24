@@ -153,13 +153,15 @@ export function Curtain({ title, onClose, children, dismissOnScrim = false, show
   return (
     <div className="fixed inset-0 z-modal">
       <div aria-hidden="true" className="scrim-in absolute inset-0 bg-scrim" onClick={dismissOnScrim ? onClose : undefined} />
+      {/* Grand écran (CON-75, S20-C-rideau) : 560px, centré dans la zone de
+          contenu à droite du rail ; le voile couvre tout, rail compris. */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="curtain-drop relative w-full max-w-120 mx-auto outline-none noren-edge"
+        className="curtain-drop relative w-full max-w-120 mx-auto outline-none noren-edge lg:max-w-curtain lg:left-30"
       >
         <div
           ref={panelRef}

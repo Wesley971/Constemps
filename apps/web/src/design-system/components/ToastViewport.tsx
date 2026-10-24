@@ -7,14 +7,15 @@ import { Notification } from './Notification'
 interface ToastViewportProps {
   toast: ActiveToast | null
   onDismiss: () => void
-  // tabs : au-dessus de la barre d'onglets. bottom : écran sans onglets, en bas
+  // tabs : au-dessus de la barre d'onglets ; sur grand écran (CON-75), en bas de
+  // la zone de contenu, à droite du rail. bottom : écran sans onglets, en bas
   // (connexion). top : en haut de l'écran (révision), pour ne jamais couvrir
   // « Valider ma réponse » ni la notation ; aucun rideau n'y a de croix.
   placement?: 'tabs' | 'bottom' | 'top'
 }
 
 const PLACEMENTS = {
-  tabs: 'bottom-20',
+  tabs: 'bottom-20 lg:bottom-4 lg:left-rail-zone',
   bottom: 'bottom-4',
   top: 'top-4',
 }

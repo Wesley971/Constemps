@@ -23,8 +23,8 @@ export function Seigaiha({ rise }: { rise?: number } = {}) {
   return (
     <svg
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-seigaiha overflow-hidden"
-      style={rise === undefined ? undefined : { height: `calc(var(--spacing-seigaiha) + ${Math.round(Math.min(1, Math.max(0, rise)) * 190)}px)`, transition: 'height 1.4s cubic-bezier(0.3, 0.7, 0.2, 1)' }}
+      className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-seigaiha lg:h-seigaiha-wide overflow-hidden"
+      style={rise === undefined ? undefined : { height: `calc(var(--seigaiha-base) + ${Math.round(Math.min(1, Math.max(0, rise)) * 190)}px)`, transition: 'height 1.4s cubic-bezier(0.3, 0.7, 0.2, 1)' }}
     >
       <defs>
         <pattern id={patternId} width="40" height="20" patternUnits="userSpaceOnUse">
