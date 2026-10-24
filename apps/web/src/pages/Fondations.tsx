@@ -91,6 +91,7 @@ export default function Fondations() {
   const [loading, setLoading] = useState(false)
   const [closeRun, setCloseRun] = useState(0)
   const [recto, setRecto] = useState(LONG_TEXT)
+  const [answer, setAnswer] = useState('')
   const [curtain, setCurtain] = useState<'form' | 'confirm' | null>(null)
   const [choice, setChoice] = useState<'a' | 'b'>('a')
   const [checked, setChecked] = useState(true)
@@ -201,6 +202,7 @@ export default function Fondations() {
             <Input label="Mot de passe" type="password" defaultValue="un mot de passe" />
             <Input label="Nom du deck" defaultValue={LONG_TEXT} error={showError ? 'Ce nom est déjà utilisé.' : undefined} hint="Visible sur la plaquette." />
             <Textarea label="Recto" value={recto} onChange={(e) => setRecto(e.target.value)} rows={3} />
+            <Textarea label="Ta réponse" variant="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} />
             <Button variant="secondary" onClick={() => setShowError((v) => !v)}>
               {showError ? 'Retirer l’erreur' : 'Afficher une erreur'}
             </Button>

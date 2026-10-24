@@ -366,7 +366,7 @@ function Review() {
           </>
         ) : (
           <form onSubmit={(event) => handleSubmitOpenQuestion(event, activeCard.id)} className="w-full flex flex-col gap-4">
-            <Textarea label="Ta réponse" rows={3} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} />
+            <Textarea label="Ta réponse" variant="answer" value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} />
             <Button type="submit" disabled={submitting || !openAnswer.trim()} className="w-full">
               <span className="grid">
                 <span className={`col-start-1 row-start-1 ${submitting ? 'invisible' : ''}`}>Valider ma réponse</span>
