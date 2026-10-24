@@ -93,10 +93,11 @@ export const decksApi = {
 
 export const cardsApi = {
   list: (deckId: string) => request<Card[]>(`/decks/${deckId}/cards`),
-  create: (deckId: string, type: CardType, front: string, back: string) =>
-    request<Card>(`/decks/${deckId}/cards`, { method: 'POST', body: JSON.stringify({ type, front, back }) }),
-  update: (id: string, front: string, back: string) =>
-    request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back }) }),
+  create: (deckId: string, type: CardType, front: string, back: string, example: string | null = null) =>
+    request<Card>(`/decks/${deckId}/cards`, { method: 'POST', body: JSON.stringify({ type, front, back, example }) }),
+  // L'exemple est toujours envoyé : null l'efface (CON-77).
+  update: (id: string, front: string, back: string, example: string | null) =>
+    request<Card>(`/cards/${id}`, { method: 'PATCH', body: JSON.stringify({ front, back, example }) }),
   remove: (id: string) => request<{ success: boolean }>(`/cards/${id}`, { method: 'DELETE' }),
   generate: (deckId: string, text: string, forceType?: CardType) =>
     request<GeneratedCard[]>(`/decks/${deckId}/cards/generate`, {

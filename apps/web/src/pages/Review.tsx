@@ -18,7 +18,7 @@ import { CARD_TYPE_LABELS } from '../design-system/constants'
 import { frontSizeClass, RATINGS } from '../lib/review'
 import { plural } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
-import { AiFeedback, ClosedVeil, RatingButtons } from './ReviewParts'
+import { AiFeedback, CardExample, ClosedVeil, RatingButtons } from './ReviewParts'
 
 // Texte du voile à la fin du palier (V7-revision). Le palier étendu atteint
 // garde le message de l'API.
@@ -316,15 +316,17 @@ function Review() {
           {/* Hauteur réservée : le verso prend la place du bouton sans rien décaler. */}
           <div className="w-full min-h-14 flex">
             {revealed ? (
-              <div
-                ref={versoRef}
-                tabIndex={-1}
-                className={`ink-in w-full flex items-center justify-center gap-3 px-6 py-3 border border-glass/70 bg-glass/70 backdrop-blur-md shadow-glass outline-none ${
-                  activeCard.back.length > 40 ? 'rounded-lg' : 'rounded-pill'
-                }`}
-              >
-                <span className="shrink-0 text-caption text-inksoft">Verso</span>
-                <p className="m-0 min-w-0 font-display text-display-md font-medium break-words">{frenchSpacing(activeCard.back)}</p>
+              // Le verso et son exemple (CON-77) forment un seul bloc, lu d'un trait.
+              <div ref={versoRef} tabIndex={-1} className="w-full flex flex-col gap-3 outline-none">
+                <div
+                  className={`ink-in w-full flex items-center justify-center gap-3 px-6 py-3 border border-glass/70 bg-glass/70 backdrop-blur-md shadow-glass ${
+                    activeCard.back.length > 40 ? 'rounded-lg' : 'rounded-pill'
+                  }`}
+                >
+                  <span className="shrink-0 text-caption text-inksoft">Verso</span>
+                  <p className="m-0 min-w-0 font-display text-display-md font-medium break-words">{frenchSpacing(activeCard.back)}</p>
+                </div>
+                {activeCard.example ? <CardExample text={activeCard.example} className="ink-in px-6 text-center" /> : null}
               </div>
             ) : (
               <button
@@ -357,7 +359,7 @@ function Review() {
             <div className="relative -mt-7">
               <VerdictStamp verdict={openResult.aiVerdict} />
             </div>
-            <AiFeedback result={openResult} reference={frenchSpacing(activeCard.back)} />
+            <AiFeedback result={openResult} reference={frenchSpacing(activeCard.back)} example={activeCard.example} />
             <Button onClick={advance} className="w-full mt-auto">
               Carte suivante
             </Button>

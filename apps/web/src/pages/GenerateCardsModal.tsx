@@ -12,6 +12,7 @@ import { Input } from '../design-system/components/Input'
 import { Label } from '../design-system/components/Label'
 import { Textarea } from '../design-system/components/Textarea'
 import { CARD_TYPE_LABELS, CARD_TYPE_HELP } from '../design-system/constants'
+import { EXAMPLE_MESSAGE, isValidExample, normalizeExample } from '../lib/card'
 import { plural } from '../lib/today'
 
 const MAX_TEXT_LENGTH = 50000
@@ -49,6 +50,10 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
   const [typeChoice, setTypeChoice] = useState<TypeChoice>('AUTO')
 
   const selectedCount = proposals?.filter((p) => p.selected).length ?? 0
+  // Exemple prérempli par l'IA, modifiable (CON-77) : mêmes règles que le rideau
+  // de carte ; une proposition retenue au-delà de la limite bloque l'ajout.
+  const exampleOf = (p: Proposal) => normalizeExample(p.example ?? '')
+  const hasInvalidExample = proposals?.some((p) => p.selected && !isValidExample(exampleOf(p))) ?? false
   const overLimit = sourceText.length > MAX_TEXT_LENGTH
 
   async function handleGenerate() {
@@ -86,7 +91,7 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
     const createdCards: CardData[] = []
     try {
       for (const p of selected) {
-        const card = await cardsApi.create(deckId, p.type, p.front.trim(), p.back.trim())
+        const card = await cardsApi.create(deckId, p.type, p.front.trim(), p.back.trim(), exampleOf(p))
         createdCards.push(card)
       }
       onCardsAdded(createdCards)
@@ -174,13 +179,19 @@ export function GenerateCardsModal({ deckId, onClose, onCardsAdded, notify }: Ge
                     rows={2}
                     onChange={(e) => updateProposal(p.id, { back: e.target.value })}
                   />
+                  <Input
+                    label="Exemple (facultatif)"
+                    value={p.example ?? ''}
+                    onChange={(e) => updateProposal(p.id, { example: e.target.value })}
+                    error={isValidExample(exampleOf(p)) ? undefined : EXAMPLE_MESSAGE}
+                  />
                 </li>
               ))}
             </ul>
           )}
 
           <div className="flex flex-col gap-2">
-            <Button variant="curtain" disabled={selectedCount === 0 || addingSelected} onClick={handleAddSelected} className="w-full">
+            <Button variant="curtain" disabled={selectedCount === 0 || hasInvalidExample || addingSelected} onClick={handleAddSelected} className="w-full">
               <span className="grid">
                 <span className={`col-start-1 row-start-1 ${addingSelected ? 'invisible' : ''}`}>{addIdle}</span>
                 <span className={`col-start-1 row-start-1 ${addingSelected ? '' : 'invisible'}`}>Ajout...</span>

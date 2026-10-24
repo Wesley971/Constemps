@@ -52,14 +52,28 @@ export function RatingButtons({ disabled, onRate, inked }: RatingButtonsProps) {
   )
 }
 
+// Phrase d'exemple d'une carte (CON-77, style de V7-revision) : petite étiquette,
+// texte droit en inksoft, interligne aéré. Montrée seulement avec le verso ou
+// la correction. Langue libre : pas d'espacement typographique français.
+export function CardExample({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <p className={`m-0 flex flex-col gap-1 ${className}`}>
+      <span className="text-micro uppercase tracking-micro text-inksoft">Exemple</span>
+      <span className="text-body-sm leading-6 text-inksoft break-words">{text}</span>
+    </p>
+  )
+}
+
 interface AiFeedbackProps {
   result: SubmitReviewResult
   reference: string
+  // Phrase d'exemple de la carte (CON-77), sous la réponse de référence.
+  example?: string | null
 }
 
 // Retour de l'IA dans le rouleau (S15-retour-ia) : points forts, à améliorer,
 // astuce, puis la réponse de référence. Les parties vides sont omises.
-export function AiFeedback({ result, reference }: AiFeedbackProps) {
+export function AiFeedback({ result, reference, example }: AiFeedbackProps) {
   const sections = [
     result.cePointsForts ? { label: 'Points forts', text: result.cePointsForts } : null,
     result.cePointsAmeliorer ? { label: 'À améliorer', text: result.cePointsAmeliorer } : null,
@@ -84,6 +98,7 @@ export function AiFeedback({ result, reference }: AiFeedbackProps) {
           <span className="text-micro uppercase tracking-micro text-wood-ink-soft">Réponse de référence</span>
           <span className="text-label">{reference}</span>
         </div>
+        {example ? <CardExample text={example} className="px-3" /> : null}
       </div>
     </Scroll>
   )

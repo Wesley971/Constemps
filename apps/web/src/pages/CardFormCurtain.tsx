@@ -10,6 +10,7 @@ import { Input } from '../design-system/components/Input'
 import { Label } from '../design-system/components/Label'
 import type { ToastState } from '../design-system/useToast'
 import { CARD_TYPE_HELP, CARD_TYPE_LABELS } from '../design-system/constants'
+import { EXAMPLE_MESSAGE, isValidExample, normalizeExample } from '../lib/card'
 import { languageLabel } from '../lib/profile'
 
 const FIELD_LABELS: Record<CardType, { front: string; back: string }> = {
@@ -46,6 +47,7 @@ export function CardFormCurtain({ deckId, card, onClose, onSaved, notify }: Card
   const [type, setType] = useState<CardType>(card?.type ?? 'CLASSIC')
   const [front, setFront] = useState(card?.front ?? '')
   const [back, setBack] = useState(card?.back ?? '')
+  const [example, setExample] = useState(card?.example ?? '')
   const [saving, setSaving] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [appliedTranslation, setAppliedTranslation] = useState<AppliedTranslation | null>(null)
@@ -54,13 +56,19 @@ export function CardFormCurtain({ deckId, card, onClose, onSaved, notify }: Card
   const latestFrontRef = useRef(front)
   latestFrontRef.current = front
 
+  // Phrase d'exemple facultative (CON-77) : mêmes règles que l'API.
+  const normalizedExample = normalizeExample(example)
+  const exampleError = isValidExample(normalizedExample) ? undefined : EXAMPLE_MESSAGE
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!front.trim() || !back.trim() || saving) return
+    if (!front.trim() || !back.trim() || exampleError || saving) return
 
     setSaving(true)
     try {
-      const saved = card ? await cardsApi.update(card.id, front.trim(), back.trim()) : await cardsApi.create(deckId, type, front.trim(), back.trim())
+      const saved = card
+        ? await cardsApi.update(card.id, front.trim(), back.trim(), normalizedExample)
+        : await cardsApi.create(deckId, type, front.trim(), back.trim(), normalizedExample)
       onSaved(saved)
     } catch (err) {
       notify({
@@ -155,7 +163,10 @@ export function CardFormCurtain({ deckId, card, onClose, onSaved, notify }: Card
           )}
         </div>
 
-        <Button type="submit" variant="curtain" disabled={saving || !front.trim() || !back.trim()} className="w-full">
+        {/* Montrée en révision avec le verso, jamais au recto (CON-77). */}
+        <Input label="Exemple (facultatif)" value={example} onChange={(e) => setExample(e.target.value)} error={exampleError} disabled={saving} />
+
+        <Button type="submit" variant="curtain" disabled={saving || !front.trim() || !back.trim() || Boolean(exampleError)} className="w-full">
           <span className="grid">
             <span className={`col-start-1 row-start-1 ${saving ? 'invisible' : ''}`}>{idle}</span>
             <span className={`col-start-1 row-start-1 ${saving ? '' : 'invisible'}`}>{busy}</span>
