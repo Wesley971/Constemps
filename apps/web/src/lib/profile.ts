@@ -13,6 +13,37 @@ export function languageLabel(code: string): string {
   }
 }
 
+// Prénom (CON-76) : mêmes règles et même message que l'API
+// (apps/api/src/auth/dto/update-profile.dto.ts), toute modification se reporte
+// des deux côtés. 1 à 40 caractères, lettres de toutes les langues, espaces,
+// traits d'union, apostrophes droite et typographique, au moins une lettre.
+const FIRST_NAME_MAX_LENGTH = 40
+const FIRST_NAME_PATTERN = new RegExp(`^(?=.{1,${FIRST_NAME_MAX_LENGTH}}$)(?=.*\\p{L})[\\p{L}\\p{M} '’-]+$`, 'u')
+export const FIRST_NAME_MESSAGE = `Le prénom ne peut contenir que des lettres, des espaces, des traits d'union et des apostrophes (${FIRST_NAME_MAX_LENGTH} caractères au plus).`
+
+// Même normalisation que l'API : forme NFC, espaces retirés aux bords et
+// réduits à un seul. Chaîne vide : null, le prénom est effacé.
+export function normalizeFirstName(value: string): string | null {
+  const normalized = value.normalize('NFC').trim().replace(/\s+/g, ' ')
+  return normalized === '' ? null : normalized
+}
+
+export function isValidFirstName(value: string | null): boolean {
+  return value === null || FIRST_NAME_PATTERN.test(value)
+}
+
+// Initiales du sceau tirées du prénom : premières lettres des deux premières
+// parties (espaces et traits d'union, pas l'apostrophe) : « Jean-Pierre » donne
+// « JP », « Wesley » « W », « D'Arcy » « D ».
+export function initialsFromFirstName(firstName: string): string {
+  const parts = firstName.split(/[\s-]+/).filter(Boolean)
+  return parts
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? '')
+    .join('')
+    .toLocaleUpperCase('fr')
+}
+
 // Initiales du sceau du profil (CON-71), tirées de l'e-mail tant que le compte
 // n'a pas de prénom (CON-76) : « jean.dupont@… » donne « JD », « test@… » « TE ».
 export function initialsFromEmail(email: string): string {

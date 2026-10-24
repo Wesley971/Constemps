@@ -7,6 +7,7 @@ import { Curtain } from '../design-system/components/Curtain'
 import { Input } from '../design-system/components/Input'
 import type { ToastState } from '../design-system/useToast'
 import { frenchSpacing } from '../lib/typography'
+import { FIRST_NAME_MESSAGE, isValidFirstName, normalizeFirstName } from '../lib/profile'
 
 interface ProfileCurtainProps {
   user: User
@@ -78,6 +79,54 @@ export function EmailCurtain({ user, onClose, onSaved, notify }: ProfileCurtainP
           </Button>
         </form>
       )}
+    </Curtain>
+  )
+}
+
+// Prénom (CON-76) : ajout, modification, ou retrait en vidant le champ. Mêmes
+// règles qu'à l'API, vérifiées avant l'envoi ; l'erreur part en notification.
+export function FirstNameCurtain({ user, onClose, onSaved, notify }: ProfileCurtainProps & { onSaved: (user: User) => void }) {
+  const [firstName, setFirstName] = useState(user.firstName ?? '')
+  const [saving, setSaving] = useState(false)
+  const next = normalizeFirstName(firstName)
+  const unchanged = next === user.firstName
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (saving || unchanged) return
+    if (!isValidFirstName(next)) {
+      notify({ tone: 'danger', title: 'Prénom non valide', message: FIRST_NAME_MESSAGE })
+      return
+    }
+    setSaving(true)
+    try {
+      const updated = await authApi.updateProfile({ firstName: next })
+      onSaved(updated)
+      notify(
+        updated.firstName
+          ? { tone: 'success', title: 'Prénom enregistré', message: frenchSpacing(`Bonjour, ${updated.firstName} !`) }
+          : { tone: 'success', title: 'Prénom retiré', message: 'Ton profil affiche de nouveau ton adresse e-mail.' },
+      )
+    } catch (err) {
+      notify({ tone: 'danger', title: 'Modification impossible', message: err instanceof ApiError ? err.message : 'Une erreur est survenue' })
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Curtain title="Prénom" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <Input
+          label="Prénom"
+          hint="40 caractères au plus · laisse vide pour le retirer"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          disabled={saving}
+        />
+        <Button type="submit" variant="curtain" disabled={saving || unchanged} className="w-full">
+          <SubmitLabel busy={saving} idle="Enregistrer" pending="Enregistrement..." />
+        </Button>
+      </form>
     </Curtain>
   )
 }

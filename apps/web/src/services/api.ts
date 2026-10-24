@@ -73,7 +73,7 @@ export const authApi = {
     request<User>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),
   me: () => request<User>('/auth/me'),
-  updateProfile: (data: { email?: string; currentPassword?: string; newPassword?: string }) =>
+  updateProfile: (data: { email?: string; currentPassword?: string; newPassword?: string; firstName?: string | null }) =>
     request<User>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
   deleteAccount: (password: string) =>
     request<{ success: boolean }>('/auth/account', { method: 'DELETE', body: JSON.stringify({ password }) }),

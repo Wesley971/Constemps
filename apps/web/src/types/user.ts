@@ -5,4 +5,6 @@ export interface User {
   createdAt: string
   // Code de la langue apprise (ex. « EN »), réglée côté back (CON-55).
   learningLanguage: string
+  // Prénom facultatif (CON-76) ; null : le profil affiche l'e-mail.
+  firstName: string | null
 }

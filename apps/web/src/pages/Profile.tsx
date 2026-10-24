@@ -14,27 +14,31 @@ import { Scroll } from '../design-system/components/Scroll'
 import { Seal } from '../design-system/components/Seal'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { useToast } from '../design-system/useToast'
-import { initialsFromEmail, languageLabel, memberSinceLabel } from '../lib/profile'
-import { EmailCurtain, PasswordCurtain } from './ProfileCurtains'
+import { initialsFromEmail, initialsFromFirstName, languageLabel, memberSinceLabel } from '../lib/profile'
+import { EmailCurtain, FirstNameCurtain, PasswordCurtain } from './ProfileCurtains'
 
-type OpenCurtain = 'email' | 'password' | 'delete' | null
+type OpenCurtain = 'firstName' | 'email' | 'password' | 'delete' | null
 
 interface AccountRowProps {
   label: string
   value: string
+  // Valeur absente (prénom non renseigné, CON-76) : texte secondaire.
+  empty?: boolean
   // Absent : valeur affichée seulement (langue apprise, CON-71).
   onEdit?: () => void
   editLabel?: string
+  // Mot du bouton : « Modifier » par défaut, « Ajouter » pour une valeur absente.
+  editText?: string
 }
 
 // Ligne du rouleau (S14-profil) : étiquette vermillon, valeur sur une ligne
 // tronquée, « Modifier » à droite avec sa cible de 44px.
-function AccountRow({ label, value, onEdit, editLabel }: AccountRowProps) {
+function AccountRow({ label, value, empty, onEdit, editLabel, editText = 'Modifier' }: AccountRowProps) {
   return (
     <div className="w-full flex items-center justify-between gap-3 min-h-hit py-1 text-left">
       <div className="min-w-0 flex flex-col">
         <Label>{label}</Label>
-        <span className="text-body-md truncate">{value}</span>
+        <span className={`text-body-md truncate ${empty ? 'text-inksoft' : ''}`}>{value}</span>
       </div>
       {onEdit ? (
         <button
@@ -43,7 +47,7 @@ function AccountRow({ label, value, onEdit, editLabel }: AccountRowProps) {
           aria-label={editLabel}
           className="shrink-0 min-h-hit px-0 bg-transparent border-none font-body text-label font-bold text-indigo cursor-pointer hover:text-indigo-deep"
         >
-          Modifier
+          {editText}
         </button>
       ) : null}
     </div>
@@ -70,9 +74,9 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-// Profil refondu (CON-71, S14-profil) : sceau à initiales, e-mail en titre tant
-// qu'il n'y a pas de prénom (CON-76), compte dans le rouleau, apparence en
-// blasons (CON-73), déconnexion et suppression en bas.
+// Profil refondu (CON-71, S14-profil) : sceau à initiales et prénom en titre
+// (CON-76), e-mail à la place tant qu'il n'y a pas de prénom, compte dans le
+// rouleau, apparence en blasons (CON-73), déconnexion et suppression en bas.
 function Profile() {
   const navigate = useNavigate()
   const { toast, notify } = useToast()
@@ -140,16 +144,25 @@ function Profile() {
       <ToastViewport toast={toast} />
 
       <div className="flex items-center gap-4 px-1">
-        <Seal initials={initialsFromEmail(user.email)} />
+        <Seal initials={user.firstName ? initialsFromFirstName(user.firstName) : initialsFromEmail(user.email)} />
         <div className="min-w-0 flex flex-col gap-1">
           <h1 className="m-0 font-display text-display-md break-words">
-            <EmailBreaks email={user.email} />
+            {user.firstName ?? <EmailBreaks email={user.email} />}
           </h1>
           <span className="font-display text-body-sm text-inksoft">Avec Constemps {memberSinceLabel(user.createdAt)}</span>
         </div>
       </div>
 
       <Scroll label="Mon compte">
+        <AccountRow
+          label="Prénom"
+          value={user.firstName ?? 'Aucun prénom'}
+          empty={!user.firstName}
+          onEdit={() => setCurtain('firstName')}
+          editText={user.firstName ? 'Modifier' : 'Ajouter'}
+          editLabel={user.firstName ? 'Modifier le prénom' : 'Ajouter un prénom'}
+        />
+        <InkRule />
         <AccountRow label="E-mail" value={user.email} onEdit={() => setCurtain('email')} editLabel="Modifier l’adresse e-mail" />
         <InkRule />
         <AccountRow label="Mot de passe" value="••••••••••" onEdit={() => setCurtain('password')} editLabel="Modifier le mot de passe" />
@@ -172,6 +185,18 @@ function Profile() {
           Supprimer mon compte
         </button>
       </div>
+
+      {curtain === 'firstName' && (
+        <FirstNameCurtain
+          user={user}
+          notify={notify}
+          onClose={() => setCurtain(null)}
+          onSaved={(updated) => {
+            setUser(updated)
+            setCurtain(null)
+          }}
+        />
+      )}
 
       {curtain === 'email' && (
         <EmailCurtain
