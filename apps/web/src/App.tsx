@@ -10,6 +10,7 @@ import Profile from './pages/Profile'
 import Onboarding from './pages/Onboarding'
 import { useAppearance } from './design-system/useAppearance'
 import { useUiScale } from './design-system/useUiScale'
+import { InkFilter } from './design-system/components/DeckSymbol'
 
 function App() {
   // Apparence suivie sur tous les écrans (Auto qui change avec le système).
@@ -19,6 +20,8 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* Filtre d'encre des symboles de deck (CON-92), une seule fois dans la page. */}
+      <InkFilter />
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />

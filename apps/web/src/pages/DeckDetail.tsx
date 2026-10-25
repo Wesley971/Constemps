@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authApi, cardsApi, decksApi, ApiError } from '../services/api'
-import type { Deck, DeckColor } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import type { Card as CardData } from '../types/card'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { BackLink } from '../design-system/components/BackLink'
@@ -96,12 +96,11 @@ function DeckDetail() {
     }
   }
 
-  async function handleSubmitDeck(name: string, color: DeckColor | null) {
+  async function handleSubmitDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
     if (!deck) return
     setSavingDeck(true)
     try {
-      // L'icône n'est plus choisie (CON-70) : on renvoie celle en base pour ne pas l'effacer.
-      const updated = await decksApi.update(deck.id, name, color, deck.icon)
+      const updated = await decksApi.update(deck.id, name, color, icon)
       // Fusion : la réponse ne porte pas les champs du jour (palier, dues).
       setDeck((prev) => (prev ? { ...prev, ...updated } : prev))
       setEditingDeck(false)
@@ -223,6 +222,7 @@ function DeckDetail() {
           label={status}
           progress={today.progress}
           color={deck.color}
+          icon={deck.icon}
           closeKey={today.done > 0 ? `deck-${deck.id}` : undefined}
         />
         <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4 lg:pt-7">

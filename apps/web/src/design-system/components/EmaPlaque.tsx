@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { DeckColor } from '../../types/deck'
-import { DECK_COLOR_BAND, deckThreadClass } from '../constants'
+import { DECK_COLOR_BAND, deckSymbolClass, deckThreadClass, isDeckIcon } from '../constants'
 import { BrushCircle } from './BrushCircle'
+import { DeckSymbol, DeckSymbolEcho } from './DeckSymbol'
 
 interface EmaPlaqueProps {
   to: string
@@ -16,6 +17,9 @@ interface EmaPlaqueProps {
   total?: string
   // Couleur du deck : fin liseré en haut de la plaquette (S18-nouveau-deck).
   color?: DeckColor | null
+  // Icône du deck (CON-92) : symbole au centre du cercle et son écho pâle dans le
+  // coin du bois. Sans icône (ou valeur inconnue), la plaquette ne change pas.
+  icon?: string | null
   closeKey?: string
   delayMs?: number
   // Deck favori (CON-74) : dit dans le libellé. Le nœud est noué sur le fil par
@@ -25,7 +29,10 @@ interface EmaPlaqueProps {
 
 // Plaquette ema en bois (CON-57) : pentagone, cercle de progression, nom en
 // Kaisei, état du jour. Le fil et le balancement sont portés par DeckRope.
-export function EmaPlaque({ to, name, status, progress, total, color, closeKey, delayMs, favorite }: EmaPlaqueProps) {
+export function EmaPlaque({ to, name, status, progress, total, color, icon, closeKey, delayMs, favorite }: EmaPlaqueProps) {
+  const symbol = isDeckIcon(icon) ? icon : null
+  // Avec un symbole, les textes passent au-dessus de son écho (positionné).
+  const above = symbol ? 'relative' : ''
   return (
     <Link
       to={to}
@@ -34,12 +41,15 @@ export function EmaPlaque({ to, name, status, progress, total, color, closeKey, 
     >
       <span
         data-surface="paper"
-        className={`ema-shape w-26 pt-6 px-2 flex flex-col items-center bg-wood text-wood-ink text-center ${total ? 'h-37 pb-2 gap-1' : 'h-32 pb-0 gap-2'} ${color ? DECK_COLOR_BAND[color] : ''}`}
+        className={`ema-shape w-26 pt-6 px-2 flex flex-col items-center bg-wood text-wood-ink text-center ${total ? 'h-37 pb-2 gap-1' : 'h-32 pb-0 gap-2'} ${color ? DECK_COLOR_BAND[color] : ''} ${above}`}
       >
-        <BrushCircle value={progress} size="sm" label={status} closeKey={closeKey} delayMs={delayMs} />
-        <span className="font-display text-body-sm font-bold line-clamp-2 break-words w-full">{name}</span>
-        <span className="text-micro font-normal text-wood-ink-soft">{status}</span>
-        {total ? <span className="mt-auto text-micro font-normal text-wood-ink-faint">{total}</span> : null}
+        {symbol ? <DeckSymbolEcho icon={symbol} plaqueWidth={104} className={deckSymbolClass(color)} /> : null}
+        <BrushCircle value={progress} size="sm" label={status} closeKey={closeKey} delayMs={delayMs}>
+          {symbol ? <DeckSymbol icon={symbol} size={14} strokeWidth={2.5} ink className={deckSymbolClass(color)} /> : null}
+        </BrushCircle>
+        <span className={`font-display text-body-sm font-bold line-clamp-2 break-words w-full ${above}`}>{name}</span>
+        <span className={`text-micro font-normal text-wood-ink-soft ${above}`}>{status}</span>
+        {total ? <span className={`mt-auto text-micro font-normal text-wood-ink-faint ${above}`}>{total}</span> : null}
       </span>
     </Link>
   )
@@ -54,22 +64,27 @@ interface DeckPlaqueProps {
   label: string
   progress: number
   color?: DeckColor | null
+  // Icône du deck (CON-92) : seulement l'écho dans le coin, le cercle garde son chiffre.
+  icon?: string | null
   closeKey?: string
 }
 
 // Grande plaquette de l'intérieur d'un deck (S15-deck) : accrochée à un clou,
 // même compteur que les plaquettes de la corde, chiffre écrit dans le cercle.
-export function DeckPlaque({ remaining, status, label, progress, color, closeKey }: DeckPlaqueProps) {
+export function DeckPlaque({ remaining, status, label, progress, color, icon, closeKey }: DeckPlaqueProps) {
+  const symbol = isDeckIcon(icon) ? icon : null
+  const above = symbol ? 'relative' : ''
   return (
     <div className="flex flex-col items-center shrink-0 origin-top animate-sway drop-shadow-ema">
       <span aria-hidden="true" className="size-2 rounded-full bg-rope" />
       <span aria-hidden="true" className={`w-thread h-3 ${deckThreadClass(color)}`} />
-      <span data-surface="paper" className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''}`}>
+      <span data-surface="paper" className={`ema-shape w-27 h-33 pt-8 px-2 pb-2 flex flex-col items-center gap-2 bg-wood text-wood-ink text-center ${color ? DECK_COLOR_BAND[color] : ''} ${above}`}>
+        {symbol ? <DeckSymbolEcho icon={symbol} plaqueWidth={108} className={deckSymbolClass(color)} /> : null}
         <BrushCircle value={progress} size="deck" label={label} closeKey={closeKey}>
           {remaining > 0 ? <span className="font-display text-display-sm">{remaining}</span> : null}
         </BrushCircle>
         {/* Déjà lu dans le libellé du cercle. */}
-        <span aria-hidden="true" className="text-caption text-wood-ink-soft">
+        <span aria-hidden="true" className={`text-caption text-wood-ink-soft ${above}`}>
           {status}
         </span>
       </span>

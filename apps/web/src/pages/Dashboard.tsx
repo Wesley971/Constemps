@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, dashboardApi, decksApi, ApiError } from '../services/api'
 import type { DashboardSummary } from '../types/dashboard'
-import type { Deck, DeckColor } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { Lantern } from '../design-system/components/Lantern'
 import { Scroll } from '../design-system/components/Scroll'
@@ -90,10 +90,10 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
-  async function handleCreateDeck(name: string, color: DeckColor | null) {
+  async function handleCreateDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
     setSavingDeck(true)
     try {
-      await decksApi.create(name, color)
+      await decksApi.create(name, color, icon)
       // Relecture complète : le nouveau deck doit arriver avec son palier calculé.
       setDecks(await decksApi.list())
       setCreatingDeck(false)
@@ -229,6 +229,7 @@ function Dashboard() {
                     status={deckTodayLabel(d)}
                     progress={d.progress}
                     color={d.deck.color}
+                    icon={d.deck.icon}
                     // Fermeture animée seulement si le deck a été travaillé aujourd'hui :
                     // un deck simplement à jour s'affiche fermé, sans animation.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}

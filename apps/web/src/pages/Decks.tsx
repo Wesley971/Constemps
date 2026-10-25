@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, decksApi, ApiError } from '../services/api'
-import type { Deck, DeckColor } from '../types/deck'
+import type { Deck, DeckColor, DeckIcon } from '../types/deck'
 import { AppScreen } from '../design-system/components/AppScreen'
 import { DeckRope } from '../design-system/components/DeckRope'
 import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
@@ -58,10 +58,10 @@ function Decks() {
     void init()
   }, [navigate])
 
-  async function handleCreateDeck(name: string, color: DeckColor | null) {
+  async function handleCreateDeck(name: string, color: DeckColor | null, icon: DeckIcon | null) {
     setSavingDeck(true)
     try {
-      await decksApi.create(name, color)
+      await decksApi.create(name, color, icon)
       // Relecture complète : le nouveau deck doit arriver avec son palier calculé.
       setDecks(await decksApi.list())
       setCreatingDeck(false)
@@ -108,6 +108,7 @@ function Decks() {
                     status={deckTodayLabel(d)}
                     progress={d.progress}
                     color={d.deck.color}
+                    icon={d.deck.icon}
                     total={cards === 0 ? 'Aucune carte' : `${cards} ${plural(cards, 'carte', 'cartes')}`}
                     // Même clé que l'accueil : la fermeture ne se joue qu'une fois par jour.
                     closeKey={d.done > 0 ? `deck-${d.deck.id}` : undefined}

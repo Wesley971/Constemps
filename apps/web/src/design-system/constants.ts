@@ -1,5 +1,5 @@
 import type { CardType } from '../types/card'
-import type { DeckColor } from '../types/deck'
+import type { DeckColor, DeckIcon } from '../types/deck'
 
 export const CARD_TYPE_LABELS: Record<CardType, string> = {
   CLASSIC: 'Appréciation personnelle',
@@ -58,6 +58,50 @@ const DECK_COLOR_KNOT: Record<DeckColor, string> = {
 
 export function deckKnotClass(color: DeckColor | null | undefined): string {
   return color ? DECK_COLOR_KNOT[color] : 'text-vermillon'
+}
+
+// Symbole du deck sur la plaquette (CON-92) : couleur de jour du deck dans les
+// deux thèmes, comme le bois et l'encre de la plaquette ; vermillon de la
+// surface sans couleur.
+const DECK_COLOR_SYMBOL: Record<DeckColor, string> = {
+  indigo: 'text-deck-indigo',
+  success: 'text-deck-sage',
+  warning: 'text-deck-sand',
+  danger: 'text-deck-terracotta',
+}
+
+export function deckSymbolClass(color: DeckColor | null | undefined): string {
+  return color ? DECK_COLOR_SYMBOL[color] : 'text-vermillon'
+}
+
+// Icônes proposées dans le rideau de deck (CON-92), dans l'ordre de la planche,
+// avec leur libellé court. Valeurs en base (anciens noms Phosphor), miroir de
+// la liste de l'API (decks/deck-icons.ts).
+export const DECK_ICONS: DeckIcon[] = [
+  'ph:book-bold',
+  'ph:code-bold',
+  'ph:globe-bold',
+  'ph:music-notes-bold',
+  'ph:lightbulb-bold',
+  'ph:flask-bold',
+  'ph:calculator-bold',
+  'ph:palette-bold',
+]
+
+// Valeur en base connue ? Une valeur hors liste s'affiche comme sans icône.
+export function isDeckIcon(value: string | null | undefined): value is DeckIcon {
+  return (DECK_ICONS as (string | null | undefined)[]).includes(value)
+}
+
+export const DECK_ICON_LABELS: Record<DeckIcon, string> = {
+  'ph:book-bold': 'Livre',
+  'ph:code-bold': 'Code',
+  'ph:globe-bold': 'Monde',
+  'ph:music-notes-bold': 'Musique',
+  'ph:lightbulb-bold': 'Idée',
+  'ph:flask-bold': 'Sciences',
+  'ph:calculator-bold': 'Calcul',
+  'ph:palette-bold': 'Art',
 }
 
 // Liseré en haut de la plaquette (classes de design-system/scenery.css).
