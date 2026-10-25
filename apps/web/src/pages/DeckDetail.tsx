@@ -15,6 +15,7 @@ import { InkRule } from '../design-system/components/InkRule'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { useToast } from '../design-system/useToast'
+import { useWideLayout } from '../design-system/useWideLayout'
 import { CARD_TYPE_LABELS, deckKnotClass } from '../design-system/constants'
 import { deckCountsLabel, deckToday, deckTodayLabel } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
@@ -32,6 +33,7 @@ function DeckDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { toast, notify, dismiss } = useToast()
+  const wide = useWideLayout()
 
   const [deck, setDeck] = useState<Deck | null>(null)
   const [cards, setCards] = useState<CardData[]>([])
@@ -171,6 +173,21 @@ function DeckDetail() {
 
   const today = deckToday(deck)
   const status = deckTodayLabel(today)
+  const knot = deck.isFavorite ? (
+    <FavoriteKnot filled tighten={tightenFavorite} className={`size-6 ${deckKnotClass(deck.color)}`} />
+  ) : (
+    <FavoriteKnot className="size-6" />
+  )
+  const actions = (
+    <>
+      <Button variant="secondary" icon="ph:plus-bold" onClick={() => setCardCurtain({ mode: 'create' })}>
+        Ajouter
+      </Button>
+      <Button variant="secondary" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
+        Générer
+      </Button>
+    </>
+  )
 
   return (
     <AppScreen>
@@ -179,27 +196,26 @@ function DeckDetail() {
       <div className="flex items-center justify-between gap-2">
         <BackLink to="/decks">Mes decks</BackLink>
         <div className="flex">
-          {/* Favori (CON-74) : vrai bouton bascule, libellé fixe et aria-pressed. */}
-          <button
-            type="button"
-            aria-pressed={deck.isFavorite}
-            aria-label="Favori"
-            title={deck.isFavorite ? 'Retirer des favoris' : 'Mettre en favori'}
-            onClick={toggleFavorite}
-            className="size-hit shrink-0 inline-flex items-center justify-center p-0 border-none rounded-sm bg-transparent text-inksoft cursor-pointer transition-colors duration-base ease-standard hover:text-indigo hover:bg-indigo-tint"
-          >
-            {deck.isFavorite ? (
-              <FavoriteKnot filled tighten={tightenFavorite} className={`size-6 ${deckKnotClass(deck.color)}`} />
-            ) : (
-              <FavoriteKnot className="size-6" />
-            )}
-          </button>
+          {/* Favori (CON-74) : vrai bouton bascule, libellé fixe et aria-pressed.
+              Sur grand écran, il passe dans la rangée Ajouter, Générer (S20-C-deck). */}
+          {wide ? null : (
+            <button
+              type="button"
+              aria-pressed={deck.isFavorite}
+              aria-label="Favori"
+              title={deck.isFavorite ? 'Retirer des favoris' : 'Mettre en favori'}
+              onClick={toggleFavorite}
+              className="size-hit shrink-0 inline-flex items-center justify-center p-0 border-none rounded-sm bg-transparent text-inksoft cursor-pointer transition-colors duration-base ease-standard hover:text-indigo hover:bg-indigo-tint"
+            >
+              {knot}
+            </button>
+          )}
           <IconButton icon="edit" label="Modifier le deck" onClick={() => setEditingDeck(true)} />
           <IconButton icon="delete" label="Supprimer le deck" onClick={() => setDeletingDeck(true)} />
         </div>
       </div>
 
-      <section aria-label="Aujourd'hui" className="flex items-start gap-5">
+      <section aria-label="Aujourd'hui" className="flex items-start gap-5 lg:gap-6">
         <DeckPlaque
           remaining={today.remaining}
           // Le chiffre est dans le cercle : la plaquette n'écrit que « à revoir ».
@@ -209,29 +225,40 @@ function DeckDetail() {
           color={deck.color}
           closeKey={today.done > 0 ? `deck-${deck.id}` : undefined}
         />
-        <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4">
-          <h1 className="m-0 font-display text-display-lg break-words">{deck.name}</h1>
+        <div className="flex-1 min-w-0 flex flex-col gap-1 pt-4 lg:pt-7">
+          <h1 className="m-0 font-display text-display-lg break-words lg:text-display-xl">{deck.name}</h1>
           <p className="m-0 text-body-sm text-inksoft">{deckCountsLabel(deck)}</p>
-          <BrushLink to={`/decks/${deck.id}/review`} disabled={cards.length === 0} delayMs={900}>
-            Réviser
-          </BrushLink>
-          <Link
-            to={`/decks/${deck.id}/stats`}
-            className="self-start min-h-hit inline-flex items-center text-body-sm font-bold text-inksoft no-underline hover:no-underline hover:text-indigo"
-          >
-            Voir les stats
-          </Link>
+          {/* Grand écran (S20-C-deck) : Réviser et Voir les stats sur une ligne. */}
+          <div className="contents lg:flex lg:items-center lg:gap-7">
+            <BrushLink to={`/decks/${deck.id}/review`} disabled={cards.length === 0} delayMs={900}>
+              Réviser
+            </BrushLink>
+            <Link
+              to={`/decks/${deck.id}/stats`}
+              className="self-start min-h-hit inline-flex items-center text-body-sm font-bold text-inksoft no-underline hover:no-underline hover:text-indigo lg:self-auto"
+            >
+              Voir les stats
+            </Link>
+          </div>
         </div>
+        {wide ? (
+          <div className="shrink-0 flex gap-2 pt-8">
+            {actions}
+            <button
+              type="button"
+              aria-pressed={deck.isFavorite}
+              title={deck.isFavorite ? 'Retirer des favoris' : 'Mettre en favori'}
+              onClick={toggleFavorite}
+              className="h-hit px-4 inline-flex items-center justify-center gap-2 border-none rounded-t-xs rounded-b-md bg-indigo-tint font-body text-body-sm font-bold text-indigo cursor-pointer transition-colors duration-base ease-standard hover:bg-indigo-veil"
+            >
+              {knot}
+              Favori
+            </button>
+          </div>
+        ) : null}
       </section>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" icon="ph:plus-bold" onClick={() => setCardCurtain({ mode: 'create' })}>
-          Ajouter
-        </Button>
-        <Button variant="secondary" icon="ph:sparkle-bold" onClick={() => setShowGenerateModal(true)}>
-          Générer
-        </Button>
-      </div>
+      {wide ? null : <div className="grid grid-cols-2 gap-2">{actions}</div>}
 
       <section aria-labelledby="les-cartes" className="flex flex-col">
         <div className="flex items-baseline justify-between">
@@ -244,10 +271,11 @@ function DeckDetail() {
         {cards.length === 0 ? (
           <p className="m-0 pt-2 text-body-sm text-inksoft">Aucune carte pour l’instant.</p>
         ) : (
-          <ul className="m-0 p-0 list-none flex flex-col">
+          // Grand écran : deux colonnes, un trait entre les cartes d'une même colonne.
+          <ul className="m-0 p-0 list-none flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-12">
             {cards.map((card, index) => (
               <li key={card.id} className="flex flex-col">
-                {index > 0 ? <InkRule /> : null}
+                {index > (wide ? 1 : 0) ? <InkRule /> : null}
                 <div className="flex items-center gap-2 py-2">
                   <div className="flex-1 min-w-0 flex flex-col gap-1">
                     {card.type === 'OPEN_QUESTION' ? (

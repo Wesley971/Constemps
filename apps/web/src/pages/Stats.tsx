@@ -12,6 +12,7 @@ import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { Scroll } from '../design-system/components/Scroll'
 import { RATING_LABELS, VERDICT_LABELS } from '../design-system/constants'
+import { useWideLayout } from '../design-system/useWideLayout'
 import { plural } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
 
@@ -53,7 +54,8 @@ function ReviewPanel({ when, review }: { when: string; review: ProgressHighlight
 
 function ProgressSection({ highlight }: { highlight: ProgressHighlight }) {
   return (
-    <section aria-labelledby="ta-progression" className="flex flex-col gap-2">
+    // Grand écran (S20-C-stats) : la carte occupe une colonne sur deux.
+    <section aria-labelledby="ta-progression" className="flex flex-col gap-2 lg:w-1/2 lg:pr-6">
       <Label id="ta-progression">Ta progression</Label>
       {highlight.available ? (
         <>
@@ -77,6 +79,7 @@ function ProgressSection({ highlight }: { highlight: ProgressHighlight }) {
 function Stats() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const wide = useWideLayout()
 
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [deck, setDeck] = useState<Deck | null>(null)
@@ -118,6 +121,46 @@ function Stats() {
     return <PageSkeleton />
   }
 
+  const scroll = overview ? (
+    <Scroll label="Ce deck" wide>
+      <p className="m-0 font-display text-scroll text-balance">{frenchSpacing(overview.message)}</p>
+    </Scroll>
+  ) : null
+  const progress = progressHighlight ? <ProgressSection highlight={progressHighlight} /> : null
+  const figures = overview ? (
+    <>
+      <div className="flex items-baseline gap-3">
+        <span className="font-display text-display-xl text-indigo lg:text-hero-card">{overview.masteredCards}</span>
+        <span className="text-body-sm lg:text-body-lg">
+          {plural(overview.masteredCards, 'carte maîtrisée', 'cartes maîtrisées')}
+          <br />
+          <span className="text-inksoft">sur {overview.totalCards} au total</span>
+        </span>
+      </div>
+
+      <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 text-label font-normal text-inksoft lg:gap-x-8">
+        {[
+          ['Nouvelles', overview.cardsByState.New],
+          ['En apprentissage', overview.cardsByState.Learning],
+          ['En révision', overview.cardsByState.Review],
+          ['À reprendre', overview.cardsByState.Relearning],
+        ].map(([label, count]) => (
+          <div key={label} className="flex gap-1">
+            <dt>{label}</dt>
+            <dd className="m-0">· {count}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Série affichée seulement quand elle existe : rien qui ressemble à un compteur cassé. */}
+      {overview.currentStreak > 0 ? (
+        <p className="m-0 text-caption text-inksoft">
+          Série en cours : {overview.currentStreak} {plural(overview.currentStreak, 'jour', 'jours')}
+        </p>
+      ) : null}
+    </>
+  ) : null
+
   return (
     <AppScreen>
       <BackLink to={`/decks/${id}`}>{deck?.name ?? 'Retour au deck'}</BackLink>
@@ -127,43 +170,24 @@ function Stats() {
       {overview ? (
         <>
           <h1 className="sr-only">Stats du deck {deck?.name}</h1>
-          <Scroll label="Ce deck">
-            <p className="m-0 font-display text-scroll text-balance">{frenchSpacing(overview.message)}</p>
-          </Scroll>
-
-          {progressHighlight ? <ProgressSection highlight={progressHighlight} /> : null}
-
-          <InkRule />
-
-          <div className="flex items-baseline gap-3">
-            <span className="font-display text-display-xl text-indigo">{overview.masteredCards}</span>
-            <span className="text-body-sm">
-              {plural(overview.masteredCards, 'carte maîtrisée', 'cartes maîtrisées')}
-              <br />
-              <span className="text-inksoft">sur {overview.totalCards} au total</span>
-            </span>
-          </div>
-
-          <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 text-label font-normal text-inksoft">
-            {[
-              ['Nouvelles', overview.cardsByState.New],
-              ['En apprentissage', overview.cardsByState.Learning],
-              ['En révision', overview.cardsByState.Review],
-              ['À reprendre', overview.cardsByState.Relearning],
-            ].map(([label, count]) => (
-              <div key={label} className="flex gap-1">
-                <dt>{label}</dt>
-                <dd className="m-0">· {count}</dd>
+          {wide ? (
+            // Grand écran (S20-C-stats) : le message et les chiffres côte à côte,
+            // puis la progression ; l'ordre du DOM suit celui de l'affichage.
+            <>
+              <div className="flex items-start gap-16">
+                {scroll}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 pt-7">{figures}</div>
               </div>
-            ))}
-          </dl>
-
-          {/* Série affichée seulement quand elle existe : rien qui ressemble à un compteur cassé. */}
-          {overview.currentStreak > 0 ? (
-            <p className="m-0 text-caption text-inksoft">
-              Série en cours : {overview.currentStreak} {plural(overview.currentStreak, 'jour', 'jours')}
-            </p>
-          ) : null}
+              {progress}
+            </>
+          ) : (
+            <>
+              {scroll}
+              {progress}
+              <InkRule />
+              {figures}
+            </>
+          )}
         </>
       ) : null}
     </AppScreen>
