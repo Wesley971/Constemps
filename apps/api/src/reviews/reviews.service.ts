@@ -10,7 +10,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
 import { DecksService } from '../decks/decks.service';
 import { ManualRating, SubmitReviewDto } from './dto/submit-review.dto';
-import { startOfDay } from '../common/date';
+import {
+  appDaysUntil,
+  nextAppDayStart,
+  startOfAppDay,
+} from '../common/app-day';
 import {
   activeSessionGoals,
   computeAdaptiveDailyGoal,
@@ -95,9 +99,10 @@ export class ReviewsService {
   // Le palier reste figé pour toute la durée d'une session de révision
   // active, y compris à travers un rechargement de page (F5) : on ne
   // recalcule que si aucun snapshot n'existe encore, si le snapshot date
-  // d'un autre jour calendaire, ou si la session qu'il décrivait était déjà
-  // conclue (palier ou palier étendu atteint), jamais juste parce que le
-  // front revient nous interroger en cours de session active. Décision
+  // d'une autre journée de l'app (CON-90 : de 4 h à 4 h, heure de Paris), ou
+  // si la session qu'il décrivait était déjà conclue (palier ou palier étendu
+  // atteint), jamais juste parce que le front revient nous interroger en
+  // cours de session active. Décision
   // actée sur CON-49 (régression CON-39 : recalcul à chaque submitReview()).
   private async getDailyCapState(deckId: string): Promise<{
     dailyGoal: number;
@@ -114,7 +119,8 @@ export class ReviewsService {
       },
     });
 
-    const todayStart = startOfDay(new Date());
+    const now = new Date();
+    const todayStart = startOfAppDay(now);
     const reviewedToday = await this.prisma.reviewLog.count({
       where: {
         card: { deckId },
@@ -122,8 +128,9 @@ export class ReviewsService {
       },
     });
 
+    // Disponible dès le début de la journée de son échéance (CON-90).
     const dueCardsCount = await this.prisma.card.count({
-      where: { deckId, due: { lte: new Date() } },
+      where: { deckId, due: { lt: nextAppDayStart(now) } },
     });
 
     let dailyGoal: number;
@@ -157,6 +164,8 @@ export class ReviewsService {
     // les plaquettes de l'accueil.
     const { dailyGoal, extendedGoal, reached, canContinue } =
       todayGoals(capState);
+    const now = new Date();
+    const dayEnd = nextAppDayStart(now);
 
     // Blocage strict sur le palier étendu brut, jamais sur le palier affiché.
     if (reviewedToday >= capState.extendedGoal) {
@@ -178,6 +187,7 @@ export class ReviewsService {
         done: false,
         state: 'goal_reached' as const,
         canContinue,
+        nextDueInDays: await this.nextDueInDays(deckId, now, dayEnd),
         message:
           "Palier du jour atteint, bravo ! Tu peux t'arrêter là, ou continuer si tu es motivé aujourd'hui.",
         dailyGoal,
@@ -189,8 +199,9 @@ export class ReviewsService {
     const target = reviewedToday >= dailyGoal ? extendedGoal : dailyGoal;
     const remaining = target - reviewedToday;
 
+    // Disponibles dès le début de la journée de leur échéance (CON-90).
     const cards = await this.prisma.card.findMany({
-      where: { deckId, due: { lte: new Date() } },
+      where: { deckId, due: { lt: dayEnd } },
       orderBy: { due: 'asc' },
       take: remaining,
     });
@@ -202,7 +213,27 @@ export class ReviewsService {
       extendedGoal,
       reviewedToday,
       cards,
+      // Écran vide de la révision : quand revient la prochaine carte.
+      nextDueInDays:
+        cards.length === 0
+          ? await this.nextDueInDays(deckId, now, dayEnd)
+          : null,
     };
+  }
+
+  // Prochaine échéance en journées (CON-90), parmi les cartes qui ne sont pas
+  // encore disponibles aujourd'hui. null pour un deck sans carte à venir.
+  private async nextDueInDays(
+    deckId: string,
+    now: Date,
+    dayEnd: Date,
+  ): Promise<number | null> {
+    const next = await this.prisma.card.findFirst({
+      where: { deckId, due: { gte: dayEnd } },
+      orderBy: { due: 'asc' },
+      select: { due: true },
+    });
+    return appDaysUntil(now, next?.due ?? null);
   }
 
   private async toFsrsCardInput(card: {

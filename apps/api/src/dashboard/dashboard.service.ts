@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Rating } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
-import { startOfDay, subDays, formatDateKey } from '../common/date';
+import { subDays } from '../common/date';
+import { addAppDays, appDayKey } from '../common/app-day';
 
 const MESSAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 // Si le nombre total de reviews a progressé d'au moins ce seuil depuis la
@@ -74,11 +75,11 @@ export class DashboardService {
       where: { id: userId },
     });
 
-    const reviewDayTimestamps = await this.getReviewDayTimestamps(userId);
+    const reviewDays = await this.getReviewDays(userId);
     const aggregate = await this.buildActivityAggregate(
       userId,
       user.createdAt,
-      reviewDayTimestamps,
+      reviewDays,
     );
 
     const [message, milestone] = await Promise.all([
@@ -91,40 +92,38 @@ export class DashboardService {
 
   async getActivity(userId: string, days: number) {
     const boundedDays = Math.min(Math.max(days, 1), MAX_ACTIVITY_DAYS);
-    const reviewDayTimestamps = await this.getReviewDayTimestamps(userId);
+    const reviewDays = await this.getReviewDays(userId);
 
-    const todayStart = startOfDay(new Date());
+    const today = appDayKey(new Date());
     const result: { date: string; active: boolean }[] = [];
     for (let i = boundedDays - 1; i >= 0; i--) {
-      const day = subDays(todayStart, i);
-      result.push({
-        date: formatDateKey(day),
-        active: reviewDayTimestamps.has(day.getTime()),
-      });
+      const day = addAppDays(today, -i);
+      result.push({ date: day, active: reviewDays.has(day) });
     }
     return result;
   }
 
-  private async getReviewDayTimestamps(userId: string): Promise<Set<number>> {
+  // Journées de l'app (CON-90) où l'utilisateur a révisé au moins une carte.
+  private async getReviewDays(userId: string): Promise<Set<string>> {
     const logs = await this.prisma.reviewLog.findMany({
       where: { card: { deck: { userId } } },
       select: { reviewedAt: true },
     });
-    return new Set(logs.map((log) => startOfDay(log.reviewedAt).getTime()));
+    return new Set(logs.map((log) => appDayKey(log.reviewedAt)));
   }
 
-  private computeCurrentStreak(reviewDayTimestamps: Set<number>): number {
-    let cursor = startOfDay(new Date());
-    if (!reviewDayTimestamps.has(cursor.getTime())) {
+  private computeCurrentStreak(reviewDays: Set<string>): number {
+    let cursor = appDayKey(new Date());
+    if (!reviewDays.has(cursor)) {
       // Pas encore révisé aujourd'hui : la journée n'est pas terminée, donc
       // le streak n'est pas "cassé" pour autant (même logique que StatsService).
-      cursor = subDays(cursor, 1);
+      cursor = addAppDays(cursor, -1);
     }
 
     let streak = 0;
-    while (reviewDayTimestamps.has(cursor.getTime())) {
+    while (reviewDays.has(cursor)) {
       streak += 1;
-      cursor = subDays(cursor, 1);
+      cursor = addAppDays(cursor, -1);
     }
     return streak;
   }
@@ -132,7 +131,7 @@ export class DashboardService {
   private async buildActivityAggregate(
     userId: string,
     accountCreatedAt: Date,
-    reviewDayTimestamps: Set<number>,
+    reviewDays: Set<string>,
   ): Promise<ActivityAggregate> {
     const shouldMixOlderSubject = Math.random() < OLDER_SUBJECT_MIX_PROBABILITY;
 
@@ -192,8 +191,8 @@ export class DashboardService {
     return {
       totalReviewCount,
       successfulReviewsLast7Days,
-      currentStreakDays: this.computeCurrentStreak(reviewDayTimestamps),
-      cumulativeActiveDays: reviewDayTimestamps.size,
+      currentStreakDays: this.computeCurrentStreak(reviewDays),
+      cumulativeActiveDays: reviewDays.size,
       accountAgeDays,
       recentResumeCourts,
       olderResumeCourt,

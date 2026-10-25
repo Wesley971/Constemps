@@ -4,7 +4,8 @@ import type { Card, Deck, ReviewLog } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { DecksService } from '../decks/decks.service';
 import { AiService } from '../ai/ai.service';
-import { startOfDay, subDays, formatDateKey } from '../common/date';
+import { subDays } from '../common/date';
+import { addAppDays, appDayKey, appDayStart } from '../common/app-day';
 
 const HISTORY_WINDOW_DAYS = 30;
 const RETENTION_WINDOW_DAYS = 30;
@@ -60,21 +61,20 @@ export class StatsService {
       select: { reviewedAt: true },
     });
 
-    const reviewDays = new Set(
-      logs.map((log) => startOfDay(log.reviewedAt).getTime()),
-    );
+    // Journées de l'app (CON-90) où le deck a été révisé.
+    const reviewDays = new Set(logs.map((log) => appDayKey(log.reviewedAt)));
 
-    let cursor = startOfDay(new Date());
-    if (!reviewDays.has(cursor.getTime())) {
+    let cursor = appDayKey(new Date());
+    if (!reviewDays.has(cursor)) {
       // Pas encore révisé aujourd'hui : la journée n'est pas terminée, donc le
       // streak n'est pas "cassé" pour autant. On commence à compter depuis hier.
-      cursor = subDays(cursor, 1);
+      cursor = addAppDays(cursor, -1);
     }
 
     let streak = 0;
-    while (reviewDays.has(cursor.getTime())) {
+    while (reviewDays.has(cursor)) {
       streak += 1;
-      cursor = subDays(cursor, 1);
+      cursor = addAppDays(cursor, -1);
     }
 
     return streak;
@@ -274,8 +274,10 @@ export class StatsService {
   async getHistory(userId: string, deckId: string) {
     await this.decksService.findOne(userId, deckId);
 
-    const todayStart = startOfDay(new Date());
-    const windowStart = subDays(todayStart, HISTORY_WINDOW_DAYS - 1);
+    const today = appDayKey(new Date());
+    const windowStart = appDayStart(
+      addAppDays(today, -(HISTORY_WINDOW_DAYS - 1)),
+    );
 
     const logs = await this.prisma.reviewLog.findMany({
       where: { card: { deckId }, reviewedAt: { gte: windowStart } },
@@ -284,12 +286,12 @@ export class StatsService {
 
     const byDay = new Map<string, { count: number; successCount: number }>();
     for (let i = 0; i < HISTORY_WINDOW_DAYS; i++) {
-      const day = subDays(todayStart, HISTORY_WINDOW_DAYS - 1 - i);
-      byDay.set(formatDateKey(day), { count: 0, successCount: 0 });
+      const day = addAppDays(today, -(HISTORY_WINDOW_DAYS - 1 - i));
+      byDay.set(day, { count: 0, successCount: 0 });
     }
 
     for (const log of logs) {
-      const entry = byDay.get(formatDateKey(startOfDay(log.reviewedAt)));
+      const entry = byDay.get(appDayKey(log.reviewedAt));
       if (entry) {
         entry.count += 1;
         if (log.rating >= RATING_GOOD) {

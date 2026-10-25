@@ -11,7 +11,11 @@ import {
   extendedGoalFor,
   todayGoals,
 } from '../common/daily-goal';
-import { startOfDay } from '../common/date';
+import {
+  appDaysUntil,
+  nextAppDayStart,
+  startOfAppDay,
+} from '../common/app-day';
 
 type DeckWithCardDues = Deck & { cards: { id: string; due: Date }[] };
 
@@ -71,18 +75,26 @@ export class DecksService {
 
     const now = new Date();
     const windowStart = new Date(now.getTime() - DAILY_GOAL_WINDOW_MS);
-    const todayStart = startOfDay(now);
+    // Journée de l'app (CON-90) : une carte est disponible dès le début de la
+    // journée de son échéance, et la prochaine échéance se compte en journées.
+    const todayStart = startOfAppDay(now);
+    const dayEnd = nextAppDayStart(now);
 
     const cardToDeck = new Map<string, string>();
     const dueCardsCountByDeck = new Map<string, number>();
+    const nextDueByDeck = new Map<string, Date>();
     for (const deck of decks) {
-      dueCardsCountByDeck.set(
-        deck.id,
-        deck.cards.filter((card) => card.due <= now).length,
-      );
+      let dueCount = 0;
       for (const card of deck.cards) {
         cardToDeck.set(card.id, deck.id);
+        if (card.due < dayEnd) {
+          dueCount += 1;
+        } else {
+          const next = nextDueByDeck.get(deck.id);
+          if (!next || card.due < next) nextDueByDeck.set(deck.id, card.due);
+        }
       }
+      dueCardsCountByDeck.set(deck.id, dueCount);
     }
 
     const cardIds = [...cardToDeck.keys()];
@@ -158,6 +170,8 @@ export class DecksService {
         // Même information que le voile de la révision : sans carte due ou
         // palier étendu atteint, ni « Réviser » ni « Continuer aujourd'hui ».
         canContinue: today.canContinue,
+        // Quand revient la prochaine carte pas encore disponible (CON-90).
+        nextDueInDays: appDaysUntil(now, nextDueByDeck.get(deck.id) ?? null),
       };
     });
   }

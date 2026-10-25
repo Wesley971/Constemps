@@ -6,6 +6,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { APP_TIME_ZONE, appTimeZoneAvailable } from './common/app-day';
 
 const REQUIRED_ENV_VARS = ['JWT_SECRET', 'DATABASE_URL', 'GEMINI_API_KEY'];
 
@@ -19,8 +20,20 @@ function assertRequiredEnvVars() {
   }
 }
 
+// Journée de l'app (CON-90) : sans les données du fuseau de Paris (Node sans
+// ICU complet), Intl retomberait sur UTC en silence et décalerait la journée.
+function assertAppTimeZone() {
+  if (!appTimeZoneAvailable()) {
+    console.error(
+      `Fuseau ${APP_TIME_ZONE} introuvable : Node doit être compilé avec les données ICU complètes.`,
+    );
+    process.exit(1);
+  }
+}
+
 async function bootstrap() {
   assertRequiredEnvVars();
+  assertAppTimeZone();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // Un seul hop de proxy en prod (Caddy, voir docker-compose.prod.yml) : sans ça,

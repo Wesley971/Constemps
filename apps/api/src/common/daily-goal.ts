@@ -1,4 +1,4 @@
-import { startOfDay } from './date';
+import { appDayKey } from './app-day';
 
 // Valeur de départ avant historique suffisant (deck tout neuf, ou moins de
 // DAILY_GOAL_WINDOW_DAYS jours depuis la première review). Remplace l'ancien
@@ -63,7 +63,8 @@ export function computeAdaptiveDailyGoal({
 
   const countsByDay = new Map<string, number>();
   for (const reviewedAt of successfulLogsInWindow) {
-    const key = startOfDay(reviewedAt).toISOString();
+    // Jours de révision comptés en journées de l'app (CON-90).
+    const key = appDayKey(reviewedAt);
     countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
   }
 
