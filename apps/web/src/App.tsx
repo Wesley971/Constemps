@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -10,11 +9,6 @@ import Stats from './pages/Stats'
 import Profile from './pages/Profile'
 import { useAppearance } from './design-system/useAppearance'
 import { useUiScale } from './design-system/useUiScale'
-
-// Page de démonstration du design system (CON-57), servie seulement en
-// développement : en build, import.meta.env.DEV vaut false, la branche est
-// éliminée et le module n'est jamais emporté dans le bundle.
-const Fondations = import.meta.env.DEV ? lazy(() => import('./pages/Fondations')) : null
 
 function App() {
   // Apparence suivie sur tous les écrans (Auto qui change avec le système).
@@ -34,16 +28,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/decks/:id/review" element={<Review />} />
-        {Fondations ? (
-          <Route
-            path="/fondations"
-            element={
-              <Suspense fallback={null}>
-                <Fondations />
-              </Suspense>
-            }
-          />
-        ) : null}
       </Routes>
     </BrowserRouter>
   )
