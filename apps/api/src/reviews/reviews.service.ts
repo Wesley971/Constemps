@@ -17,13 +17,9 @@ import {
   DAILY_GOAL_WINDOW_DAYS,
   DAILY_GOAL_WINDOW_MS,
   DEFAULT_DAILY_GOAL,
+  extendedGoalFor,
+  todayGoals,
 } from '../common/daily-goal';
-
-// Palier étendu (opt-in) : double du palier initial, mais le bonus est
-// plafonné à 20 cards supplémentaires pour éviter un cram illimité sur les
-// decks dont le palier adaptatif est déjà élevé. Pour un dailyGoal <= 20 (cas
-// courant), ça revient exactement à un doublement.
-const EXTENSION_BONUS_CAP = 20;
 
 const MANUAL_RATING_TO_GRADE: Record<ManualRating, Grade> = {
   [ManualRating.AGAIN]: Rating.Again,
@@ -92,8 +88,9 @@ export class ReviewsService {
   }
 
   // Regroupe tout le calcul du palier (dailyGoal adaptatif + palier étendu +
-  // compteur du jour) sans rien décider : getSession() en tire son affichage,
-  // submitReview() son blocage.
+  // compteur du jour + cartes dues) sans rien décider : getSession() en tire
+  // son affichage, submitReview() son blocage. Paliers bruts : le plafond aux
+  // cartes disponibles (todayGoals, CON-87) ne s'applique qu'à l'affichage.
   //
   // Le palier reste figé pour toute la durée d'une session de révision
   // active, y compris à travers un rechargement de page (F5) : on ne
@@ -106,6 +103,7 @@ export class ReviewsService {
     dailyGoal: number;
     extendedGoal: number;
     reviewedToday: number;
+    dueCardsCount: number;
   }> {
     const deck = await this.prisma.deck.findUnique({
       where: { id: deckId },
@@ -124,17 +122,17 @@ export class ReviewsService {
       },
     });
 
+    const dueCardsCount = await this.prisma.card.count({
+      where: { deckId, due: { lte: new Date() } },
+    });
+
     let dailyGoal: number;
     let extendedGoal: number;
 
     const activeGoals = activeSessionGoals(deck, reviewedToday, todayStart);
     if (!activeGoals) {
-      const dueCardsCount = await this.prisma.card.count({
-        where: { deckId, due: { lte: new Date() } },
-      });
-
       dailyGoal = await this.computeDailyGoal(deckId, dueCardsCount);
-      extendedGoal = dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
+      extendedGoal = extendedGoalFor(dailyGoal);
 
       await this.prisma.deck.update({
         where: { id: deckId },
@@ -148,15 +146,20 @@ export class ReviewsService {
       ({ dailyGoal, extendedGoal } = activeGoals);
     }
 
-    return { dailyGoal, extendedGoal, reviewedToday };
+    return { dailyGoal, extendedGoal, reviewedToday, dueCardsCount };
   }
 
   async getSession(userId: string, deckId: string, extend: boolean) {
     await this.decksService.findOne(userId, deckId);
-    const { dailyGoal, extendedGoal, reviewedToday } =
-      await this.getDailyCapState(deckId);
+    const capState = await this.getDailyCapState(deckId);
+    const { reviewedToday } = capState;
+    // Paliers affichés, ramenés aux cartes disponibles (CON-87) : les mêmes que
+    // les plaquettes de l'accueil.
+    const { dailyGoal, extendedGoal, reached, canContinue } =
+      todayGoals(capState);
 
-    if (reviewedToday >= extendedGoal) {
+    // Blocage strict sur le palier étendu brut, jamais sur le palier affiché.
+    if (reviewedToday >= capState.extendedGoal) {
       return {
         done: true,
         state: 'capped' as const,
@@ -168,10 +171,13 @@ export class ReviewsService {
       };
     }
 
-    if (reviewedToday >= dailyGoal && !extend) {
+    // Palier atteint, ou extension qui a épuisé les cartes dues : la journée se
+    // clôt, « Continuer aujourd'hui » seulement s'il reste des cartes dues.
+    if (reached && (!extend || !canContinue)) {
       return {
         done: false,
         state: 'goal_reached' as const,
+        canContinue,
         message:
           "Palier du jour atteint, bravo ! Tu peux t'arrêter là, ou continuer si tu es motivé aujourd'hui.",
         dailyGoal,

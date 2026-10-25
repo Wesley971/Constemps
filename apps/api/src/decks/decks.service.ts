@@ -8,6 +8,8 @@ import {
   activeSessionGoals,
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_MS,
+  extendedGoalFor,
+  todayGoals,
 } from '../common/daily-goal';
 import { startOfDay } from '../common/date';
 
@@ -32,8 +34,8 @@ export class DecksService {
   // dailyGoalReached calculé en batch (2 requêtes au total, quel que soit le
   // nombre de decks/cards) plutôt qu'en boucle par deck, pour éviter le N+1
   // signalé sur CON-36. Reflète uniquement le palier normal (goal_reached),
-  // jamais le palier étendu : voir computeAdaptiveDailyGoal (common/daily-goal.ts),
-  // formule partagée avec ReviewsService.computeDailyGoal.
+  // jamais le palier étendu : voir computeAdaptiveDailyGoal et todayGoals
+  // (common/daily-goal.ts), partagées avec ReviewsService.
   //
   // Ordre d'affichage partout (accueil, Mes decks, « Reprendre ») : favoris
   // d'abord (CON-74), puis chaque groupe du plus récent au plus ancien.
@@ -128,21 +130,34 @@ export class DecksService {
       // Même palier que l'écran de révision (CON-68) : le palier figé de la
       // session en cours s'il est encore valable, sinon le calcul adaptatif.
       // Lecture seule : seule la révision réécrit le snapshot.
-      const dailyGoal =
-        activeSessionGoals(deck, reviewedToday, todayStart)?.dailyGoal ??
-        computeAdaptiveDailyGoal({
-          firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
-          successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
-          dueCardsCount,
-        });
+      const activeGoals = activeSessionGoals(deck, reviewedToday, todayStart);
+      const adaptiveGoal = activeGoals
+        ? activeGoals.dailyGoal
+        : computeAdaptiveDailyGoal({
+            firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
+            successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
+            dueCardsCount,
+          });
+      // Puis ramené aux cartes disponibles, par le même calcul que la
+      // révision (CON-87) : dailyGoal est le palier affiché, pas le brut.
+      const today = todayGoals({
+        dailyGoal: adaptiveGoal,
+        extendedGoal:
+          activeGoals?.extendedGoal ?? extendedGoalFor(adaptiveGoal),
+        reviewedToday,
+        dueCardsCount,
+      });
 
       return {
         ...deck,
         cardCount: cards.length,
-        dailyGoal,
+        dailyGoal: today.dailyGoal,
         reviewedToday,
         dueCardsCount,
-        dailyGoalReached: reviewedToday >= dailyGoal,
+        dailyGoalReached: today.reached,
+        // Même information que le voile de la révision : sans carte due, pas
+        // d'accès « Réviser » une fois le palier atteint.
+        canContinue: today.canContinue,
       };
     });
   }

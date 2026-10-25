@@ -118,3 +118,53 @@ export function activeSessionGoals(
     extendedGoal: snapshot.sessionExtendedGoal,
   };
 }
+
+// Palier étendu (opt-in) : double du palier initial, mais le bonus est
+// plafonné à 20 cards supplémentaires pour éviter un cram illimité sur les
+// decks dont le palier adaptatif est déjà élevé. Pour un dailyGoal <= 20 (cas
+// courant), ça revient exactement à un doublement.
+export const EXTENSION_BONUS_CAP = 20;
+
+export function extendedGoalFor(dailyGoal: number): number {
+  return dailyGoal + Math.min(dailyGoal, EXTENSION_BONUS_CAP);
+}
+
+interface TodayGoalsInput {
+  // Paliers bruts : figés de la session (activeSessionGoals) ou adaptatifs.
+  dailyGoal: number;
+  extendedGoal: number;
+  reviewedToday: number;
+  dueCardsCount: number;
+}
+
+export interface TodayGoals {
+  dailyGoal: number;
+  extendedGoal: number;
+  reached: boolean;
+  canContinue: boolean;
+}
+
+// Palier du jour affiché (CON-87), seul calcul partagé par l'écran de révision
+// (ReviewsService.getSession) et les plaquettes de l'accueil (DecksService) :
+// les paliers bruts ramenés aux cartes réellement disponibles aujourd'hui
+// (faites + dues), pour qu'un deck de 3 cartes se close à 3 sur 3 partout.
+// Calculé à la lecture, jamais écrit dans le snapshot de session : des cartes
+// ajoutées ou redevenues dues plus tard relèvent l'objectif jusqu'au palier brut.
+// Atteint seulement avec au moins une carte faite aujourd'hui : un deck sans
+// rien à revoir ni rien de fait reste « à jour », pas « journée close ».
+// Le blocage strict (palier étendu, état capped et 403) reste sur le brut.
+export function todayGoals({
+  dailyGoal,
+  extendedGoal,
+  reviewedToday,
+  dueCardsCount,
+}: TodayGoalsInput): TodayGoals {
+  const available = reviewedToday + dueCardsCount;
+  const goal = Math.min(dailyGoal, available);
+  return {
+    dailyGoal: goal,
+    extendedGoal: Math.min(extendedGoal, available),
+    reached: reviewedToday > 0 && reviewedToday >= goal,
+    canContinue: dueCardsCount > 0,
+  };
+}
