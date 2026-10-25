@@ -1,4 +1,5 @@
 import type { Deck } from '../types/deck'
+import { appDayKey } from './appDay'
 
 // Calculs de l'accueil (CON-68). Le palier reste par deck (CLAUDE.md) : la
 // lanterne n'est qu'une somme d'affichage, aucun blocage global.
@@ -51,6 +52,9 @@ export interface DaySummary {
   // Premier deck où la révision a encore quelque chose à servir (canContinue de
   // l'API : cartes dues, palier étendu pas atteint), pour débloquer l'extension.
   continueDeck: Deck | null
+  // « Tout est à jour » (CON-90) : la plus proche échéance de l'API parmi les
+  // decks, en journées de l'app, ou null si aucune carte n'est à venir.
+  nextDueInDays: number | null
 }
 
 export function summarizeDay(decks: Deck[]): DaySummary {
@@ -74,6 +78,10 @@ export function summarizeDay(decks: Deck[]): DaySummary {
     state,
     resumeDeck: perDeck.find((d) => d.remaining > 0)?.deck ?? null,
     continueDeck: decks.find((d) => d.canContinue) ?? null,
+    nextDueInDays: decks.reduce<number | null>((min, d) => {
+      const next = d.nextDueInDays ?? null
+      return next !== null && (min === null || next < min) ? next : min
+    }, null),
   }
 }
 
@@ -87,20 +95,32 @@ export const SEASON_LABELS: Record<Season, string> = {
 }
 
 // Dates fixes (décision de Wesley) : printemps le 20 mars, été le 21 juin,
-// automne le 22 septembre, hiver le 21 décembre.
+// automne le 22 septembre, hiver le 21 décembre. Saison de la journée de l'app
+// (CON-90) : à 1 h du matin, encore celle de la veille.
 export function seasonOf(date: Date): Season {
-  const md = (date.getMonth() + 1) * 100 + date.getDate()
+  const [, month, day] = appDayKey(date).split('-').map(Number)
+  const md = month * 100 + day
   if (md >= 1221 || md < 320) return 'winter'
   if (md < 621) return 'spring'
   if (md < 922) return 'summer'
   return 'autumn'
 }
 
-const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })
+// La date affichée est celle de la clé de la journée de l'app : formatée en UTC
+// à midi pour ne dépendre ni du fuseau du navigateur ni de l'heure.
+const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })
 
-// Ex. « vendredi 23 oct. »
+// Ex. « vendredi 23 oct. », date de la journée de l'app (CON-90 : à 1 h du
+// matin samedi, encore vendredi).
 export function formatToday(date: Date): string {
-  return DATE_FORMAT.format(date)
+  const [year, month, day] = appDayKey(date).split('-').map(Number)
+  return DATE_FORMAT.format(new Date(Date.UTC(year, month - 1, day, 12)))
+}
+
+// Prochaine échéance (CON-90), en journées de l'app : « Prochaine carte demain »,
+// « Prochaine carte dans 3 jours ».
+export function nextCardLabel(days: number): string {
+  return days <= 1 ? 'Prochaine carte demain' : `Prochaine carte dans ${days} jours`
 }
 
 export function plural(n: number, singular: string, pluralForm: string): string {
@@ -119,10 +139,13 @@ export function decksSummaryLabel(day: DaySummary): string {
 
 // Ligne secondaire de l'intérieur d'un deck : cartes dues au total, au-delà
 // du palier du jour, puis nombre de cartes (« 11 en attente · 48 cartes »).
+// Sans carte disponible aujourd'hui, la prochaine échéance (CON-90) :
+// « Prochaine carte dans 3 jours · 48 cartes ».
 export function deckCountsLabel(deck: Deck): string {
   const total = deck.cardCount ?? 0
   if (total === 0) return 'Aucune carte'
   const cards = `${total} ${plural(total, 'carte', 'cartes')}`
   const due = deck.dueCardsCount ?? 0
-  return due > 0 ? `${due} en attente · ${cards}` : cards
+  if (due > 0) return `${due} en attente · ${cards}`
+  return deck.nextDueInDays ? `${nextCardLabel(deck.nextDueInDays)} · ${cards}` : cards
 }

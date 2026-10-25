@@ -18,7 +18,7 @@ import { SeasonMark } from '../design-system/components/SeasonMark'
 import { deckKnotClass, deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
 import type { CreateDeckState } from './Onboarding'
-import { deckTodayLabel, formatToday, plural, seasonOf, summarizeDay } from '../lib/today'
+import { deckTodayLabel, formatToday, nextCardLabel, plural, seasonOf, summarizeDay } from '../lib/today'
 import type { DaySummary } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
 
@@ -180,6 +180,10 @@ function Dashboard() {
                 </>
               ) : null}
               {day.state === 'clear' ? <span className="font-display text-display-md text-indigo">Tout est à jour</span> : null}
+              {/* Quand revient la prochaine carte (CON-90). */}
+              {day.state === 'clear' && day.nextDueInDays ? (
+                <span className="text-body-sm text-inksoft">{nextCardLabel(day.nextDueInDays)}</span>
+              ) : null}
               {day.state === 'empty' ? (
                 <BrushLink onClick={() => setCreatingDeck(true)} size="md" delayMs={1600}>
                   Crée ton premier deck

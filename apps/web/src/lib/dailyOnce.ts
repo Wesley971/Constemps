@@ -1,10 +1,11 @@
+import { appDayKey } from './appDay'
+
 // Mémoire « déjà joué aujourd'hui » des animations qui ne se jouent qu'une fois
 // par jour (fermeture des cercles au pinceau, icône de la saison). La clé garde
-// la date locale du dernier passage.
+// la journée de l'app du dernier passage (CON-90 : de 4 h à 4 h, heure de Paris).
 
 function todayKey(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return appDayKey(new Date())
 }
 
 // Stockage protégé : navigation privée ou stockage bloqué ne doivent jamais

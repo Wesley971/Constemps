@@ -11,6 +11,8 @@ export interface ReviewSessionActive {
   extendedGoal: number
   reviewedToday: number
   cards: Card[]
+  // Sans carte à servir : prochaine échéance en journées de l'app (CON-90).
+  nextDueInDays: number | null
 }
 
 export interface ReviewSessionGoalReached {
@@ -18,6 +20,8 @@ export interface ReviewSessionGoalReached {
   state: 'goal_reached'
   // Cartes encore dues (CON-87) : sans elles, pas de « Continuer aujourd'hui ».
   canContinue: boolean
+  // Prochaine échéance en journées de l'app (CON-90), pour le voile.
+  nextDueInDays: number | null
   message: string
   dailyGoal: number
   extendedGoal: number

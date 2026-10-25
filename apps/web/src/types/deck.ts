@@ -26,6 +26,9 @@ export interface Deck {
   // palier étendu pas atteint. Même valeur que le canContinue de la révision ;
   // sans elle, ni « Réviser » ni « Continuer aujourd'hui ».
   canContinue?: boolean
+  // Prochaine carte pas encore disponible, en journées de l'app (CON-90) :
+  // 1 pour demain. null sans carte à venir.
+  nextDueInDays?: number | null
   // Renvoyés par GET /decks (CON-68) : palier du jour, déjà ramené aux cartes
   // disponibles par l'API (même calcul que la révision, CON-87), cartes
   // révisées aujourd'hui, cartes dues maintenant.

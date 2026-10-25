@@ -20,13 +20,17 @@ import { useToast } from '../design-system/useToast'
 import { useWideLayout } from '../design-system/useWideLayout'
 import { CARD_TYPE_LABELS } from '../design-system/constants'
 import { frontSizeClass, RATINGS } from '../lib/review'
-import { plural } from '../lib/today'
+import { nextCardLabel, plural } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
 import { AiFeedback, CardExample, ClosedVeil, RatingButtons } from './ReviewParts'
 
 // Texte du voile à la fin du palier (V7-revision). Le palier étendu atteint
-// garde le message de l'API.
-const DAY_CLOSED_MESSAGE = 'Le cercle est fermé. Tu peux t’arrêter là, la suite t’attendra demain.'
+// garde le message de l'API. Sans carte due, la fin dit quand revient la
+// prochaine carte (CON-90) ; « demain » sinon, comme sur la planche.
+function dayClosedMessage(nextDueInDays: number | null): string {
+  const when = nextDueInDays && nextDueInDays > 1 ? `dans ${nextDueInDays} jours` : 'demain'
+  return `Le cercle est fermé. Tu peux t’arrêter là, la suite t’attendra ${when}.`
+}
 
 function TypeTag({ type }: { type: Card['type'] }) {
   if (type === 'OPEN_QUESTION') {
@@ -324,7 +328,11 @@ function Review() {
       return (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
           <p className="m-0 max-w-80 font-display text-display-sm">
-            {empty ? 'Ce deck n’a pas encore de carte.' : 'Tu as fait le tour des cartes pour l’instant. Reviens plus tard.'}
+            {empty
+              ? 'Ce deck n’a pas encore de carte.'
+              : session.nextDueInDays
+                ? `Tu as fait le tour des cartes. ${nextCardLabel(session.nextDueInDays)}.`
+                : 'Tu as fait le tour des cartes pour l’instant. Reviens plus tard.'}
           </p>
           <span className="self-center">
             <BrushLink to={`/decks/${id}`} size="md">
@@ -498,7 +506,7 @@ function Review() {
       </div>
       {session?.state === 'goal_reached' ? (
         <ClosedVeil
-          message={DAY_CLOSED_MESSAGE}
+          message={dayClosedMessage(session.canContinue ? null : session.nextDueInDays)}
           closeKey={veilCloseKey}
           onContinue={session.canContinue ? handleContinueToday : undefined}
           continuing={continuing}
