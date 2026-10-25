@@ -118,8 +118,10 @@ export function AiFeedback({ result, reference, example, wide }: AiFeedbackProps
 }
 
 interface ClosedVeilProps {
-  // capped : palier étendu atteint, plus de « Continuer aujourd'hui ».
+  // capped, ou plus aucune carte due (CON-87) : pas de « Continuer aujourd'hui ».
   message: string
+  // Cachet joué une fois par jour et par deck (CON-87), comme la lanterne.
+  closeKey: string
   onContinue?: () => void
   continuing?: boolean
 }
@@ -127,7 +129,7 @@ interface ClosedVeilProps {
 // Voile de fin de palier (V7-revision, « Journée close ») : le cercle fermé posé
 // en tampon vermillon. Le reste de l'écran est rendu inerte par la page.
 // Grand écran (CON-75) : le tampon à gauche, le texte et les boutons à droite.
-export function ClosedVeil({ message, onContinue, continuing }: ClosedVeilProps) {
+export function ClosedVeil({ message, closeKey, onContinue, continuing }: ClosedVeilProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const titleId = useId()
 
@@ -143,7 +145,7 @@ export function ClosedVeil({ message, onContinue, continuing }: ClosedVeilProps)
       className="veil-in fixed inset-0 z-modal flex flex-col items-center justify-center gap-6 px-9 bg-canvas/80 backdrop-blur-sm text-center lg:flex-row lg:gap-16 lg:text-left"
     >
       <span aria-hidden="true" data-surface="paper" className="seal-stamp size-38 flex items-center justify-center -rotate-8 rounded-blot bg-vermillon shadow-stamp">
-        <BrushCircle value={100} label="Cercle fermé" size="stamp" tone="cream" playClose delayMs={950} />
+        <BrushCircle value={100} label="Cercle fermé" size="stamp" tone="cream" closeKey={closeKey} delayMs={950} />
       </span>
       <div className="contents lg:flex lg:flex-col lg:gap-6">
         <div className="flex flex-col gap-2 max-w-80">

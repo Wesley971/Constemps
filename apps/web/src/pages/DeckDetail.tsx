@@ -230,9 +230,13 @@ function DeckDetail() {
           <p className="m-0 text-body-sm text-inksoft">{deckCountsLabel(deck)}</p>
           {/* Grand écran (S20-C-deck) : Réviser et Voir les stats sur une ligne. */}
           <div className="contents lg:flex lg:items-center lg:gap-7">
-            <BrushLink to={`/decks/${deck.id}/review`} disabled={cards.length === 0} delayMs={900}>
-              Réviser
-            </BrushLink>
+            {/* Palier atteint sans carte due (CON-87) : la révision n'ouvrirait que
+                le voile, la plaquette dit déjà « Palier atteint ». */}
+            {deck.dailyGoalReached && !deck.canContinue ? null : (
+              <BrushLink to={`/decks/${deck.id}/review`} disabled={cards.length === 0} delayMs={900}>
+                Réviser
+              </BrushLink>
+            )}
             <Link
               to={`/decks/${deck.id}/stats`}
               className="self-start min-h-hit inline-flex items-center text-body-sm font-bold text-inksoft no-underline hover:no-underline hover:text-indigo lg:self-auto"

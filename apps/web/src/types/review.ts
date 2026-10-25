@@ -16,6 +16,8 @@ export interface ReviewSessionActive {
 export interface ReviewSessionGoalReached {
   done: false
   state: 'goal_reached'
+  // Cartes encore dues (CON-87) : sans elles, pas de « Continuer aujourd'hui ».
+  canContinue: boolean
   message: string
   dailyGoal: number
   extendedGoal: number

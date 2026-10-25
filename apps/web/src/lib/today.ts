@@ -7,9 +7,8 @@ export type DeckTodayStatus = 'todo' | 'goal-reached' | 'clear'
 
 export interface DeckToday {
   deck: Deck
-  // Objectif du jour : le palier, plafonné à ce qui est réellement faisable
-  // (faites + dues), sinon un deck sans carte due empêcherait la journée de
-  // se clore.
+  // Objectif du jour : le palier déjà ramené par l'API aux cartes réellement
+  // disponibles (faites + dues), le même que l'écran de révision (CON-87).
   target: number
   // Faites, plafonnées à l'objectif : l'extension ne fait pas déborder le cercle.
   done: number
@@ -20,14 +19,12 @@ export interface DeckToday {
 }
 
 export function deckToday(deck: Deck): DeckToday {
-  const goal = deck.dailyGoal ?? 0
-  const reviewed = deck.reviewedToday ?? 0
-  const due = deck.dueCardsCount ?? 0
-
-  const target = Math.min(goal, reviewed + due)
-  const done = Math.min(reviewed, target)
+  const target = deck.dailyGoal ?? 0
+  const done = Math.min(deck.reviewedToday ?? 0, target)
   const remaining = target - done
-  const status: DeckTodayStatus = remaining > 0 ? 'todo' : due > 0 ? 'goal-reached' : 'clear'
+  // Palier atteint dès qu'une carte a été faite et l'objectif rempli, même sans
+  // carte due restante : comme le voile « Journée close » de la révision.
+  const status: DeckTodayStatus = remaining > 0 ? 'todo' : deck.dailyGoalReached ? 'goal-reached' : 'clear'
   const progress = target === 0 ? 100 : (done / target) * 100
 
   return { deck, target, done, remaining, status, progress }
@@ -76,7 +73,7 @@ export function summarizeDay(decks: Deck[]): DaySummary {
     remaining,
     state,
     resumeDeck: perDeck.find((d) => d.remaining > 0)?.deck ?? null,
-    continueDeck: decks.find((d) => (d.dueCardsCount ?? 0) > 0) ?? null,
+    continueDeck: decks.find((d) => d.canContinue) ?? null,
   }
 }
 

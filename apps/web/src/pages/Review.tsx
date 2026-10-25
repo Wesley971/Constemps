@@ -257,6 +257,8 @@ function Review() {
         : session.dailyGoal
   const ratio = target > 0 ? Math.min(1, doneToday / target) : 0
   const veil = session && session.state !== 'active'
+  // Cachet « Journée close » : fermeture jouée une fois par jour et par deck.
+  const veilCloseKey = `journee-close-${id}`
 
   const backIcon = (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
@@ -495,9 +497,14 @@ function Review() {
         </AppScreen>
       </div>
       {session?.state === 'goal_reached' ? (
-        <ClosedVeil message={DAY_CLOSED_MESSAGE} onContinue={handleContinueToday} continuing={continuing} />
+        <ClosedVeil
+          message={DAY_CLOSED_MESSAGE}
+          closeKey={veilCloseKey}
+          onContinue={session.canContinue ? handleContinueToday : undefined}
+          continuing={continuing}
+        />
       ) : null}
-      {session?.state === 'capped' ? <ClosedVeil message={frenchSpacing(session.message)} /> : null}
+      {session?.state === 'capped' ? <ClosedVeil message={frenchSpacing(session.message)} closeKey={veilCloseKey} /> : null}
     </>
   )
 }
