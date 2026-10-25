@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Deck } from '@prisma/client';
-import { Rating } from 'ts-fsrs';
+import { Rating, State } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
@@ -17,7 +17,16 @@ import {
   startOfAppDay,
 } from '../common/app-day';
 
-type DeckWithCardDues = Deck & { cards: { id: string; due: Date }[] };
+type DeckWithCardDues = Deck & {
+  cards: { id: string; due: Date; state: number }[];
+};
+
+// État FSRS d'une carte jamais révisée (State.New de ts-fsrs) : les cartes
+// neuves ne comptent ni dans le plancher du palier ni dans l'extension (CON-89).
+const NEW_STATE: number = State.New;
+
+// Champs des cartes nécessaires au calcul du jour.
+const TODAY_CARD_SELECT = { id: true, due: true, state: true } as const;
 
 // ReviewLog.rating est une colonne Int côté Prisma : on compare à une
 // constante typée number (plutôt qu'un cast `as number` sur l'enum, que
@@ -47,7 +56,7 @@ export class DecksService {
     const decks = await this.prisma.deck.findMany({
       where: { userId },
       orderBy: [{ isFavorite: 'desc' }, { createdAt: 'desc' }],
-      include: { cards: { select: { id: true, due: true } } },
+      include: { cards: { select: TODAY_CARD_SELECT } },
     });
     return this.withToday(decks);
   }
@@ -57,7 +66,7 @@ export class DecksService {
   async findOneWithToday(userId: string, id: string) {
     const deck = await this.prisma.deck.findUnique({
       where: { id },
-      include: { cards: { select: { id: true, due: true } } },
+      include: { cards: { select: TODAY_CARD_SELECT } },
     });
     if (!deck || deck.userId !== userId) {
       throw new NotFoundException('Deck introuvable');
@@ -82,19 +91,23 @@ export class DecksService {
 
     const cardToDeck = new Map<string, string>();
     const dueCardsCountByDeck = new Map<string, number>();
+    const dueReviewCountByDeck = new Map<string, number>();
     const nextDueByDeck = new Map<string, Date>();
     for (const deck of decks) {
       let dueCount = 0;
+      let dueReviews = 0;
       for (const card of deck.cards) {
         cardToDeck.set(card.id, deck.id);
         if (card.due < dayEnd) {
           dueCount += 1;
+          if (card.state !== NEW_STATE) dueReviews += 1;
         } else {
           const next = nextDueByDeck.get(deck.id);
           if (!next || card.due < next) nextDueByDeck.set(deck.id, card.due);
         }
       }
       dueCardsCountByDeck.set(deck.id, dueCount);
+      dueReviewCountByDeck.set(deck.id, dueReviews);
     }
 
     const cardIds = [...cardToDeck.keys()];
@@ -105,9 +118,30 @@ export class DecksService {
         })
       : [];
 
+    // Première révision de chaque carte : celle d'une carte neuve, qui relève
+    // du quota de neuves et pas du rythme des révisions (CON-89).
+    const firstReviewedAtByCard = new Map<string, Date>();
+    for (const log of logs) {
+      const first = firstReviewedAtByCard.get(log.cardId);
+      if (!first || log.reviewedAt < first) {
+        firstReviewedAtByCard.set(log.cardId, log.reviewedAt);
+      }
+    }
+
     const firstReviewedAtByDeck = new Map<string, Date>();
     const successfulInWindowByDeck = new Map<string, Date[]>();
     const reviewedTodayByDeck = new Map<string, number>();
+    const newLearnedTodayByDeck = new Map<string, number>();
+
+    for (const [cardId, first] of firstReviewedAtByCard) {
+      const deckId = cardToDeck.get(cardId);
+      if (deckId && first >= todayStart) {
+        newLearnedTodayByDeck.set(
+          deckId,
+          (newLearnedTodayByDeck.get(deckId) ?? 0) + 1,
+        );
+      }
+    }
 
     for (const log of logs) {
       const deckId = cardToDeck.get(log.cardId);
@@ -120,6 +154,8 @@ export class DecksService {
 
       if (
         log.rating >= GOOD_RATING &&
+        log.reviewedAt >
+          (firstReviewedAtByCard.get(log.cardId) ?? log.reviewedAt) &&
         log.reviewedAt >= windowStart &&
         log.reviewedAt <= now
       ) {
@@ -138,7 +174,9 @@ export class DecksService {
 
     return decks.map(({ cards, ...deck }) => {
       const dueCardsCount = dueCardsCountByDeck.get(deck.id) ?? 0;
+      const dueReviewCount = dueReviewCountByDeck.get(deck.id) ?? 0;
       const reviewedToday = reviewedTodayByDeck.get(deck.id) ?? 0;
+      const newLearnedToday = newLearnedTodayByDeck.get(deck.id) ?? 0;
       // Même palier que l'écran de révision (CON-68) : le palier figé de la
       // session en cours s'il est encore valable, sinon le calcul adaptatif.
       // Lecture seule : seule la révision réécrit le snapshot.
@@ -148,7 +186,9 @@ export class DecksService {
         : computeAdaptiveDailyGoal({
             firstReviewedAt: firstReviewedAtByDeck.get(deck.id) ?? null,
             successfulLogsInWindow: successfulInWindowByDeck.get(deck.id) ?? [],
-            dueCardsCount,
+            dueReviewCount,
+            newLearnedToday,
+            dueNewCount: dueCardsCount - dueReviewCount,
           });
       // Puis ramené aux cartes disponibles, par le même calcul que la
       // révision (CON-87) : dailyGoal est le palier affiché, pas le brut.
@@ -158,6 +198,8 @@ export class DecksService {
           activeGoals?.extendedGoal ?? extendedGoalFor(adaptiveGoal),
         reviewedToday,
         dueCardsCount,
+        dueReviewCount,
+        newLearnedToday,
       });
 
       return {

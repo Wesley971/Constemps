@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { fsrs, Rating } from 'ts-fsrs';
+import { fsrs, Rating, State } from 'ts-fsrs';
 import type { Card as FsrsCardInput, Grade } from 'ts-fsrs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService, AiVerdict } from '../ai/ai.service';
@@ -20,8 +20,8 @@ import {
   computeAdaptiveDailyGoal,
   DAILY_GOAL_WINDOW_DAYS,
   DAILY_GOAL_WINDOW_MS,
-  DEFAULT_DAILY_GOAL,
   extendedGoalFor,
+  newCardsLeftToday,
   todayGoals,
 } from '../common/daily-goal';
 
@@ -50,7 +50,11 @@ export class ReviewsService {
 
   private async computeDailyGoal(
     deckId: string,
-    dueCardsCount: number,
+    counts: {
+      dueReviewCount: number;
+      newLearnedToday: number;
+      dueNewCount: number;
+    },
   ): Promise<number> {
     const firstLog = await this.prisma.reviewLog.findFirst({
       where: { card: { deckId } },
@@ -59,14 +63,22 @@ export class ReviewsService {
     });
 
     if (!firstLog) {
-      return DEFAULT_DAILY_GOAL;
+      return computeAdaptiveDailyGoal({
+        firstReviewedAt: null,
+        successfulLogsInWindow: [],
+        ...counts,
+      });
     }
 
     const daysSinceFirstReview = Math.floor(
       (Date.now() - firstLog.reviewedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (daysSinceFirstReview < DAILY_GOAL_WINDOW_DAYS) {
-      return DEFAULT_DAILY_GOAL;
+      return computeAdaptiveDailyGoal({
+        firstReviewedAt: firstLog.reviewedAt,
+        successfulLogsInWindow: [],
+        ...counts,
+      });
     }
 
     // Fenêtre glissante des 7×24h précédentes, pas calée sur des frontières
@@ -81,13 +93,29 @@ export class ReviewsService {
         reviewedAt: { gte: windowStart, lte: windowEnd },
         rating: { gte: Rating.Good },
       },
-      select: { reviewedAt: true },
+      select: { cardId: true, reviewedAt: true },
     });
+
+    // Rythme des révisions seulement (CON-89) : la première révision d'une
+    // carte, celle d'une carte neuve, relève du quota de neuves.
+    const firstReviews = await this.prisma.reviewLog.groupBy({
+      by: ['cardId'],
+      where: { cardId: { in: successfulLogs.map((log) => log.cardId) } },
+      _min: { reviewedAt: true },
+    });
+    const firstReviewedAtByCard = new Map(
+      firstReviews.map((row) => [row.cardId, row._min.reviewedAt]),
+    );
+    const successfulReviews = successfulLogs.filter(
+      (log) =>
+        log.reviewedAt >
+        (firstReviewedAtByCard.get(log.cardId) ?? log.reviewedAt),
+    );
 
     return computeAdaptiveDailyGoal({
       firstReviewedAt: firstLog.reviewedAt,
-      successfulLogsInWindow: successfulLogs.map((log) => log.reviewedAt),
-      dueCardsCount,
+      successfulLogsInWindow: successfulReviews.map((log) => log.reviewedAt),
+      ...counts,
     });
   }
 
@@ -102,13 +130,15 @@ export class ReviewsService {
   // d'une autre journée de l'app (CON-90 : de 4 h à 4 h, heure de Paris), ou
   // si la session qu'il décrivait était déjà conclue (palier ou palier étendu
   // atteint), jamais juste parce que le front revient nous interroger en
-  // cours de session active. Décision
-  // actée sur CON-49 (régression CON-39 : recalcul à chaque submitReview()).
+  // cours de session active. Décision actée sur CON-49 (régression CON-39 :
+  // recalcul à chaque submitReview()).
   private async getDailyCapState(deckId: string): Promise<{
     dailyGoal: number;
     extendedGoal: number;
     reviewedToday: number;
     dueCardsCount: number;
+    dueReviewCount: number;
+    newLearnedToday: number;
   }> {
     const deck = await this.prisma.deck.findUnique({
       where: { id: deckId },
@@ -128,9 +158,26 @@ export class ReviewsService {
       },
     });
 
-    // Disponible dès le début de la journée de son échéance (CON-90).
+    // Disponible dès le début de la journée de son échéance (CON-90). Parmi
+    // elles, les révisions (cartes déjà vues) : seules à compter dans le
+    // plancher du palier et à être servies pendant l'extension (CON-89).
+    const dayEnd = nextAppDayStart(now);
     const dueCardsCount = await this.prisma.card.count({
-      where: { deckId, due: { lt: nextAppDayStart(now) } },
+      where: { deckId, due: { lt: dayEnd } },
+    });
+    const dueReviewCount = await this.prisma.card.count({
+      where: { deckId, due: { lt: dayEnd }, state: { not: State.New } },
+    });
+    // Cartes neuves apprises aujourd'hui, pour le quota (CON-89) : cartes dont
+    // la première révision date de la journée.
+    const newLearnedToday = await this.prisma.card.count({
+      where: {
+        deckId,
+        reviewLogs: {
+          some: { reviewedAt: { gte: todayStart } },
+          none: { reviewedAt: { lt: todayStart } },
+        },
+      },
     });
 
     let dailyGoal: number;
@@ -138,7 +185,11 @@ export class ReviewsService {
 
     const activeGoals = activeSessionGoals(deck, reviewedToday, todayStart);
     if (!activeGoals) {
-      dailyGoal = await this.computeDailyGoal(deckId, dueCardsCount);
+      dailyGoal = await this.computeDailyGoal(deckId, {
+        dueReviewCount,
+        newLearnedToday,
+        dueNewCount: dueCardsCount - dueReviewCount,
+      });
       extendedGoal = extendedGoalFor(dailyGoal);
 
       await this.prisma.deck.update({
@@ -153,7 +204,14 @@ export class ReviewsService {
       ({ dailyGoal, extendedGoal } = activeGoals);
     }
 
-    return { dailyGoal, extendedGoal, reviewedToday, dueCardsCount };
+    return {
+      dailyGoal,
+      extendedGoal,
+      reviewedToday,
+      dueCardsCount,
+      dueReviewCount,
+      newLearnedToday,
+    };
   }
 
   async getSession(userId: string, deckId: string, extend: boolean) {
@@ -180,14 +238,18 @@ export class ReviewsService {
       };
     }
 
-    // Palier atteint, ou extension qui a épuisé les cartes dues : la journée se
-    // clôt, « Continuer aujourd'hui » seulement s'il reste des cartes dues.
+    // Palier atteint, ou extension qui a épuisé les révisions dues : la journée
+    // se clôt, « Continuer aujourd'hui » seulement s'il reste des révisions.
     if (reached && (!extend || !canContinue)) {
       return {
         done: false,
         state: 'goal_reached' as const,
         canContinue,
-        nextDueInDays: await this.nextDueInDays(deckId, now, dayEnd),
+        // Des cartes neuves encore en attente reviennent demain (CON-89).
+        nextDueInDays:
+          capState.dueCardsCount > 0
+            ? 1
+            : await this.nextDueInDays(deckId, now, dayEnd),
         message:
           "Palier du jour atteint, bravo ! Tu peux t'arrêter là, ou continuer si tu es motivé aujourd'hui.",
         dailyGoal,
@@ -196,15 +258,39 @@ export class ReviewsService {
       };
     }
 
-    const target = reviewedToday >= dailyGoal ? extendedGoal : dailyGoal;
+    const inExtension = reviewedToday >= dailyGoal;
+    const target = inExtension ? extendedGoal : dailyGoal;
     const remaining = target - reviewedToday;
 
     // Disponibles dès le début de la journée de leur échéance (CON-90).
-    const cards = await this.prisma.card.findMany({
-      where: { deckId, due: { lt: dayEnd } },
-      orderBy: { due: 'asc' },
-      take: remaining,
+    // Les révisions d'abord, puis les cartes neuves dans la limite du quota du
+    // jour, jamais pendant l'extension (CON-89) : une carte neuve crée du
+    // travail pour les jours suivants. Les places des neuves sont réservées,
+    // pour qu'une grosse pile de révisions ne mange pas le quota.
+    // Second critère de tri sur l'id, pour un ordre stable à échéance égale.
+    const newSlots = inExtension
+      ? 0
+      : Math.min(
+          remaining,
+          newCardsLeftToday(
+            capState.newLearnedToday,
+            capState.dueCardsCount - capState.dueReviewCount,
+          ),
+        );
+    const reviews = await this.prisma.card.findMany({
+      where: { deckId, due: { lt: dayEnd }, state: { not: State.New } },
+      orderBy: [{ due: 'asc' }, { id: 'asc' }],
+      take: remaining - newSlots,
     });
+    const newCards =
+      newSlots === 0
+        ? []
+        : await this.prisma.card.findMany({
+            where: { deckId, due: { lt: dayEnd }, state: State.New },
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+            take: newSlots,
+          });
+    const cards = [...reviews, ...newCards];
 
     return {
       done: false,
