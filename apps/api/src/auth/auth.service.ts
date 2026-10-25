@@ -64,7 +64,13 @@ export class AuthService {
     // s'en sortir.
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: { email: dto.email, password: hashedPassword },
+        // Prénom facultatif (CON-56), écrit avec le compte : jamais de compte
+        // créé dont le prénom saisi serait perdu.
+        data: {
+          email: dto.email,
+          password: hashedPassword,
+          firstName: dto.firstName ?? null,
+        },
         select: { id: true, email: true },
       });
 
