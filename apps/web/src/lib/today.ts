@@ -48,8 +48,8 @@ export interface DaySummary {
   state: DayState
   // Premier deck, dans l'ordre affiché, qui a encore des cartes sous son palier.
   resumeDeck: Deck | null
-  // Premier deck qui a encore des cartes dues (révision où le bouton du deck
-  // reste le seul à débloquer l'extension).
+  // Premier deck où la révision a encore quelque chose à servir (canContinue de
+  // l'API : cartes dues, palier étendu pas atteint), pour débloquer l'extension.
   continueDeck: Deck | null
 }
 

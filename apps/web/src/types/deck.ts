@@ -22,8 +22,9 @@ export interface Deck {
   cardCount?: number
   // Palier du jour atteint, avec au moins une carte faite aujourd'hui (CON-87).
   dailyGoalReached?: boolean
-  // Cartes encore dues aujourd'hui (CON-87), même valeur que le canContinue de
-  // la révision : sans elles, un palier atteint ne propose plus « Réviser ».
+  // Quelque chose à réviser aujourd'hui (CON-87, CON-88) : une carte due et le
+  // palier étendu pas atteint. Même valeur que le canContinue de la révision ;
+  // sans elle, ni « Réviser » ni « Continuer aujourd'hui ».
   canContinue?: boolean
   // Renvoyés par GET /decks (CON-68) : palier du jour, déjà ramené aux cartes
   // disponibles par l'API (même calcul que la révision, CON-87), cartes
