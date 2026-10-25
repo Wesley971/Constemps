@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import brushUrl from '../../assets/brush-circle.svg'
+import { playedToday, rememberPlayedToday } from '../../lib/dailyOnce'
 
 type BrushCircleSize = 'sm' | 'deck' | 'review' | 'stamp' | 'md' | 'lg' | 'enso'
 type BrushCircleTone = 'indigo' | 'vermillon' | 'cream'
@@ -70,27 +71,12 @@ const GAP_DELAY_MS = 1450
 
 const STORAGE_PREFIX = 'constemps.brushClosed.'
 
-function today(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-// Stockage protégé : navigation privée ou stockage bloqué ne doivent jamais
-// casser l'affichage. En cas d'échec de lecture, la fermeture est rejouée.
 function closePlayedToday(key: string): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_PREFIX + key) === today()
-  } catch {
-    return false
-  }
+  return playedToday(STORAGE_PREFIX + key)
 }
 
 function rememberClosePlayed(key: string) {
-  try {
-    window.localStorage.setItem(STORAGE_PREFIX + key, today())
-  } catch {
-    // Rien à faire : au pire, la fermeture sera rejouée à la prochaine vue.
-  }
+  rememberPlayedToday(STORAGE_PREFIX + key)
 }
 
 function Stroke({ className, style }: { className: string; style?: CSSProperties }) {
