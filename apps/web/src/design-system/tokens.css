@@ -483,6 +483,11 @@
   }
 }
 
+/* États de départ des cercles au pinceau, affichés aussi pendant le délai
+   (fill backwards) : tout le fondu du masque (brush.css) doit tomber après la
+   fin du tour (360deg), sinon un bout de trait apparaît avant l'animation
+   (CON-91). Limites : --a ≤ -6deg (fondu de 354deg - --a à 360deg - --a) et
+   --b ≤ -10deg (fondu de 350deg - --b à 360deg - --b). */
 @keyframes brush-in {
   from {
     --a: -8deg;
@@ -491,6 +496,6 @@
 
 @keyframes gap-in {
   from {
-    --b: -4deg;
+    --b: -10deg;
   }
 }
