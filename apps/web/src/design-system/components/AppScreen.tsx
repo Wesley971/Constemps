@@ -27,7 +27,7 @@ interface AppScreenProps {
 export function AppScreen({ children, tallNoren, withTabs = true, norenPanels, rise, wideNoren }: AppScreenProps) {
   const wideLayout = withTabs || wideNoren
   return (
-    <div className="relative min-h-dvh flex flex-col overflow-x-clip">
+    <div className="relative min-h-viewport flex flex-col overflow-x-clip">
       <Seigaiha rise={rise} />
       {withTabs ? <Rail /> : null}
       {wideNoren && !withTabs ? (

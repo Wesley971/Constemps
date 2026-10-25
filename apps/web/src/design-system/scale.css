@@ -1,0 +1,21 @@
+/* Échelle de l'interface sur écran ultra large (CON-75, S24-ultralarge). Le
+   facteur (--ui-scale, zoom sur <html>) est posé par lib/uiScale.ts et par le
+   script en ligne de index.html, seulement au-delà de 1440px de large. */
+:root {
+  --ui-scale: 1;
+  /* Zone de contenu : 924px (--container-content de tokens.css) à l'échelle 1,
+     1400px à l'échelle 1,75, en px de mise en page (puis agrandie par le zoom).
+     Hors couche, cette valeur prend le pas sur celle du thème. */
+  --container-content: calc(924px + (var(--ui-scale) - 1) / 0.75 * 476px);
+}
+
+/* Sous zoom, les unités d'écran (vh, dvh, vw) sont multipliées par le facteur :
+   100dvh ferait 2520px sur un écran de 1440px à l'échelle 1,75. Toute hauteur ou
+   largeur d'écran passe par ces utilitaires, jamais par min-h-dvh, h-screen ou
+   w-screen. */
+@utility min-h-viewport {
+  min-height: calc(100dvh / var(--ui-scale));
+}
+@utility max-h-viewport {
+  max-height: calc(100dvh / var(--ui-scale));
+}

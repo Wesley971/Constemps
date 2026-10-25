@@ -30,6 +30,21 @@
         if (meta) meta.setAttribute('content', canvas)
       })()
     </script>
+    <!-- Échelle de l'interface sur écran ultra large (CON-75), posée avant tout
+         rendu pour éviter l'éclair d'une page plus petite. Même formule que
+         src/lib/uiScale.ts, qui prend le relais au redimensionnement. -->
+    <script>
+      ;(function () {
+        var w = window.innerWidth
+        if (w <= 1440 || !window.CSS || !CSS.supports('zoom', '1')) return
+        var scale = Math.min(1 + (0.75 * (w - 1440)) / 2000, 1.75, Math.max(1, window.innerHeight / 800))
+        scale = Math.round(scale * 1000) / 1000
+        if (scale === 1) return
+        var root = document.documentElement
+        root.style.setProperty('zoom', String(scale))
+        root.style.setProperty('--ui-scale', String(scale))
+      })()
+    </script>
     <script
       src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
       integrity="sha384-GPb5RlngihS9H0z1D137JsvzmeZ7tCpWEF4t5YDoTZyMsPP8S7h7vFDh4XhheU83"

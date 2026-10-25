@@ -166,7 +166,7 @@ export function Curtain({ title, onClose, children, dismissOnScrim = false, show
         <div
           ref={panelRef}
           data-curtain-panel=""
-          className="max-h-dvh flex flex-col pb-12 bg-noren rounded-b-curtain"
+          className="max-h-viewport flex flex-col pb-12 bg-noren rounded-b-curtain"
           style={clip ? ({ clipPath: clip } as CSSProperties) : undefined}
         >
           <div data-surface="curtain" className="min-h-0 flex flex-col gap-5 pt-8 px-6 pb-6">

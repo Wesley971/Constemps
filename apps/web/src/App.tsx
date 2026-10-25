@@ -9,6 +9,7 @@ import Review from './pages/Review'
 import Stats from './pages/Stats'
 import Profile from './pages/Profile'
 import { useAppearance } from './design-system/useAppearance'
+import { useUiScale } from './design-system/useUiScale'
 
 // Page de démonstration du design system (CON-57), servie seulement en
 // développement : en build, import.meta.env.DEV vaut false, la branche est
@@ -18,6 +19,8 @@ const Fondations = import.meta.env.DEV ? lazy(() => import('./pages/Fondations')
 function App() {
   // Apparence suivie sur tous les écrans (Auto qui change avec le système).
   useAppearance()
+  // Échelle de l'interface sur écran ultra large (CON-75), suivie au redimensionnement.
+  useUiScale()
 
   return (
     <BrowserRouter>

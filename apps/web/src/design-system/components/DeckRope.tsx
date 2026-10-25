@@ -40,6 +40,10 @@ const BODY_TOP_MIDDLE = 40
 const WIDE_MIN_GAP = 24
 const WIDE_STACKED_PER_PAGE = 5
 const BODY_TOP_WIDE = 44
+// Écran ultra large (CON-75, S24-ultralarge) : dès 1120px de corde (vers 2300px
+// d'écran), deux cordes de 6 plaquettes empilées par page, comme sur la planche.
+const DOUBLE_MIN_WIDTH = 1120
+const DOUBLE_PER_ROPE = 6
 // Corde : courbe quadratique de (-4, 6) à (W + 4, 6), point de contrôle (W/2, 34).
 // Le point de contrôle étant au milieu, x varie linéairement avec t : t = (x + 4) / (W + 8).
 function ropeY(x: number, width: number): number {
@@ -94,15 +98,19 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
   }, [])
 
   const wide = useWideLayout()
-  const perPage = !wide
+  const double = wide && !stacked && width >= DOUBLE_MIN_WIDTH
+  const perRope = !wide
     ? PER_PAGE
     : stacked
       ? WIDE_STACKED_PER_PAGE
-      : Math.max(1, Math.floor((width - WIDE_MIN_GAP) / (PLAQUE_WIDTH + WIDE_MIN_GAP)))
+      : double
+        ? DOUBLE_PER_ROPE
+        : Math.max(1, Math.floor((width - WIDE_MIN_GAP) / (PLAQUE_WIDTH + WIDE_MIN_GAP)))
+  const perPage = double ? 2 * perRope : perRope
   const pages = chunk(items, perPage)
   const slotLeft = (slot: number, w: number) => {
     if (!wide) return [GUTTER, (w - PLAQUE_WIDTH) / 2, w - GUTTER - PLAQUE_WIDTH][slot]
-    const gap = (w - perPage * PLAQUE_WIDTH) / (perPage + 1)
+    const gap = (w - perRope * PLAQUE_WIDTH) / (perRope + 1)
     return gap + slot * (PLAQUE_WIDTH + gap)
   }
 
@@ -147,12 +155,20 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
           const strip = event.currentTarget
           setCurrentPage(strip.clientWidth > 0 ? Math.round(strip.scrollLeft / strip.clientWidth) : 0)
         }}
-        className="rope-strip h-43 lg:h-44 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
+        className={`rope-strip h-43 ${double ? 'lg:h-92' : 'lg:h-44'} overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain`}
       >
         <div className={`flex h-full ${pages.length > 1 ? 'rope-peek' : ''}`}>
           {pages.map((page, pageIndex) => (
-            <div key={page[0].key} className="relative flex-none w-full h-full snap-start">
-              {width > 0 ? renderBand(page, pageIndex) : null}
+            <div key={page[0].key} className={`relative flex-none w-full h-full snap-start ${double ? 'flex flex-col gap-4' : ''}`}>
+              {width === 0
+                ? null
+                : double
+                  ? chunk(page, perRope).map((row, rowIndex) => (
+                      <div key={row[0].key} className="relative h-44">
+                        {renderBand(row, pageIndex, rowIndex * perRope)}
+                      </div>
+                    ))
+                  : renderBand(page, pageIndex)}
             </div>
           ))}
         </div>
@@ -164,8 +180,9 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
     </div>
   )
 
-  // Corde courbe et plaquettes d'une page, fils calculés pour toucher la corde.
-  function renderBand(page: RopeItem[], pageIndex: number) {
+  // Corde courbe et plaquettes d'une page (ou d'une de ses cordes à partir de la
+  // plaquette first), fils calculés pour toucher la corde.
+  function renderBand(page: RopeItem[], pageIndex: number, first = 0) {
     return (
       <>
         <svg aria-hidden="true" className="absolute left-0 top-0 w-full h-8 overflow-visible" viewBox={`0 0 ${width} 32`} preserveAspectRatio="none">
@@ -184,7 +201,7 @@ export function DeckRope({ items, label, stacked }: DeckRopeProps) {
               role="listitem"
               className={`absolute flex flex-col items-center w-26 origin-top ${item.still ? '' : 'animate-sway'}`}
               // Positions calculées (corde courbe) : seules valeurs hors grille, imposées par la géométrie.
-              style={{ left, top, animationDelay: `${-2 * (pageIndex * perPage + slot)}s` }}
+              style={{ left, top, animationDelay: `${-2 * (pageIndex * perPage + first + slot)}s` }}
             >
               {/* Fil d'un deck : couleur de deckThreadClass, éclaircie la nuit. Fil
                   par défaut (« Nouveau deck ») : vermillon du papier, inchangé. */}

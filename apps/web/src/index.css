@@ -9,6 +9,7 @@
 @import './design-system/tokens.css';
 @import './design-system/brush.css';
 @import './design-system/scenery.css';
+@import './design-system/scale.css';
 
 @layer base {
   * {
