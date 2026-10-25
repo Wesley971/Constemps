@@ -211,6 +211,9 @@
      56px de marge au moins ; rideaux de 560px ; vagues de 180px. */
   --spacing-rail: 212px;
   --spacing-rail-zone: 240px;
+  /* Rideau d'en-tête plein écran des écrans sans rail : révision et connexion. */
+  --spacing-noren-wide: 40px;
+  --spacing-noren-wide-tall: 56px;
   --spacing-seigaiha-wide: 180px;
   --container-content: 924px;
   --container-curtain: 560px;

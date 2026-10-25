@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import brushUrl from '../../assets/brush-circle.svg'
 
-type BrushCircleSize = 'sm' | 'deck' | 'review' | 'stamp' | 'md' | 'lg'
+type BrushCircleSize = 'sm' | 'deck' | 'review' | 'stamp' | 'md' | 'lg' | 'enso'
 type BrushCircleTone = 'indigo' | 'vermillon' | 'cream'
 
 interface BrushCircleProps {
@@ -32,6 +32,8 @@ const sizes: Record<BrushCircleSize, string> = {
   stamp: 'size-26',
   md: 'size-20',
   lg: 'size-23',
+  // Ensō de la connexion sur grand écran (CON-75, S20-C-connexion).
+  enso: 'size-48',
 }
 
 const tones: Record<BrushCircleTone, string> = {

@@ -19,6 +19,7 @@ function Register() {
 
   return (
     <AuthScreen
+      title="Inscription"
       submitLabel="Créer mon compte"
       pendingLabel="Création..."
       passwordHint="8 caractères minimum"

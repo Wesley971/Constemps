@@ -143,47 +143,55 @@ function Profile() {
     <AppScreen>
       <ToastViewport toast={toast} onDismiss={dismiss} />
 
-      <div className="flex items-center gap-4 px-1">
-        <Seal initials={user.firstName ? initialsFromFirstName(user.firstName) : initialsFromEmail(user.email)} />
-        <div className="min-w-0 flex flex-col gap-1">
-          <h1 className="m-0 font-display text-display-md break-words">
-            {user.firstName ?? <EmailBreaks email={user.email} />}
-          </h1>
-          <span className="font-display text-body-sm text-inksoft">Avec Constemps {memberSinceLabel(user.createdAt)}</span>
+      {/* Grand écran (S20-C-profil) : identité et compte à gauche, apparence et
+          déconnexion à droite ; sur mobile, les enveloppes sont transparentes. */}
+      <div className="contents lg:flex lg:items-start lg:gap-16">
+        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:shrink-0">
+          <div className="flex items-center gap-4 px-1">
+            <Seal initials={user.firstName ? initialsFromFirstName(user.firstName) : initialsFromEmail(user.email)} />
+            <div className="min-w-0 flex flex-col gap-1">
+              <h1 className="m-0 font-display text-display-md break-words lg:text-display-xl">
+                {user.firstName ?? <EmailBreaks email={user.email} />}
+              </h1>
+              <span className="font-display text-body-sm text-inksoft">Avec Constemps {memberSinceLabel(user.createdAt)}</span>
+            </div>
+          </div>
+
+          <Scroll label="Mon compte" wide>
+            <AccountRow
+              label="Prénom"
+              value={user.firstName ?? 'Aucun prénom'}
+              empty={!user.firstName}
+              onEdit={() => setCurtain('firstName')}
+              editText={user.firstName ? 'Modifier' : 'Ajouter'}
+              editLabel={user.firstName ? 'Modifier le prénom' : 'Ajouter un prénom'}
+            />
+            <InkRule />
+            <AccountRow label="E-mail" value={user.email} onEdit={() => setCurtain('email')} editLabel="Modifier l’adresse e-mail" />
+            <InkRule />
+            <AccountRow label="Mot de passe" value="••••••••••" onEdit={() => setCurtain('password')} editLabel="Modifier le mot de passe" />
+            <InkRule />
+            <AccountRow label="Langue apprise" value={capitalize(languageLabel(user.learningLanguage))} />
+          </Scroll>
         </div>
-      </div>
 
-      <Scroll label="Mon compte">
-        <AccountRow
-          label="Prénom"
-          value={user.firstName ?? 'Aucun prénom'}
-          empty={!user.firstName}
-          onEdit={() => setCurtain('firstName')}
-          editText={user.firstName ? 'Modifier' : 'Ajouter'}
-          editLabel={user.firstName ? 'Modifier le prénom' : 'Ajouter un prénom'}
-        />
-        <InkRule />
-        <AccountRow label="E-mail" value={user.email} onEdit={() => setCurtain('email')} editLabel="Modifier l’adresse e-mail" />
-        <InkRule />
-        <AccountRow label="Mot de passe" value="••••••••••" onEdit={() => setCurtain('password')} editLabel="Modifier le mot de passe" />
-        <InkRule />
-        <AccountRow label="Langue apprise" value={capitalize(languageLabel(user.learningLanguage))} />
-      </Scroll>
+        <div className="contents lg:flex lg:flex-1 lg:min-w-0 lg:flex-col lg:gap-8 lg:pt-32">
+          <AppearancePicker />
 
-      <AppearancePicker />
-
-      {/* Seule déconnexion de l'app depuis CON-69 : ne jamais la retirer. */}
-      <div className="flex items-center justify-between gap-4 px-1">
-        <BrushLink size="md" chevron={false} onClick={handleLogout}>
-          Se déconnecter
-        </BrushLink>
-        <button
-          type="button"
-          onClick={() => setCurtain('delete')}
-          className="min-h-hit px-0 bg-transparent border-none font-body text-label font-bold text-vermillon cursor-pointer hover:underline"
-        >
-          Supprimer mon compte
-        </button>
+          {/* Seule déconnexion de l'app depuis CON-69 : ne jamais la retirer. */}
+          <div className="flex items-center justify-between gap-4 px-1 lg:flex-col lg:items-start lg:justify-start lg:gap-2">
+            <BrushLink size="md" chevron={false} onClick={handleLogout}>
+              Se déconnecter
+            </BrushLink>
+            <button
+              type="button"
+              onClick={() => setCurtain('delete')}
+              className="min-h-hit px-0 bg-transparent border-none font-body text-label font-bold text-vermillon cursor-pointer hover:underline"
+            >
+              Supprimer mon compte
+            </button>
+          </div>
+        </div>
       </div>
 
       {curtain === 'firstName' && (

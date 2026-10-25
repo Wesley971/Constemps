@@ -33,6 +33,7 @@ function Login() {
 
   return (
     <AuthScreen
+      title="Connexion"
       submitLabel="Se connecter"
       pendingLabel="Connexion..."
       switchPrompt={'Pas encore de compte ?'}
