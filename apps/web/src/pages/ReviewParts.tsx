@@ -14,11 +14,13 @@ interface RatingButtonsProps {
   onRate: (rating: ManualRating) => void
   // Dernière note choisie au clavier : rejoue la tache d'encre sur son bouton.
   inked: { rating: ManualRating; at: number } | null
+  // Grand écran (CON-75, S20-C-revision) : la touche du raccourci sous chaque note.
+  showKeys?: boolean
 }
 
 // Notation (V7-revision) : quatre pastilles de verre, Correct en indigo. Une tache
 // d'encre s'étend depuis le centre du bouton choisi.
-export function RatingButtons({ disabled, onRate, inked }: RatingButtonsProps) {
+export function RatingButtons({ disabled, onRate, inked, showKeys }: RatingButtonsProps) {
   return (
     <div className="w-full flex flex-col gap-2">
       <p className="m-0 text-center text-body-md font-medium text-indigo">Comment c’est revenu ?</p>
@@ -43,7 +45,16 @@ export function RatingButtons({ disabled, onRate, inked }: RatingButtonsProps) {
                   className={`ink-blot absolute left-1/2 top-1/2 size-4 -ml-2 -mt-2 pointer-events-none ${strong ? 'bg-cream nuit:bg-cream-ink' : 'bg-indigo'}`}
                 />
               ) : null}
-              {RATING_LABELS[value]}
+              {showKeys ? (
+                <span className="relative flex flex-col items-center gap-1">
+                  {RATING_LABELS[value]}
+                  <span aria-hidden="true" className="px-1 rounded-xs border border-current/30 text-micro font-normal">
+                    {key}
+                  </span>
+                </span>
+              ) : (
+                RATING_LABELS[value]
+              )}
             </button>
           )
         })}
@@ -69,18 +80,20 @@ interface AiFeedbackProps {
   reference: string
   // Phrase d'exemple de la carte (CON-77), sous la réponse de référence.
   example?: string | null
+  // Grand écran : rouleau de la colonne de droite (Scroll review).
+  wide?: boolean
 }
 
 // Retour de l'IA dans le rouleau (S15-retour-ia) : points forts, à améliorer,
 // astuce, puis la réponse de référence. Les parties vides sont omises.
-export function AiFeedback({ result, reference, example }: AiFeedbackProps) {
+export function AiFeedback({ result, reference, example, wide }: AiFeedbackProps) {
   const sections = [
     result.cePointsForts ? { label: 'Points forts', text: result.cePointsForts } : null,
     result.cePointsAmeliorer ? { label: 'À améliorer', text: result.cePointsAmeliorer } : null,
   ].filter((s): s is { label: string; text: string } => s !== null)
 
   return (
-    <Scroll label="Retour de l’IA">
+    <Scroll label="Retour de l’IA" review={wide}>
       <div className="w-full flex flex-col gap-3 text-left">
         {sections.map((section) => (
           <div key={section.label} className="flex flex-col gap-1">
@@ -113,6 +126,7 @@ interface ClosedVeilProps {
 
 // Voile de fin de palier (V7-revision, « Journée close ») : le cercle fermé posé
 // en tampon vermillon. Le reste de l'écran est rendu inerte par la page.
+// Grand écran (CON-75) : le tampon à gauche, le texte et les boutons à droite.
 export function ClosedVeil({ message, onContinue, continuing }: ClosedVeilProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const titleId = useId()
@@ -126,26 +140,28 @@ export function ClosedVeil({ message, onContinue, continuing }: ClosedVeilProps)
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="veil-in fixed inset-0 z-modal flex flex-col items-center justify-center gap-6 px-9 bg-canvas/80 backdrop-blur-sm text-center"
+      className="veil-in fixed inset-0 z-modal flex flex-col items-center justify-center gap-6 px-9 bg-canvas/80 backdrop-blur-sm text-center lg:flex-row lg:gap-16 lg:text-left"
     >
       <span aria-hidden="true" data-surface="paper" className="seal-stamp size-38 flex items-center justify-center -rotate-8 rounded-blot bg-vermillon shadow-stamp">
         <BrushCircle value={100} label="Cercle fermé" size="stamp" tone="cream" playClose delayMs={950} />
       </span>
-      <div className="flex flex-col gap-2 max-w-80">
-        <h2 id={titleId} ref={titleRef} tabIndex={-1} className="m-0 font-display text-display-xl outline-none">
-          Journée close
-        </h2>
-        <p className="m-0 text-body-md text-inksoft">{message}</p>
-      </div>
-      <div className="w-full max-w-80 flex flex-col gap-2">
-        <LinkButton to="/dashboard" variant="primary" className="w-full">
-          Retour à l’accueil
-        </LinkButton>
-        {onContinue ? (
-          <Button variant="secondary" disabled={continuing} onClick={onContinue} className="w-full">
-            Continuer aujourd’hui
-          </Button>
-        ) : null}
+      <div className="contents lg:flex lg:flex-col lg:gap-6">
+        <div className="flex flex-col gap-2 max-w-80">
+          <h2 id={titleId} ref={titleRef} tabIndex={-1} className="m-0 font-display text-display-xl outline-none">
+            Journée close
+          </h2>
+          <p className="m-0 text-body-md text-inksoft">{message}</p>
+        </div>
+        <div className="w-full max-w-80 flex flex-col gap-2">
+          <LinkButton to="/dashboard" variant="primary" className="w-full">
+            Retour à l’accueil
+          </LinkButton>
+          {onContinue ? (
+            <Button variant="secondary" disabled={continuing} onClick={onContinue} className="w-full">
+              Continuer aujourd’hui
+            </Button>
+          ) : null}
+        </div>
       </div>
     </div>
   )

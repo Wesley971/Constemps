@@ -9,11 +9,15 @@ import { BrushCircle } from '../design-system/components/BrushCircle'
 import { BrushLink } from '../design-system/components/BrushLink'
 import { Button } from '../design-system/components/Button'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { InkRule } from '../design-system/components/InkRule'
+import { Label } from '../design-system/components/Label'
 import { RoundCard } from '../design-system/components/RoundCard'
+import { Scroll } from '../design-system/components/Scroll'
 import { Textarea } from '../design-system/components/Textarea'
 import { ToastViewport } from '../design-system/components/ToastViewport'
 import { VerdictStamp } from '../design-system/components/VerdictStamp'
 import { useToast } from '../design-system/useToast'
+import { useWideLayout } from '../design-system/useWideLayout'
 import { CARD_TYPE_LABELS } from '../design-system/constants'
 import { frontSizeClass, RATINGS } from '../lib/review'
 import { plural } from '../lib/today'
@@ -51,6 +55,7 @@ function Review() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { toast, notify, dismiss } = useToast()
+  const wide = useWideLayout()
 
   const [loading, setLoading] = useState(true)
   const [deckName, setDeckName] = useState('')
@@ -253,6 +258,21 @@ function Review() {
   const ratio = target > 0 ? Math.min(1, doneToday / target) : 0
   const veil = session && session.state !== 'active'
 
+  const backIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
+      <path d="M15.6 3.9C13 6.4 10.4 9 7.7 11.4c-.6.5-.6 1.1 0 1.6 2.7 2.4 5.3 4.9 7.6 7.4.5.5 1.1 0 .8-.6-1.9-2.5-4-4.9-6.2-7.4 2.3-2.4 4.7-4.9 6.6-7.5.4-.6-.3-1.4-.9-1z" />
+    </svg>
+  )
+  // Pas de palier à montrer pour un deck encore vide.
+  const goalCircle = (tone: 'cream' | 'indigo') =>
+    session && cardCount !== 0 ? (
+      <BrushCircle key="goal" value={ratio * 100} label={`Palier du jour : ${doneToday} ${plural(doneToday, 'carte', 'cartes')} sur ${target}`} size="review" tone={tone}>
+        <span aria-hidden="true" className="text-label font-bold tabular-nums">
+          {doneToday}/{target}
+        </span>
+      </BrushCircle>
+    ) : null
+
   const panels: [ReactNode, ReactNode, ReactNode] = [
     <Link
       key="back"
@@ -260,22 +280,29 @@ function Review() {
       aria-label="Retour à l’accueil"
       className="size-hit flex items-center justify-center rounded-full bg-cream-veil text-on-noren hover:text-on-noren"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor">
-        <path d="M15.6 3.9C13 6.4 10.4 9 7.7 11.4c-.6.5-.6 1.1 0 1.6 2.7 2.4 5.3 4.9 7.6 7.4.5.5 1.1 0 .8-.6-1.9-2.5-4-4.9-6.2-7.4 2.3-2.4 4.7-4.9 6.6-7.5.4-.6-.3-1.4-.9-1z" />
-      </svg>
+      {backIcon}
     </Link>,
-    // Pas de palier à montrer pour un deck encore vide.
-    session && cardCount !== 0 ? (
-      <BrushCircle key="goal" value={ratio * 100} label={`Palier du jour : ${doneToday} ${plural(doneToday, 'carte', 'cartes')} sur ${target}`} size="review" tone="cream">
-        <span aria-hidden="true" className="text-label font-bold tabular-nums">
-          {doneToday}/{target}
-        </span>
-      </BrushCircle>
-    ) : null,
+    goalCircle('cream'),
     <span key="deck" className="w-full text-center font-display text-body-sm font-bold line-clamp-2 break-words">
       {deckName}
     </span>,
   ]
+
+  // Grand écran (CON-75, S20-C-revision) : sous le rideau fin, une ligne avec le
+  // retour, le nom du deck et le cercle du palier, les mêmes que sur mobile.
+  const wideHeader = (
+    <div className="w-full max-w-260 mx-auto grid grid-cols-3 items-center gap-4">
+      <Link
+        to="/dashboard"
+        aria-label="Retour à l’accueil"
+        className="justify-self-start size-hit flex items-center justify-center rounded-full text-indigo hover:text-indigo hover:bg-indigo-tint"
+      >
+        {backIcon}
+      </Link>
+      <span className="justify-self-center max-w-full text-center font-display text-display-sm line-clamp-1 break-words">{deckName}</span>
+      <span className="justify-self-end">{goalCircle('indigo')}</span>
+    </div>
+  )
 
   function renderContent() {
     if (loadError && !session) {
@@ -306,6 +333,101 @@ function Review() {
       )
     }
 
+    const revealButton = (
+      <button
+        ref={revealRef}
+        type="button"
+        aria-keyshortcuts="Space"
+        onClick={reveal}
+        className="w-full h-14 rounded-pill border-2 border-dashed border-indigo/45 bg-glass/55 backdrop-blur-md font-body text-body-md font-bold text-indigo cursor-pointer"
+      >
+        Voir le verso
+      </button>
+    )
+
+    const answerForm = (
+      <form onSubmit={(event) => handleSubmitOpenQuestion(event, activeCard.id)} className="w-full flex flex-col gap-4">
+        <Textarea label="Ta réponse" variant="answer" value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} />
+        <Button type="submit" disabled={submitting || !openAnswer.trim()} className="w-full">
+          <span className="grid">
+            <span className={`col-start-1 row-start-1 ${submitting ? 'invisible' : ''}`}>Valider ma réponse</span>
+            <span className={`col-start-1 row-start-1 ${submitting ? '' : 'invisible'}`}>Évaluation...</span>
+          </span>
+        </Button>
+      </form>
+    )
+
+    // Grand écran (CON-75, S20-C-revision) : carte à gauche, colonne de 420px
+    // (460px dès 1280px) à droite, écart de 40px puis 72px ; notes sur 760px avec
+    // leur touche et le rappel des raccourcis, propres à ce type de carte.
+    if (wide && activeCard.type === 'CLASSIC') {
+      return (
+        <div className="flex-1 flex flex-col items-center gap-10">
+          <div className="flex items-center justify-center gap-10 xl:gap-18">
+            <RoundCard inkKey={activeCard.id} tag={<TypeTag type={activeCard.type} />}>
+              <h1 className={`m-0 font-display break-words max-w-full ${frontSizeClass(activeCard.front)}`}>{frenchSpacing(activeCard.front)}</h1>
+            </RoundCard>
+            <div className="w-105 xl:w-115 min-h-75 flex flex-col justify-center">
+              {revealed ? (
+                <div ref={versoRef} tabIndex={-1} className="outline-none">
+                  <Scroll label="Verso" review>
+                    <div className="ink-in w-full flex flex-col gap-3 text-left">
+                      <div className="flex flex-col gap-1">
+                        <Label>Verso</Label>
+                        <p className="m-0 font-display text-display-md font-medium break-words">{frenchSpacing(activeCard.back)}</p>
+                      </div>
+                      {activeCard.example ? (
+                        <>
+                          <InkRule />
+                          <CardExample text={activeCard.example} />
+                        </>
+                      ) : null}
+                    </div>
+                  </Scroll>
+                </div>
+              ) : (
+                revealButton
+              )}
+            </div>
+          </div>
+
+          <div className="w-190 flex flex-col gap-3">
+            <RatingButtons showKeys disabled={!revealed || submitting} inked={inked} onRate={(rating) => handleRating(activeCard.id, rating)} />
+            <p className="m-0 text-center text-label font-normal text-inksoft">{'Au clavier : Espace pour retourner la carte, 1 à 4 pour noter.'}</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (wide) {
+      return (
+        <div className="flex-1 flex items-start justify-center gap-10 xl:gap-18">
+          <div className="shrink-0 flex flex-col items-center">
+            <RoundCard inkKey={activeCard.id} tag={<TypeTag type={activeCard.type} />}>
+              <h1 className={`m-0 font-display break-words max-w-full ${frontSizeClass(activeCard.front)}`}>{frenchSpacing(activeCard.front)}</h1>
+            </RoundCard>
+            {openResult ? (
+              <div className="relative -mt-7">
+                <VerdictStamp verdict={openResult.aiVerdict} />
+              </div>
+            ) : null}
+          </div>
+          <div className="w-105 xl:w-115 flex flex-col gap-4 pt-6">
+            {openResult ? (
+              <>
+                <AiFeedback wide result={openResult} reference={frenchSpacing(activeCard.back)} example={activeCard.example} />
+                <Button onClick={advance} className="w-full">
+                  Carte suivante
+                </Button>
+              </>
+            ) : (
+              answerForm
+            )}
+          </div>
+        </div>
+      )
+    }
+
     if (activeCard.type === 'CLASSIC') {
       return (
         <div className="flex-1 flex flex-col items-center gap-4">
@@ -329,15 +451,7 @@ function Review() {
                 {activeCard.example ? <CardExample text={activeCard.example} className="ink-in px-6 text-center" /> : null}
               </div>
             ) : (
-              <button
-                ref={revealRef}
-                type="button"
-                aria-keyshortcuts="Space"
-                onClick={reveal}
-                className="w-full h-14 rounded-pill border-2 border-dashed border-indigo/45 bg-glass/55 backdrop-blur-md font-body text-body-md font-bold text-indigo cursor-pointer"
-              >
-                Voir le verso
-              </button>
+              revealButton
             )}
           </div>
 
@@ -365,15 +479,7 @@ function Review() {
             </Button>
           </>
         ) : (
-          <form onSubmit={(event) => handleSubmitOpenQuestion(event, activeCard.id)} className="w-full flex flex-col gap-4">
-            <Textarea label="Ta réponse" variant="answer" value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} disabled={submitting} />
-            <Button type="submit" disabled={submitting || !openAnswer.trim()} className="w-full">
-              <span className="grid">
-                <span className={`col-start-1 row-start-1 ${submitting ? 'invisible' : ''}`}>Valider ma réponse</span>
-                <span className={`col-start-1 row-start-1 ${submitting ? '' : 'invisible'}`}>Évaluation...</span>
-              </span>
-            </Button>
-          </form>
+          answerForm
         )}
       </div>
     )
@@ -382,8 +488,9 @@ function Review() {
   return (
     <>
       <div inert={Boolean(veil)}>
-        <AppScreen withTabs={false} norenPanels={panels} rise={ratio}>
+        <AppScreen withTabs={false} wideNoren norenPanels={wide ? undefined : panels} rise={ratio}>
           <ToastViewport toast={toast} onDismiss={dismiss} placement="top" />
+          {wide ? wideHeader : null}
           {renderContent()}
         </AppScreen>
       </div>
