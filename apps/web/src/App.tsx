@@ -7,6 +7,7 @@ import DeckDetail from './pages/DeckDetail'
 import Review from './pages/Review'
 import Stats from './pages/Stats'
 import Profile from './pages/Profile'
+import Onboarding from './pages/Onboarding'
 import { useAppearance } from './design-system/useAppearance'
 import { useUiScale } from './design-system/useUiScale'
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/bienvenue" element={<Onboarding />} />
         <Route path="/decks/:id/review" element={<Review />} />
       </Routes>
     </BrowserRouter>

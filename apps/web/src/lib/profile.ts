@@ -14,7 +14,7 @@ export function languageLabel(code: string): string {
 }
 
 // Prénom (CON-76) : mêmes règles et même message que l'API
-// (apps/api/src/auth/dto/update-profile.dto.ts), toute modification se reporte
+// (apps/api/src/auth/dto/first-name.ts), toute modification se reporte
 // des deux côtés. 1 à 40 caractères, lettres de toutes les langues, espaces,
 // traits d'union, apostrophes droite et typographique, au moins une lettre.
 const FIRST_NAME_MAX_LENGTH = 40

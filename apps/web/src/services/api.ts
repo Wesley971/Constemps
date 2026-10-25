@@ -67,8 +67,9 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
 }
 
 export const authApi = {
-  register: (email: string, password: string) =>
-    request<User>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  // Prénom facultatif (CON-56) : null, le compte est créé sans prénom.
+  register: (email: string, password: string, firstName: string | null) =>
+    request<User>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, firstName }) }),
   login: (email: string, password: string) =>
     request<User>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),

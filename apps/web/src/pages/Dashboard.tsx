@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { authApi, dashboardApi, decksApi, ApiError } from '../services/api'
 import type { DashboardSummary } from '../types/dashboard'
 import type { Deck, DeckColor } from '../types/deck'
@@ -17,6 +17,7 @@ import { PageSkeleton } from '../design-system/components/PageSkeleton'
 import { SeasonMark } from '../design-system/components/SeasonMark'
 import { deckKnotClass, deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
+import type { CreateDeckState } from './Onboarding'
 import { deckTodayLabel, formatToday, plural, seasonOf, summarizeDay } from '../lib/today'
 import type { DaySummary } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
@@ -48,12 +49,23 @@ function LanternCount({ done, target, accent }: { done: number; target: number; 
 
 function Dashboard() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [decks, setDecks] = useState<Deck[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [creatingDeck, setCreatingDeck] = useState(false)
+  // « Créer mon premier deck » de l'onboarding (CON-56) ouvre le rideau de
+  // création. État lu une seule fois, à l'initialisation (StrictMode), puis effacé
+  // pour qu'un rechargement ne le rouvre pas.
+  const [creatingDeck, setCreatingDeck] = useState(() => (location.state as Partial<CreateDeckState> | null)?.createDeck === true)
   const [savingDeck, setSavingDeck] = useState(false)
+
+  useEffect(() => {
+    if ((location.state as Partial<CreateDeckState> | null)?.createDeck) {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     async function init() {

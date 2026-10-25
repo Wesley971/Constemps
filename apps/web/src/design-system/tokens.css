@@ -81,6 +81,10 @@
      que 3,18:1 sur le bois, celui-ci 4,87:1. */
   --color-wood-ink-faint: #5c5648;
   --color-rope: #8a6a3a;
+  /* Cadre en bois de l'onboarding (CON-56, S21) : le bois est la corde (rope),
+     le bord intérieur et les montants plus sombres, le fond derrière la feuille. */
+  --color-frame-edge: #6e5530;
+  --color-frame-well: #e9dfc9;
   /* Papier de la lanterne, du centre allumé vers les bords. */
   --color-lantern-core: #fff6e2;
   --color-lantern-mid: #f7e3c4;
@@ -248,6 +252,11 @@
   --drop-shadow-ema: 0 6px 8px rgba(31, 35, 51, 0.12);
   /* Plaquette des notifications (CON-78, S19-A), plus détachée du fond. */
   --drop-shadow-plaque: 0 8px 12px rgba(31, 35, 51, 0.22);
+  /* Onboarding (CON-56) : bord intérieur du cadre et ombre portée ; ombre de la
+     feuille du côté d'où elle entre (droite, ou gauche avec « Retour »). */
+  --shadow-frame: inset 0 0 0 3px var(--color-frame-edge), 0 18px 30px -22px rgba(31, 35, 51, 0.6);
+  --shadow-sheet: -6px 0 12px -8px rgba(31, 35, 51, 0.35);
+  --shadow-sheet-back: 6px 0 12px -8px rgba(31, 35, 51, 0.35);
 
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
   --ease-brush: cubic-bezier(0.45, 0.05, 0.25, 1);
@@ -311,6 +320,8 @@
   --color-wood: #dccba8;
   --color-wood-veil: rgba(239, 228, 204, 0.06);
   --color-rope: #a88654;
+  --color-frame-edge: #806538;
+  --color-frame-well: #d6c6a2;
   --color-seigaiha: #161d33;
   --color-seigaiha-line: rgba(239, 228, 204, 0.14);
   /* Lanterne de la journée close, plus lumineuse (S14-nuit-close). */

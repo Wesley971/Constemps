@@ -347,3 +347,94 @@
   transform-origin: 12px 12px;
   animation: season-snow 3s ease-out 0.4s backwards;
 }
+
+/* Onboarding (CON-56, S21-H-anime). États finaux = illustrations au repos, celles
+   que montre le mouvement réduit. La feuille entre dans le cadre par la droite,
+   ou par la gauche avec « Retour ». */
+@keyframes sheet-in {
+  from {
+    transform: translateX(105%) rotate(1.5deg);
+  }
+}
+@keyframes sheet-in-back {
+  from {
+    transform: translateX(-105%) rotate(-1.5deg);
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.75s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+.sheet-in-back {
+  animation: sheet-in-back 0.75s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+/* Fil des gestes : le trait se trace jusqu'au geste courant (pathLength="1"),
+   le cercle du geste courant apparaît ensuite. */
+@keyframes thread-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.thread-draw {
+  stroke-dasharray: 1;
+  animation: thread-draw 0.8s cubic-bezier(0.45, 0.05, 0.25, 1) 0.3s backwards;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+.pop-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+/* Titre et texte du geste. */
+@keyframes text-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.text-rise {
+  animation: text-rise 0.5s ease 0.9s backwards;
+}
+/* Geste 1 : la main monte et touche deux fois la plaquette du milieu, qui se
+   soulève et s'éclaire. */
+@keyframes hand-tap {
+  45% {
+    transform: translate(3px, 5px) scale(0.9);
+  }
+}
+.hand-tap {
+  animation:
+    plaque-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s backwards,
+    hand-tap 0.55s ease-in-out 1.9s 2;
+}
+@keyframes plaque-lift {
+  50% {
+    translate: 0 -6px;
+  }
+}
+.plaque-lift {
+  animation: plaque-lift 0.6s ease 2.4s;
+}
+@keyframes plaque-lit {
+  from {
+    filter: drop-shadow(0 6px 8px rgba(31, 35, 51, 0.12));
+  }
+}
+.plaque-lit {
+  filter: drop-shadow(0 10px 14px color-mix(in srgb, var(--color-vermillon) 55%, transparent));
+  animation: plaque-lit 0.5s ease 2.4s backwards;
+}
+/* Geste 2 : une note s'allume puis revient. */
+@keyframes rating-pick {
+  40%,
+  70% {
+    background-color: var(--color-indigo);
+  }
+}
+.rating-pick {
+  animation: rating-pick 1.4s ease 2.9s;
+}

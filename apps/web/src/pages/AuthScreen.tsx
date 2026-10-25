@@ -17,12 +17,15 @@ interface AuthScreenProps {
   passwordHint?: string
   // Mot de passe à 8 caractères au moins (inscription), comme l'exige l'API.
   passwordMinLength?: number
+  // Inscription (CON-56) : champ « Prénom (facultatif) » au-dessus de l'e-mail.
+  withFirstName?: boolean
   switchPrompt: string
   switchLabel: string
   switchTo: string
   toast: ActiveToast | null
   onDismissToast: () => void
-  onSubmit: (email: string, password: string) => Promise<void>
+  // Prénom tel que saisi (chaîne vide sans withFirstName) : la page le valide.
+  onSubmit: (email: string, password: string, firstName: string) => Promise<void>
 }
 
 // Connexion et inscription (CON-71, S15-connexion), même écran : cercle qui se
@@ -34,6 +37,7 @@ export function AuthScreen({
   pendingLabel,
   passwordHint,
   passwordMinLength,
+  withFirstName,
   switchPrompt,
   switchLabel,
   switchTo,
@@ -41,6 +45,7 @@ export function AuthScreen({
   onDismissToast,
   onSubmit,
 }: AuthScreenProps) {
+  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -51,7 +56,7 @@ export function AuthScreen({
     if (loading) return
     setLoading(true)
     try {
-      await onSubmit(email.trim(), password)
+      await onSubmit(email.trim(), password, firstName)
     } finally {
       setLoading(false)
     }
@@ -79,6 +84,15 @@ export function AuthScreen({
           {wide ? <h2 className="m-0 font-display text-display-lg">{title}</h2> : null}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {withFirstName ? (
+              <Input
+                label="Prénom (facultatif)"
+                hint="40 caractères au plus"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                disabled={loading}
+              />
+            ) : null}
             <Input label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
             <Input
               label="Mot de passe"
