@@ -155,8 +155,8 @@ export class DecksService {
         reviewedToday,
         dueCardsCount,
         dailyGoalReached: today.reached,
-        // Même information que le voile de la révision : sans carte due, pas
-        // d'accès « Réviser » une fois le palier atteint.
+        // Même information que le voile de la révision : sans carte due ou
+        // palier étendu atteint, ni « Réviser » ni « Continuer aujourd'hui ».
         canContinue: today.canContinue,
       };
     });

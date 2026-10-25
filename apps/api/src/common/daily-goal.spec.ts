@@ -54,15 +54,24 @@ describe('todayGoals', () => {
     });
   });
 
-  it('garde le palier étendu brut une fois atteint (état capped)', () => {
+  it('ne propose plus de continuer une fois le palier étendu brut atteint (état capped)', () => {
     expect(todayGoals({ ...RAW, reviewedToday: 20, dueCardsCount: 5 })).toEqual(
       {
         dailyGoal: 10,
         extendedGoal: 20,
         reached: true,
-        canContinue: true,
+        canContinue: false,
       },
     );
+  });
+
+  it('propose de réviser un deck de cartes nouvelles, toutes dues', () => {
+    expect(todayGoals({ ...RAW, reviewedToday: 0, dueCardsCount: 4 })).toEqual({
+      dailyGoal: 4,
+      extendedGoal: 4,
+      reached: false,
+      canContinue: true,
+    });
   });
 });
 

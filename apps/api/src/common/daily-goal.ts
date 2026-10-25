@@ -153,6 +153,8 @@ export interface TodayGoals {
 // Atteint seulement avec au moins une carte faite aujourd'hui : un deck sans
 // rien à revoir ni rien de fait reste « à jour », pas « journée close ».
 // Le blocage strict (palier étendu, état capped et 403) reste sur le brut.
+// canContinue (CON-88) : il reste une carte due et le palier étendu brut n'est
+// pas atteint, donc la révision a vraiment quelque chose à servir aujourd'hui.
 export function todayGoals({
   dailyGoal,
   extendedGoal,
@@ -165,6 +167,6 @@ export function todayGoals({
     dailyGoal: goal,
     extendedGoal: Math.min(extendedGoal, available),
     reached: reviewedToday > 0 && reviewedToday >= goal,
-    canContinue: dueCardsCount > 0,
+    canContinue: dueCardsCount > 0 && reviewedToday < extendedGoal,
   };
 }
