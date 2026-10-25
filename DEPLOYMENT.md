@@ -5,6 +5,12 @@
 > `README.md`). Ce guide reste valable pour redéployer Constemps de zéro sur
 > un nouveau serveur.
 
+> **À traiter avant le redéploiement** : la table `RefreshToken` grossit sans
+> purge des jetons expirés. Ils ne sont supprimés qu'à une déconnexion
+> (`revokeRefreshToken` dans `apps/api/src/auth/auth.service.ts`) : tant que
+> personne ne se déconnecte, ils s'accumulent. Prévoir une purge régulière
+> (tâche planifiée) avant de rouvrir l'app à de vrais utilisateurs.
+
 Contexte : déploiement production initial. Architecture : un seul VPS,
 Docker Compose avec trois services (`mysql`, `api`, `web`), `web` faisant à
 la fois front statique et reverse proxy HTTPS (Caddy, certificats Let's

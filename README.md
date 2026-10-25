@@ -25,7 +25,7 @@ Toutes les commandes se lancent depuis la racine du repo, sauf mention contraire
 ### 1. Prérequis
 
 - **Node.js** `20.19+` ou `22.12+` (exigence de Vite 8), avec **npm**. Vérifier avec `node --version`.
-- **Docker Desktop** (ou Docker Engine avec le plugin `docker compose` v2), **démarré** avant de continuer. Vérifier avec `docker info`.
+- **Docker Desktop** (ou Docker Engine avec le plugin `docker compose`, Compose v2 ou plus récent), **démarré** avant de continuer. Vérifier avec `docker info` et `docker compose version`.
 - **Git**, pour cloner le repo.
 
 ### 2. Démarrer la base MySQL
@@ -38,7 +38,7 @@ Démarre le service `mysql` de `docker-compose.yml` : MySQL 8.4, base `constemps
 
 Attention si un MySQL tourne déjà sur ta machine : le conteneur s'appelle toujours `constemps-mysql` (nom fixe) et publie le port `3306`. Si ce port est déjà pris par un autre MySQL, ou si un conteneur `constemps-mysql` existe déjà d'une autre installation, `docker compose up -d` échoue. Arrêter l'autre MySQL (ou supprimer l'ancien conteneur) avant de relancer.
 
-Attendre quelques secondes que MySQL soit prêt (premier démarrage plus long) : `docker compose ps` doit afficher le service `mysql` en état `running`.
+Attendre que MySQL soit prêt avant l'étape 4. `docker compose ps` affiche le service `mysql` en état `running` dès le lancement du conteneur, avant que MySQL accepte les connexions : ce n'est donc pas le bon signal. MySQL est prêt quand `docker compose logs mysql` affiche une ligne `ready for connections` avec `port: 3306` (au premier démarrage, une ligne avec `port: 0` vient d'abord : c'est l'initialisation de la base, pas encore le vrai serveur). Compter quelques secondes, plus au premier démarrage. Si `npx prisma migrate deploy` est lancé trop tôt, il échoue avec `P1017` (« Server has closed the connection ») ou `P1001` : attendre puis relancer la commande.
 
 ### 3. Configurer l'API (`apps/api/.env`)
 
@@ -58,7 +58,7 @@ Puis éditer `apps/api/.env` :
 
 Sans ces trois variables obligatoires, l'API refuse de démarrer et affiche celles qui manquent.
 
-Sans **vraie** clé Gemini (valeur factice), l'API démarre et l'app reste utilisable (comptes, decks, fiches, révisions), mais les fonctionnalités IA ne marchent pas : la traduction et la génération de fiches affichent une erreur, l'évaluation des réponses « Avis assisté » se rabat sur une simple comparaison de mots avec la réponse de référence, et les messages personnalisés du dashboard et des stats sont remplacés par un message générique.
+Pour essayer l'app sans clé Gemini, laisser la valeur d'exemple de `GEMINI_API_KEY` (une variable vide compte comme manquante : l'API refuserait de démarrer). Sans **vraie** clé Gemini (valeur factice), l'API démarre et l'app reste utilisable (comptes, decks, fiches, révisions), mais les fonctionnalités IA ne marchent pas : la traduction et la génération de fiches affichent une erreur, l'évaluation des réponses « Avis assisté » se rabat sur une simple comparaison de mots avec la réponse de référence, et les messages personnalisés du dashboard et des stats sont remplacés par un message générique.
 
 Le front n'a pas besoin de fichier `.env` en local : il appelle l'API sur `http://localhost:3000` par défaut (surchargeable avec `VITE_API_URL`).
 

@@ -1,5 +1,5 @@
 # Remplacer <IP-VPS-AVEC-TIRETS> par l'IP publique du VPS, points remplacés
-# par des tirets (ex: 51.75.20.10 -> 51-75-20-10). Voir DEPLOYMENT.md à la
+# par des tirets (ex: 203.0.113.10 -> 203-0-113-10). Voir DEPLOYMENT.md à la
 # racine. Caddy obtient et renouvelle automatiquement les certificats HTTPS
 # (Let's Encrypt) pour ces deux hosts, aucune config manuelle requise.
 
