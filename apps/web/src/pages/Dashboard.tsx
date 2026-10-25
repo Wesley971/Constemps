@@ -14,26 +14,12 @@ import { DeckRope } from '../design-system/components/DeckRope'
 import { EmaPlaque, NewDeckPlaque } from '../design-system/components/EmaPlaque'
 import { Notification } from '../design-system/components/Notification'
 import { PageSkeleton } from '../design-system/components/PageSkeleton'
+import { SeasonMark } from '../design-system/components/SeasonMark'
 import { deckKnotClass, deckThreadClass } from '../design-system/constants'
 import { DeckFormModal } from './DeckFormModal'
-import { deckTodayLabel, formatToday, plural, seasonOf, SEASON_LABELS, summarizeDay } from '../lib/today'
-import type { DaySummary, Season } from '../lib/today'
+import { deckTodayLabel, formatToday, plural, seasonOf, summarizeDay } from '../lib/today'
+import type { DaySummary } from '../lib/today'
 import { frenchSpacing } from '../lib/typography'
-
-// Couleur de l'accent de saison (point et libellé). Le libellé de l'été prend
-// une teinte un peu plus foncée pour tenir le contraste AA en petit texte.
-const SEASON_TEXT: Record<Season, string> = {
-  spring: 'text-season-spring',
-  summer: 'text-season-summer-ink',
-  autumn: 'text-season-autumn',
-  winter: 'text-season-winter',
-}
-const SEASON_DOT: Record<Season, string> = {
-  spring: 'bg-season-spring',
-  summer: 'bg-season-summer',
-  autumn: 'bg-season-autumn',
-  winter: 'bg-season-winter',
-}
 
 // Clé de la fermeture du cercle de la lanterne : jouée une fois par jour.
 const LANTERN_CLOSE_KEY = 'palier-du-jour'
@@ -123,10 +109,7 @@ function Dashboard() {
         <h1 className="m-0 font-display text-display-lg">Constemps</h1>
         <div className="flex flex-col items-end">
           <span className="text-caption text-inksoft">{formatToday(today)}</span>
-          <span className={`inline-flex items-center gap-2 text-caption font-bold ${SEASON_TEXT[season]}`}>
-            <span aria-hidden="true" className={`size-2 rounded-full ${SEASON_DOT[season]}`} />
-            {SEASON_LABELS[season]}
-          </span>
+          <SeasonMark season={season} />
         </div>
       </header>
 

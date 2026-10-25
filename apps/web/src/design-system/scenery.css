@@ -266,3 +266,84 @@
 .veil-in {
   animation: scrim-in 0.4s ease backwards;
 }
+
+/* Icônes de saison (CON-80, S22-saisons) : jouées une fois par jour, à la première
+   ouverture (SeasonMark), puis immobiles. L'état final est l'icône au repos, que
+   le mouvement réduit affiche directement. Origines en unités de la grille de 24. */
+/* Printemps : la fleur s'ouvre en tournant, un pétale s'en détache. */
+@keyframes season-bloom {
+  from {
+    transform: scale(0.2) rotate(-72deg);
+    opacity: 0;
+  }
+}
+.season-bloom {
+  transform-origin: 12px 12px;
+  animation: season-bloom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
+}
+@keyframes season-petal {
+  0% {
+    transform: translate(-8px, 5px) rotate(-60deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+.season-petal {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: season-petal 2.4s ease-out 1.2s backwards;
+}
+/* Été : le soleil se lève derrière les vagues, ses rayons tournent un peu. */
+@keyframes season-sunrise {
+  from {
+    transform: translateY(9px);
+  }
+}
+.season-sunrise {
+  animation: season-sunrise 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
+}
+@keyframes season-rays {
+  from {
+    transform: rotate(-45deg);
+  }
+}
+.season-rays {
+  transform-origin: 12px 11.5px;
+  animation: season-rays 3s ease-in-out 0.4s backwards;
+}
+/* Automne : la feuille d'érable tombe en se balançant. */
+@keyframes season-fall {
+  0% {
+    transform: translate(-6px, -26px) rotate(-40deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  40% {
+    transform: translate(6px, -12px) rotate(20deg);
+  }
+  70% {
+    transform: translate(-3px, -3px) rotate(-10deg);
+  }
+}
+.season-fall {
+  transform-origin: 12px 12px;
+  animation: season-fall 2.6s ease-out 0.4s backwards;
+}
+/* Hiver : le flocon descend en tournant. */
+@keyframes season-snow {
+  0% {
+    transform: translateY(-24px) rotate(-120deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+.season-snow {
+  transform-origin: 12px 12px;
+  animation: season-snow 3s ease-out 0.4s backwards;
+}

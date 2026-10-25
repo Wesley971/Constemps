@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { TABS } from '../constants'
-import { formatToday } from '../../lib/today'
+import { formatToday, seasonOf } from '../../lib/today'
+import { SeasonMark } from './SeasonMark'
 
 // Rail des grands écrans (CON-75, S20-C) : rouleau d'étoffe suspendu à gauche,
 // avec le nom de l'app, la date, les onglets et la devise. Remplace la barre
 // d'onglets dès 1024px ; fixe pendant le défilement. Étoffe et barre suivent les
 // tokens noren et scroll-cap, comme les rideaux, dans les deux thèmes.
 // L'onglet actif est une languette couleur du fond, qui rejoint la page.
-export function Rail() {
+// Saison sous la date (CON-80), en couleurs claires sur l'étoffe et cachée aux
+// lecteurs d'écran : l'en-tête caché de l'accueil l'annonce déjà. Pendant le
+// chargement (seasonPending), sa place est seulement réservée : le rail du
+// squelette est remplacé par celui de la page, et une animation commencée là
+// serait coupée net.
+export function Rail({ seasonPending = false }: { seasonPending?: boolean }) {
   // Date relue au retour sur l'onglet : une page restée ouverte la nuit se recale.
   const [today, setToday] = useState(() => new Date())
   useEffect(() => {
@@ -25,6 +31,9 @@ export function Rail() {
       <div className="w-rail flex-1 min-h-0 flex flex-col pt-8 pb-7 bg-noren text-on-noren rounded-b-lg">
         <span className="px-6 font-display text-display-lg">Constemps</span>
         <span className="px-6 pt-1 text-label font-normal text-cream-soft">{formatToday(today)}</span>
+        <span aria-hidden="true" data-surface="noren" className="px-6 pt-1 flex items-center h-6">
+          {seasonPending ? null : <SeasonMark season={seasonOf(today)} />}
+        </span>
         <nav aria-label="Navigation principale" className="mt-11 flex flex-col gap-2">
           {TABS.map((tab) => (
             <NavLink
